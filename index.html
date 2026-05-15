@@ -5,13 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kelas Mengaji Hafsah - Portal</title>
     
-    <!-- PWA / Home Screen App Icons -->
+    <!-- PWA / Home Screen App Icons & Meta Tags -->
     <link rel="icon" type="image/png" href="https://i.postimg.cc/TwZN5fP1/image.png">
     <link rel="apple-touch-icon" href="https://i.postimg.cc/TwZN5fP1/image.png">
     <meta name="apple-mobile-web-app-title" content="KM Hafsah">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#052e16">
+    
+    <!-- Dynamic Manifest Generator for PWA -->
+    <script>
+        const manifestJSON = {
+            "name": "Kelas Mengaji Hafsah",
+            "short_name": "KM Hafsah",
+            "description": "Sistem Pemantauan Prestasi Pelajar",
+            "start_url": "./",
+            "display": "standalone",
+            "background_color": "#052e16",
+            "theme_color": "#052e16",
+            "icons": [
+                {
+                    "src": "https://i.postimg.cc/TwZN5fP1/image.png",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                },
+                {
+                    "src": "https://i.postimg.cc/TwZN5fP1/image.png",
+                    "sizes": "512x512",
+                    "type": "image/png"
+                }
+            ]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifestJSON)], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        document.write('<link rel="manifest" href="' + manifestURL + '">');
+    </script>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -92,6 +121,16 @@
         
         .admin-sidebar-slim .nav-icon { margin-right: 0 !important; }
         .admin-sidebar-expanded .nav-icon { margin-right: 0.75rem !important; }
+
+        /* --- Pengoptimuman Peranti Mudah Alih (Mobile-First CSS) --- */
+        /* Halang Auto-Zoom pada peranti iOS (Safari) apabila mengisi borang */
+        input[type="text"], input[type="password"], input[type="file"], select, textarea {
+            font-size: 16px !important;
+        }
+
+        /* Sembunyikan scrollbar untuk paparan tab melintang yang kemas */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 antialiased h-screen w-screen overflow-hidden">
@@ -244,12 +283,13 @@
             <!-- Scrollable Content -->
             <div class="flex-1 overflow-y-auto w-full relative scroll-smooth" id="main-scroll-area">
                 
+                <!-- Pemilih Kelas (Boleh-skrol melintang) -->
                 <div id="class-selector-container" class="hidden p-4 md:p-8 pb-0 flex-wrap bg-gray-50 z-10 sticky top-0 border-b border-gray-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
-                    <div class="flex bg-white p-1.5 rounded-xl border border-gray-200 shadow-sm w-full md:w-max items-center mb-4 md:mb-6">
-                        <button onclick="setClass('talaqqi')" id="btn-class-talaqqi" class="flex-1 md:flex-none px-5 py-2 rounded-lg bg-quran-700 text-white font-medium text-sm transition-all shadow-sm">
+                    <div class="flex overflow-x-auto hide-scrollbar bg-white p-1.5 rounded-xl border border-gray-200 shadow-sm w-full md:w-max items-center mb-4 md:mb-6">
+                        <button onclick="setClass('talaqqi')" id="btn-class-talaqqi" class="flex-none whitespace-nowrap px-5 py-2.5 rounded-lg bg-quran-700 text-white font-medium text-sm transition-all shadow-sm">
                             <i data-lucide="book" class="w-4 h-4 inline-block mr-1 mb-0.5"></i> Talaqqi Al-Quran
                         </button>
-                        <button onclick="setClass('abahata')" id="btn-class-abahata" class="flex-1 md:flex-none px-5 py-2 rounded-lg text-gray-500 hover:text-quran-700 font-medium text-sm transition-all">
+                        <button onclick="setClass('abahata')" id="btn-class-abahata" class="flex-none whitespace-nowrap px-5 py-2.5 rounded-lg text-gray-500 hover:text-quran-700 font-medium text-sm transition-all">
                             <i data-lucide="library" class="w-4 h-4 inline-block mr-1 mb-0.5"></i> Kelas ABAHATA
                         </button>
                     </div>
@@ -266,20 +306,20 @@
                     <i data-lucide="alert-triangle" class="w-16 h-16 text-red-500 mb-4"></i>
                     <h2 class="text-xl font-bold text-gray-800 mb-2">Ralat Mengambil Data</h2>
                     <p class="text-gray-600 mb-4" id="error-msg">Sila pastikan sambungan internet anda stabil.</p>
-                    <button onclick="fetchData(true)" class="px-6 py-2 bg-quran-700 text-white rounded-lg shadow hover:bg-quran-800 transition">Cuba Semula</button>
+                    <button onclick="fetchData(true)" class="px-6 py-2.5 bg-quran-700 text-white rounded-lg shadow hover:bg-quran-800 transition font-medium">Cuba Semula</button>
                 </div>
 
                 <div id="tab-dashboard" class="hidden space-y-6 p-4 md:p-8 pt-4">
-                    <div class="flex justify-between items-end mb-6">
+                    <div class="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-6">
                         <div>
                             <h2 class="text-2xl font-bold text-gray-800">Analisis <span id="display-class-title" class="text-quran-700">Talaqqi Al-Quran</span></h2>
                             <p class="text-sm text-gray-500 mt-1">Prestasi purata kelas berdasarkan pecahan tajwid dan kefasihan.</p>
                         </div>
-                        <div class="flex gap-2 no-print">
-                            <button onclick="downloadDashboardPDF(this)" class="hidden md:flex items-center text-sm bg-quran-700 border border-quran-700 shadow-sm px-3 py-1.5 rounded-md text-white hover:bg-quran-800 transition">
+                        <div class="flex gap-2 no-print w-full md:w-auto">
+                            <button onclick="downloadDashboardPDF(this)" class="flex-1 md:flex-none flex items-center justify-center text-sm bg-quran-700 border border-quran-700 shadow-sm px-4 py-2.5 rounded-lg text-white hover:bg-quran-800 transition font-medium">
                                 <i data-lucide="download" class="w-4 h-4 mr-2"></i> Muat Turun PDF
                             </button>
-                            <button onclick="fetchData(true)" class="hidden md:flex items-center text-sm bg-white border border-gray-200 shadow-sm px-3 py-1.5 rounded-md text-gray-600 hover:text-quran-700 transition">
+                            <button onclick="fetchData(true)" class="flex-1 md:flex-none flex items-center justify-center text-sm bg-white border border-gray-200 shadow-sm px-4 py-2.5 rounded-lg text-gray-600 hover:text-quran-700 transition font-medium">
                                 <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i> Segar Semula
                             </button>
                         </div>
@@ -355,22 +395,22 @@
                                 <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
                                 <input type="text" id="search-input" onkeyup="filterStudents()" placeholder="Cari nama pelajar atau IC..." class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-quran-500 focus:border-transparent text-sm">
                             </div>
-                            <button onclick="toggleAddStudentModal()" class="w-full md:w-auto px-4 py-2 bg-quran-700 hover:bg-quran-800 text-white rounded-lg text-sm font-medium transition flex items-center justify-center whitespace-nowrap shadow-sm">
+                            <button onclick="toggleAddStudentModal()" class="w-full md:w-auto px-4 py-2.5 bg-quran-700 hover:bg-quran-800 text-white rounded-lg text-sm font-medium transition flex items-center justify-center whitespace-nowrap shadow-sm">
                                 <i data-lucide="user-plus" class="w-4 h-4 mr-2"></i> Tambah Pelajar
                             </button>
                         </div>
                     </div>
 
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                        <div class="overflow-x-auto">
+                        <div class="overflow-x-auto hide-scrollbar">
                             <table class="w-full whitespace-nowrap">
                                 <thead class="bg-gray-50 border-b border-gray-100 text-left">
                                     <tr>
-                                        <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Bil</th>
-                                        <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nama Pelajar</th>
-                                        <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">IC / Pengenalan</th>
-                                        <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Skor Purata</th>
-                                        <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Tindakan</th>
+                                        <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Bil</th>
+                                        <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nama Pelajar</th>
+                                        <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">IC / Pengenalan</th>
+                                        <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Skor Purata</th>
+                                        <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Tindakan</th>
                                     </tr>
                                 </thead>
                                 <tbody id="student-table-body" class="divide-y divide-gray-100">
@@ -424,10 +464,10 @@
                         
                         <!-- Butang Action di Penjuru Atas Portal -->
                         <div class="absolute top-4 right-4 flex gap-2 z-10 no-print">
-                            <button onclick="downloadPortalPDF(this)" class="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg text-sm font-medium flex items-center transition border border-white/30 shadow-sm">
+                            <button onclick="downloadPortalPDF(this)" class="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center transition border border-white/30 shadow-sm">
                                 <i data-lucide="download" class="w-4 h-4 md:mr-2"></i> <span class="hidden md:inline">Muat Turun PDF</span>
                             </button>
-                            <button onclick="logout()" class="bg-red-500/80 hover:bg-red-500 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg text-sm font-medium flex items-center transition border border-red-500/50 shadow-sm">
+                            <button onclick="logout()" class="bg-red-500/80 hover:bg-red-500 backdrop-blur-sm text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center transition border border-red-500/50 shadow-sm">
                                 <i data-lucide="log-out" class="w-4 h-4 md:mr-2"></i> <span class="hidden md:inline">Keluar</span>
                             </button>
                         </div>
@@ -437,18 +477,18 @@
                                 <div class="flex flex-col md:flex-row md:items-end w-full">
                                     <div class="relative group inline-block mx-auto md:mx-0 -mt-14 md:-mt-20"> <!-- Margin ditarik pada avatar sahaja -->
                                         <img id="portal-student-pic" src="" alt="Profile" class="w-28 h-28 md:w-40 md:h-40 rounded-full border-4 border-white object-cover bg-white shadow-xl">
-                                        <button onclick="togglePortalEdit()" class="no-print absolute bottom-1 right-1 md:bottom-2 md:right-2 bg-gold-500 hover:bg-gold-600 text-white p-2.5 rounded-full shadow-lg transition transform hover:scale-105 border-2 border-white focus:outline-none">
+                                        <button onclick="togglePortalEdit()" class="no-print absolute bottom-1 right-1 md:bottom-2 md:right-2 bg-gold-500 hover:bg-gold-600 text-white p-3 rounded-full shadow-lg transition transform hover:scale-105 border-2 border-white focus:outline-none">
                                             <i data-lucide="camera" class="w-4 h-4 md:w-5 md:h-5"></i>
                                         </button>
                                     </div>
-                                    <div class="mt-4 md:mt-0 md:ml-6 pb-2 text-center md:text-left">
+                                    <div class="mt-4 md:mt-0 md:ml-6 pb-2 text-center md:text-left overflow-hidden">
                                         <h2 class="text-2xl md:text-4xl font-bold font-arabic text-gray-800 leading-tight" id="portal-student-name">Nama Pelajar</h2>
                                         <p class="text-sm md:text-base text-gray-500 font-medium flex items-center justify-center md:justify-start mt-1 md:mt-2">
                                             <i data-lucide="credit-card" class="w-4 h-4 mr-1.5"></i> <span id="portal-student-ic">No IC</span>
                                         </p>
                                         <span class="inline-block mt-3 px-4 py-1.5 bg-quran-50 text-quran-700 text-xs md:text-sm font-bold rounded-full border border-quran-100" id="portal-student-class">Kelas</span>
-                                        <!-- Container untuk butang pilihan jika pelajar ada 2 kelas -->
-                                        <div id="portal-class-selector" class="mt-3 flex flex-wrap gap-2 justify-center md:justify-start hidden no-print"></div>
+                                        <!-- Container untuk butang pilihan jika pelajar ada 2 kelas (scroll melintang) -->
+                                        <div id="portal-class-selector" class="mt-3 flex flex-nowrap overflow-x-auto hide-scrollbar gap-2 justify-start md:justify-start hidden no-print pb-1"></div>
                                     </div>
                                 </div>
                             </div>
@@ -458,11 +498,11 @@
                                 <h3 class="font-bold text-gray-800 mb-3 flex items-center text-sm"><i data-lucide="image" class="w-4 h-4 mr-2 text-quran-600"></i> Muat Naik Gambar Profil Baharu</h3>
                                 <div class="flex flex-col sm:flex-row items-end gap-3 sm:gap-4">
                                     <div class="flex-1 w-full">
-                                        <input type="file" id="portal-edit-image" accept="image/*" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm file:mr-4 file:py-1.5 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-quran-50 file:text-quran-700 hover:file:bg-quran-100 transition">
+                                        <input type="file" id="portal-edit-image" accept="image/*" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm file:mr-4 file:py-1.5 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-quran-50 file:text-quran-700 hover:file:bg-quran-100 transition bg-white">
                                     </div>
                                     <div class="flex w-full sm:w-auto gap-2">
-                                        <button onclick="togglePortalEdit()" class="flex-1 sm:flex-none px-4 py-2 bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded-lg text-sm font-medium transition text-center">Batal</button>
-                                        <button onclick="savePortalPicture()" id="portal-btn-save" class="flex-1 sm:flex-none px-6 py-2 bg-quran-700 hover:bg-quran-800 text-white rounded-lg text-sm font-medium transition shadow-sm whitespace-nowrap flex justify-center items-center">Simpan Gambar</button>
+                                        <button onclick="togglePortalEdit()" class="flex-1 sm:flex-none px-4 py-2.5 bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded-lg text-sm font-medium transition text-center">Batal</button>
+                                        <button onclick="savePortalPicture()" id="portal-btn-save" class="flex-1 sm:flex-none px-6 py-2.5 bg-quran-700 hover:bg-quran-800 text-white rounded-lg text-sm font-medium transition shadow-sm whitespace-nowrap flex justify-center items-center">Simpan Gambar</button>
                                     </div>
                                 </div>
                                 <p class="text-[10px] md:text-xs text-gray-400 mt-3 italic">* Perubahan gambar mungkin mengambil masa beberapa saat untuk dipaparkan sepenuhnya kerana tetapan keselamatan pelayan (server cache).</p>
@@ -511,14 +551,14 @@
                                 <h4 class="font-bold text-gray-800 text-sm">Pecahan Markah Terperinci</h4>
                                 <span class="text-xs font-medium text-gray-400">Rujukan Silibus Lengkap</span>
                             </div>
-                            <div class="overflow-x-auto">
+                            <div class="overflow-x-auto hide-scrollbar">
                                 <table class="w-full text-sm text-left">
                                     <thead class="bg-gray-50 text-gray-500">
                                         <tr>
-                                            <th class="px-5 py-3 font-medium border-b border-gray-200">Aspek Penilaian</th>
-                                            <th class="px-5 py-3 font-medium text-center border-b border-gray-200">Markah Diperolehi</th>
-                                            <th class="px-5 py-3 font-medium text-center border-b border-gray-200">Markah Penuh</th>
-                                            <th class="px-5 py-3 font-medium text-center border-b border-gray-200">Pencapaian (%)</th>
+                                            <th class="px-5 py-4 font-medium border-b border-gray-200">Aspek Penilaian</th>
+                                            <th class="px-5 py-4 font-medium text-center border-b border-gray-200">Markah Diperolehi</th>
+                                            <th class="px-5 py-4 font-medium text-center border-b border-gray-200">Markah Penuh</th>
+                                            <th class="px-5 py-4 font-medium text-center border-b border-gray-200">Pencapaian (%)</th>
                                         </tr>
                                     </thead>
                                     <tbody id="portal-detail-table" class="divide-y divide-gray-100">
@@ -606,14 +646,14 @@
                         <div class="px-5 py-3 border-b border-gray-100 bg-gray-50">
                             <h4 class="font-bold text-gray-800 text-sm">Pecahan Markah Terperinci</h4>
                         </div>
-                        <div class="overflow-x-auto">
+                        <div class="overflow-x-auto hide-scrollbar">
                             <table class="w-full text-sm text-left">
                                 <thead class="bg-gray-50 text-gray-500">
                                     <tr>
-                                        <th class="px-5 py-2 font-medium">Aspek Penilaian</th>
-                                        <th class="px-5 py-2 font-medium text-center">Markah Pelajar</th>
-                                        <th class="px-5 py-2 font-medium text-center">Markah Penuh</th>
-                                        <th class="px-5 py-2 font-medium text-center">Peratusan (%)</th>
+                                        <th class="px-5 py-3 font-medium">Aspek Penilaian</th>
+                                        <th class="px-5 py-3 font-medium text-center">Markah Pelajar</th>
+                                        <th class="px-5 py-3 font-medium text-center">Markah Penuh</th>
+                                        <th class="px-5 py-3 font-medium text-center">Peratusan (%)</th>
                                     </tr>
                                 </thead>
                                 <tbody id="modal-detail-table" class="divide-y divide-gray-100"></tbody>
@@ -631,11 +671,11 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Nama Pelajar</label>
-                                <input type="text" id="edit-name" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-quran-500 focus:border-transparent text-sm">
+                                <input type="text" id="edit-name" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-quran-500 focus:border-transparent text-sm">
                             </div>
                             <div>
                                 <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1">Muat Naik Gambar Baru (Abaikan jika tiada)</label>
-                                <input type="file" id="edit-image" accept="image/*" class="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-quran-50 file:text-quran-700 hover:file:bg-quran-100">
+                                <input type="file" id="edit-image" accept="image/*" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-quran-50 file:text-quran-700 hover:file:bg-quran-100 bg-white">
                             </div>
                         </div>
 
@@ -648,8 +688,8 @@
                         </div>
 
                         <div class="mt-8 flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-100">
-                            <button onclick="toggleEditMode()" class="px-5 py-2 text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg font-medium transition text-sm">Batal</button>
-                            <button onclick="saveStudentData()" id="btn-save" class="px-6 py-2 bg-quran-700 hover:bg-quran-800 text-white rounded-lg font-medium shadow-sm transition flex justify-center items-center text-sm">
+                            <button onclick="toggleEditMode()" class="px-5 py-2.5 text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg font-medium transition text-sm">Batal</button>
+                            <button onclick="saveStudentData()" id="btn-save" class="px-6 py-2.5 bg-quran-700 hover:bg-quran-800 text-white rounded-lg font-medium shadow-sm transition flex justify-center items-center text-sm">
                                 <i data-lucide="save" class="w-4 h-4 mr-2"></i> Simpan Perubahan
                             </button>
                         </div>
@@ -690,7 +730,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Gambar Profil (Pilihan)</label>
-                        <input type="file" id="add-student-image" accept="image/*" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-quran-50 file:text-quran-700 hover:file:bg-quran-100">
+                        <input type="file" id="add-student-image" accept="image/*" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-quran-50 file:text-quran-700 hover:file:bg-quran-100 bg-white">
                     </div>
                 </div>
                 <div class="mt-8 flex justify-end gap-3 pt-4 border-t border-gray-100">
@@ -1151,11 +1191,11 @@
             const btnAbahata = document.getElementById('btn-class-abahata');
             
             if (classId === 'talaqqi') {
-                btnTalaqqi.className = "flex-1 md:flex-none px-5 py-2 rounded-lg bg-quran-700 text-white font-medium text-sm transition-all shadow-sm";
-                btnAbahata.className = "flex-1 md:flex-none px-5 py-2 rounded-lg text-gray-500 hover:text-quran-700 font-medium text-sm transition-all";
+                btnTalaqqi.className = "flex-none whitespace-nowrap px-5 py-2.5 rounded-lg bg-quran-700 text-white font-medium text-sm transition-all shadow-sm";
+                btnAbahata.className = "flex-none whitespace-nowrap px-5 py-2.5 rounded-lg text-gray-500 hover:text-quran-700 font-medium text-sm transition-all";
             } else {
-                btnAbahata.className = "flex-1 md:flex-none px-5 py-2 rounded-lg bg-quran-700 text-white font-medium text-sm transition-all shadow-sm";
-                btnTalaqqi.className = "flex-1 md:flex-none px-5 py-2 rounded-lg text-gray-500 hover:text-quran-700 font-medium text-sm transition-all";
+                btnAbahata.className = "flex-none whitespace-nowrap px-5 py-2.5 rounded-lg bg-quran-700 text-white font-medium text-sm transition-all shadow-sm";
+                btnTalaqqi.className = "flex-none whitespace-nowrap px-5 py-2.5 rounded-lg text-gray-500 hover:text-quran-700 font-medium text-sm transition-all";
             }
             fetchData();
         }
@@ -1490,7 +1530,7 @@
                 const wrapper = document.createElement('div');
                 wrapper.className = "bg-gray-50 p-3 rounded-lg border border-gray-100";
                 
-                let selectHtml = `<select id="edit-mark-${header}" class="w-full mt-1.5 px-2 py-1.5 bg-white border border-gray-200 rounded-md text-sm focus:ring-quran-500 font-medium">`;
+                let selectHtml = `<select id="edit-mark-${header}" class="w-full mt-1.5 px-2 py-2 bg-white border border-gray-200 rounded-md text-sm focus:ring-quran-500 font-medium">`;
                 for (let i = 0; i <= maxMark; i++) {
                     const selected = (i === currentMark) ? 'selected' : '';
                     selectHtml += `<option value="${i}" ${selected}>${i}</option>`;
@@ -1588,7 +1628,7 @@
                 
                 enrolled.forEach((enc, index) => {
                     const btn = document.createElement('button');
-                    btn.className = `px-4 py-1.5 text-xs md:text-sm font-bold rounded-full border transition-all ${index === 0 ? 'bg-quran-700 text-white border-quran-700 shadow-sm' : 'bg-white text-quran-700 border-quran-200 hover:bg-quran-50'}`;
+                    btn.className = `flex-none whitespace-nowrap px-4 py-2 text-sm font-bold rounded-full border transition-all ${index === 0 ? 'bg-quran-700 text-white border-quran-700 shadow-sm' : 'bg-white text-quran-700 border-quran-200 hover:bg-quran-50'}`;
                     btn.innerHTML = enc.classId === 'talaqqi' ? '<i data-lucide="book" class="w-3.5 h-3.5 inline mr-1"></i> Talaqqi Al-Quran' : '<i data-lucide="library" class="w-3.5 h-3.5 inline mr-1"></i> Kelas ABAHATA';
                     btn.onclick = () => switchPortalClass(index, btn);
                     selectorContainer.appendChild(btn);
@@ -1611,9 +1651,9 @@
             if (activeBtn) {
                 const container = document.getElementById('portal-class-selector');
                 Array.from(container.children).forEach(btn => {
-                    btn.className = 'px-4 py-1.5 text-xs md:text-sm font-bold rounded-full border transition-all bg-white text-quran-700 border-quran-200 hover:bg-quran-50';
+                    btn.className = 'flex-none whitespace-nowrap px-4 py-2 text-sm font-bold rounded-full border transition-all bg-white text-quran-700 border-quran-200 hover:bg-quran-50';
                 });
-                activeBtn.className = 'px-4 py-1.5 text-xs md:text-sm font-bold rounded-full border transition-all bg-quran-700 text-white border-quran-700 shadow-sm';
+                activeBtn.className = 'flex-none whitespace-nowrap px-4 py-2 text-sm font-bold rounded-full border transition-all bg-quran-700 text-white border-quran-700 shadow-sm';
             }
 
             renderStudentPortal(enc.student);
