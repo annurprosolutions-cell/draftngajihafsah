@@ -76,6 +76,22 @@
             background-color: #052e16;
             background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2315803d' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
+
+        /* --- Gaya Khas Sidebar Minimize & Expand --- */
+        .admin-sidebar-slim { width: 5rem !important; }
+        .admin-sidebar-expanded { width: 16rem !important; }
+        
+        .admin-sidebar-slim .sidebar-text { display: none !important; }
+        .admin-sidebar-expanded .sidebar-text { display: block !important; }
+        
+        .admin-sidebar-slim .sidebar-logo-wrapper { width: 3rem !important; height: 3rem !important; }
+        .admin-sidebar-expanded .sidebar-logo-wrapper { width: 6rem !important; height: 6rem !important; }
+        
+        .admin-sidebar-slim .nav-button { justify-content: center !important; padding-left: 0 !important; padding-right: 0 !important; }
+        .admin-sidebar-expanded .nav-button { justify-content: flex-start !important; padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
+        
+        .admin-sidebar-slim .nav-icon { margin-right: 0 !important; }
+        .admin-sidebar-expanded .nav-icon { margin-right: 0.75rem !important; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 antialiased h-screen w-screen overflow-hidden">
@@ -151,32 +167,42 @@
 
     <div id="app-wrapper" class="hidden h-full w-full flex">
         
-        <!-- Sidebar (Admin Sahaja) -->
-        <aside id="admin-sidebar" class="w-64 islamic-pattern-bg text-white hidden flex-col shadow-xl z-20 shrink-0">
-            <div class="p-6 flex flex-col items-center border-b border-quran-800">
-                <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-4 shadow-lg border-2 border-gold-500 overflow-hidden">
+        <!-- Sidebar (Admin Sahaja) - Bermula dengan Minimize (admin-sidebar-slim) -->
+        <aside id="admin-sidebar" class="admin-sidebar-slim islamic-pattern-bg text-white hidden flex-col shadow-xl z-20 shrink-0 relative transition-[width] duration-300">
+            
+            <!-- Butang Toggle Keluar/Masuk Sidebar -->
+            <button onclick="toggleSidebar()" class="hidden md:flex absolute -right-3.5 top-8 bg-gold-500 hover:bg-gold-600 text-white rounded-full p-1 shadow-lg border-2 border-white z-50 transition-transform">
+                <i data-lucide="chevron-right" id="sidebar-toggle-icon" class="w-4 h-4"></i>
+            </button>
+
+            <div class="p-6 flex flex-col items-center border-b border-quran-800 overflow-hidden">
+                <div class="sidebar-logo-wrapper w-12 h-12 transition-all duration-300 bg-white rounded-full flex items-center justify-center mb-4 shadow-lg border-2 border-gold-500 overflow-hidden shrink-0">
                     <img src="https://i.postimg.cc/TwZN5fP1/image.png" alt="Logo Kelas Mengaji Hafsah" class="w-full h-full object-contain p-1.5">
                 </div>
-                <h1 class="text-xl font-bold text-center font-arabic leading-tight text-gold-400">Kelas Mengaji<br>Hafsah</h1>
-                <p class="text-xs text-quran-100 mt-2 uppercase tracking-wider">Pemantauan Prestasi</p>
+                <h1 class="sidebar-text text-xl font-bold text-center font-arabic leading-tight text-gold-400 whitespace-nowrap">Kelas Mengaji<br>Hafsah</h1>
+                <p class="sidebar-text text-xs text-quran-100 mt-2 uppercase tracking-wider whitespace-nowrap">Pemantauan Prestasi</p>
             </div>
-            <nav class="flex-1 py-4">
-                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="w-full flex items-center px-6 py-3 text-sm font-medium bg-quran-800 border-l-4 border-gold-500 text-white transition-colors">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard Utama
+            <nav class="flex-1 py-4 overflow-x-hidden">
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" title="Dashboard Utama" class="nav-button w-full flex items-center text-sm font-medium bg-quran-800 border-l-4 border-gold-500 text-white transition-colors mt-1 py-3">
+                    <i data-lucide="layout-dashboard" class="nav-icon w-5 h-5 shrink-0"></i> 
+                    <span class="sidebar-text whitespace-nowrap">Dashboard Utama</span>
                 </button>
-                <button onclick="switchTab('students')" id="btn-students" class="w-full flex items-center px-6 py-3 text-sm font-medium text-quran-100 hover:bg-quran-800/50 hover:text-white border-l-4 border-transparent transition-colors mt-1">
-                    <i data-lucide="users" class="w-5 h-5 mr-3"></i> Senarai Pelajar
+                <button onclick="switchTab('students')" id="btn-students" title="Senarai Pelajar" class="nav-button w-full flex items-center text-sm font-medium text-quran-100 hover:bg-quran-800/50 hover:text-white border-l-4 border-transparent transition-colors mt-1 py-3">
+                    <i data-lucide="users" class="nav-icon w-5 h-5 shrink-0"></i> 
+                    <span class="sidebar-text whitespace-nowrap">Senarai Pelajar</span>
                 </button>
-                <button onclick="switchTab('settings')" id="btn-settings" class="w-full flex items-center px-6 py-3 text-sm font-medium text-quran-100 hover:bg-quran-800/50 hover:text-white border-l-4 border-transparent transition-colors mt-1">
-                    <i data-lucide="settings" class="w-5 h-5 mr-3"></i> Tetapan
+                <button onclick="switchTab('settings')" id="btn-settings" title="Tetapan" class="nav-button w-full flex items-center text-sm font-medium text-quran-100 hover:bg-quran-800/50 hover:text-white border-l-4 border-transparent transition-colors mt-1 py-3">
+                    <i data-lucide="settings" class="nav-icon w-5 h-5 shrink-0"></i> 
+                    <span class="sidebar-text whitespace-nowrap">Tetapan</span>
                 </button>
             </nav>
-            <div class="p-4 border-t border-quran-800 flex flex-col items-center">
-                <button onclick="logout()" class="w-full py-2 mb-3 bg-red-500/20 hover:bg-red-500/40 text-white rounded-lg text-xs font-medium transition flex items-center justify-center">
-                    <i data-lucide="log-out" class="w-4 h-4 mr-2"></i> Log Keluar
+            <div class="p-4 border-t border-quran-800 flex flex-col items-center overflow-x-hidden">
+                <button onclick="logout()" title="Log Keluar" class="nav-button w-full py-2.5 mb-3 bg-red-500/20 hover:bg-red-500/40 text-white rounded-lg text-xs font-medium transition flex items-center">
+                    <i data-lucide="log-out" class="nav-icon w-4 h-4 shrink-0"></i> 
+                    <span class="sidebar-text whitespace-nowrap">Log Keluar</span>
                 </button>
-                <div class="text-[10px] text-center text-quran-500 uppercase tracking-widest">
-                    &copy; Kelas Mengaji Hafsah 2026
+                <div class="sidebar-text text-[10px] text-center text-quran-500 uppercase tracking-widest whitespace-nowrap">
+                    &copy; KM Hafsah 2026
                 </div>
             </div>
         </aside>
@@ -708,6 +734,7 @@
         let sectionChartInstance = null;
         let portalRadarChartInstance = null;
         let currentEditingStudent = null; 
+        let isSidebarExpanded = false; // Status sidebar lalai
 
         // Fungsi Penjana Avatar Tempatan (Local SVG Avatar Generator)
         function generateAvatar(name) {
@@ -715,6 +742,24 @@
             if(!initials) initials = '?';
             const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100"><rect width="100" height="100" fill="#15803d"/><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" fill="#ffffff" font-family="sans-serif" font-size="45" font-weight="bold">${initials}</text></svg>`;
             return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
+        }
+
+        // Fungsi Toggle Sidebar
+        function toggleSidebar() {
+            isSidebarExpanded = !isSidebarExpanded;
+            const sidebar = document.getElementById('admin-sidebar');
+            const icon = document.getElementById('sidebar-toggle-icon');
+            
+            if (isSidebarExpanded) {
+                sidebar.classList.remove('admin-sidebar-slim');
+                sidebar.classList.add('admin-sidebar-expanded');
+                icon.setAttribute('data-lucide', 'chevron-left');
+            } else {
+                sidebar.classList.remove('admin-sidebar-expanded');
+                sidebar.classList.add('admin-sidebar-slim');
+                icon.setAttribute('data-lucide', 'chevron-right');
+            }
+            lucide.createIcons();
         }
 
         // Pemetaan Kumpulan (Sections)
@@ -966,6 +1011,19 @@
             // Paparkan Login Screen
             document.getElementById('login-screen').classList.remove('hidden');
             document.getElementById('app-wrapper').classList.add('hidden');
+            
+            // Reset state sidebar
+            isSidebarExpanded = false;
+            const sidebar = document.getElementById('admin-sidebar');
+            if (sidebar) {
+                sidebar.classList.remove('admin-sidebar-expanded');
+                sidebar.classList.add('admin-sidebar-slim');
+            }
+            const icon = document.getElementById('sidebar-toggle-icon');
+            if (icon) {
+                icon.setAttribute('data-lucide', 'chevron-right');
+                lucide.createIcons();
+            }
             
             // Sembunyikan semua tab untuk pastikan UI betul-betul bersih (reset)
             document.getElementById('tab-dashboard').classList.add('hidden');
@@ -1709,7 +1767,7 @@
                 const response = await fetch(APP_SCRIPT_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: newSearchParams({ payload: JSON.stringify(payload) })
+                    body: new URLSearchParams({ payload: JSON.stringify(payload) })
                 });
 
                 const result = await response.json();
@@ -1740,11 +1798,11 @@
             const btns = ['btn-dashboard', 'btn-students', 'btn-settings'];
             btns.forEach(id => {
                 const b = document.getElementById(id);
-                if (b) b.className = "w-full flex items-center px-6 py-3 text-sm font-medium text-quran-100 hover:bg-quran-800/50 hover:text-white border-l-4 border-transparent transition-colors mt-1";
+                if (b) b.className = "nav-button w-full flex items-center text-sm font-medium text-quran-100 hover:bg-quran-800/50 hover:text-white border-l-4 border-transparent transition-colors mt-1 py-3";
             });
             
             const activeBtn = document.getElementById('btn-' + tabId);
-            if (activeBtn) activeBtn.className = "w-full flex items-center px-6 py-3 text-sm font-medium bg-quran-800 border-l-4 border-gold-500 text-white transition-colors mt-1";
+            if (activeBtn) activeBtn.className = "nav-button w-full flex items-center text-sm font-medium bg-quran-800 border-l-4 border-gold-500 text-white transition-colors mt-1 py-3";
             
             document.getElementById('tab-' + tabId).classList.remove('hidden');
             document.getElementById('main-scroll-area').scrollTop = 0;
