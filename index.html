@@ -123,14 +123,20 @@
         .admin-sidebar-expanded .nav-icon { margin-right: 0.75rem !important; }
 
         /* --- Pengoptimuman Peranti Mudah Alih (Mobile-First CSS) --- */
-        /* Halang Auto-Zoom pada peranti iOS (Safari) apabila mengisi borang */
         input[type="text"], input[type="password"], input[type="file"], select, textarea {
             font-size: 16px !important;
         }
-
-        /* Sembunyikan scrollbar untuk paparan tab melintang yang kemas */
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .mobile-nav-active {
+            background-color: #000 !important;
+            color: #fff !important;
+            border-top-color: #eab308 !important; 
+        }
+
+        /* Pengurusan Page Break PDF */
+        .pdf-page-break { page-break-before: always !important; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 antialiased h-screen w-screen overflow-hidden">
@@ -206,10 +212,9 @@
 
     <div id="app-wrapper" class="hidden h-full w-full flex">
         
-        <!-- Sidebar (Admin Sahaja) - Bermula dengan Minimize (admin-sidebar-slim) -->
+        <!-- Sidebar (Admin Sahaja) -->
         <aside id="admin-sidebar" class="admin-sidebar-slim islamic-pattern-bg text-white hidden flex-col shadow-xl z-20 shrink-0 relative transition-[width] duration-300">
-            
-            <!-- Butang Toggle Keluar/Masuk Sidebar -->
+            <!-- Butang Toggle -->
             <button onclick="toggleSidebar()" class="hidden md:flex absolute -right-3.5 top-8 bg-gold-500 hover:bg-gold-600 text-white rounded-full p-1 shadow-lg border-2 border-white z-50 transition-transform">
                 <i data-lucide="chevron-right" id="sidebar-toggle-icon" class="w-4 h-4"></i>
             </button>
@@ -249,8 +254,8 @@
         <!-- Kawasan Kandungan Utama -->
         <main class="flex-1 flex flex-col h-full overflow-hidden bg-gray-50 relative">
             
-            <!-- Mobile Header (Admin Sahaja) -->
-            <header id="admin-mobile-header" class="hidden islamic-pattern-bg text-white p-3.5 justify-between items-center shadow-md z-20 shrink-0">
+            <!-- Mobile Header (Admin Sahaja) - Tanpa Menu Hamburg -->
+            <header id="admin-mobile-header" class="hidden md:hidden islamic-pattern-bg text-white p-3.5 justify-between items-center shadow-md z-20 shrink-0">
                 <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-gold-500 overflow-hidden shrink-0">
                         <img src="https://i.postimg.cc/TwZN5fP1/image.png" alt="Logo" class="w-full h-full object-contain p-0.5">
@@ -258,30 +263,14 @@
                     <h1 class="font-bold font-arabic text-gold-400 leading-tight text-lg">Kelas Mengaji<br><span class="text-xs font-sans text-quran-100 uppercase tracking-wide">Hafsah</span></h1>
                 </div>
                 <div class="flex items-center">
-                    <button onclick="logout()" class="mr-4 text-white hover:text-red-300">
-                        <i data-lucide="log-out" class="w-5 h-5"></i>
-                    </button>
-                    <button onclick="toggleMobileMenu()" class="text-white hover:text-gold-400 transition">
-                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    <button onclick="logout()" class="text-white hover:text-red-300 flex items-center text-sm font-medium px-2">
+                        <i data-lucide="log-out" class="w-5 h-5 mr-1.5"></i> Keluar
                     </button>
                 </div>
             </header>
 
-            <!-- Mobile Menu -->
-            <div id="mobile-menu" class="hidden absolute top-[60px] left-0 w-full islamic-pattern-bg text-white z-30 shadow-xl border-b border-quran-800">
-                <button onclick="switchTab('dashboard'); toggleMobileMenu()" class="w-full flex items-center px-6 py-4 text-sm font-medium border-b border-quran-800">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard
-                </button>
-                <button onclick="switchTab('students'); toggleMobileMenu()" class="w-full flex items-center px-6 py-4 text-sm font-medium border-b border-quran-800">
-                    <i data-lucide="users" class="w-5 h-5 mr-3"></i> Senarai Pelajar
-                </button>
-                <button onclick="switchTab('settings'); toggleMobileMenu()" class="w-full flex items-center px-6 py-4 text-sm font-medium">
-                    <i data-lucide="settings" class="w-5 h-5 mr-3"></i> Tetapan
-                </button>
-            </div>
-
             <!-- Scrollable Content -->
-            <div class="flex-1 overflow-y-auto w-full relative scroll-smooth" id="main-scroll-area">
+            <div class="flex-1 overflow-y-auto w-full relative scroll-smooth pb-24 md:pb-0" id="main-scroll-area">
                 
                 <!-- Pemilih Kelas (Boleh-skrol melintang) -->
                 <div id="class-selector-container" class="hidden p-4 md:p-8 pb-0 flex-wrap bg-gray-50 z-10 sticky top-0 border-b border-gray-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
@@ -393,7 +382,7 @@
                         <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
                             <div class="relative w-full md:w-64">
                                 <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
-                                <input type="text" id="search-input" onkeyup="filterStudents()" placeholder="Cari nama pelajar atau IC..." class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-quran-500 focus:border-transparent text-sm">
+                                <input type="text" id="search-input" onkeyup="filterStudents()" placeholder="Cari nama atau IC..." class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-quran-500 focus:border-transparent text-sm">
                             </div>
                             <button onclick="toggleAddStudentModal()" class="w-full md:w-auto px-4 py-2.5 bg-quran-700 hover:bg-quran-800 text-white rounded-lg text-sm font-medium transition flex items-center justify-center whitespace-nowrap shadow-sm">
                                 <i data-lucide="user-plus" class="w-4 h-4 mr-2"></i> Tambah Pelajar
@@ -522,25 +511,39 @@
                                 </div>
                             </div>
                             
-                            <!-- Score & Highlights -->
-                            <div class="space-y-6">
+                            <!-- Score & Highlights (4 Kategori) -->
+                            <div class="space-y-4">
                                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center flex flex-col justify-center min-h-[160px]">
                                     <p class="text-sm text-gray-500 font-medium mb-2">Markah Keseluruhan</p>
-                                    <div class="text-5xl md:text-6xl font-bold text-quran-700 tracking-tight" id="portal-overall-score">0%</div>
+                                    <div class="text-5xl md:text-6xl font-bold tracking-tight" id="portal-overall-score">0%</div>
                                 </div>
                                 
-                                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                                    <h4 class="font-bold text-gray-800 mb-3 flex items-center text-sm border-b border-gray-100 pb-2">
-                                        <i data-lucide="check-circle-2" class="w-4 h-4 mr-2 text-green-500"></i> Cemerlang (≥ 80%)
+                                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                                    <h4 class="font-bold text-gray-800 mb-2 flex items-center text-sm border-b border-gray-50 pb-2">
+                                        <i data-lucide="award" class="w-4 h-4 mr-2 text-emerald-500"></i> Cemerlang (≥ 90%)
                                     </h4>
-                                    <ul id="portal-good-points" class="space-y-1 text-sm text-gray-600 max-h-[150px] overflow-y-auto pr-2 custom-scrollbar"></ul>
+                                    <ul id="portal-cemerlang" class="space-y-1 text-sm text-gray-600 max-h-[100px] overflow-y-auto pr-1 custom-scrollbar"></ul>
                                 </div>
                                 
-                                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                                    <h4 class="font-bold text-gray-800 mb-3 flex items-center text-sm border-b border-gray-100 pb-2">
-                                        <i data-lucide="alert-circle" class="w-4 h-4 mr-2 text-red-500"></i> Perlu Penekanan (< 80%)
+                                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                                    <h4 class="font-bold text-gray-800 mb-2 flex items-center text-sm border-b border-gray-50 pb-2">
+                                        <i data-lucide="check-circle-2" class="w-4 h-4 mr-2 text-green-500"></i> Baik (70 - 89%)
                                     </h4>
-                                    <ul id="portal-weak-points" class="space-y-1 text-sm text-gray-600 max-h-[150px] overflow-y-auto pr-2 custom-scrollbar"></ul>
+                                    <ul id="portal-baik" class="space-y-1 text-sm text-gray-600 max-h-[100px] overflow-y-auto pr-1 custom-scrollbar"></ul>
+                                </div>
+                                
+                                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                                    <h4 class="font-bold text-gray-800 mb-2 flex items-center text-sm border-b border-gray-50 pb-2">
+                                        <i data-lucide="alert-triangle" class="w-4 h-4 mr-2 text-orange-500"></i> Sederhana (41 - 69%)
+                                    </h4>
+                                    <ul id="portal-sederhana" class="space-y-1 text-sm text-gray-600 max-h-[100px] overflow-y-auto pr-1 custom-scrollbar"></ul>
+                                </div>
+                                
+                                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                                    <h4 class="font-bold text-gray-800 mb-2 flex items-center text-sm border-b border-gray-50 pb-2">
+                                        <i data-lucide="alert-circle" class="w-4 h-4 mr-2 text-red-500"></i> Lemah (≤ 40%)
+                                    </h4>
+                                    <ul id="portal-lemah" class="space-y-1 text-sm text-gray-600 max-h-[100px] overflow-y-auto pr-1 custom-scrollbar"></ul>
                                 </div>
                             </div>
                         </div>
@@ -576,6 +579,23 @@
                 </div>
 
             </div>
+            
+            <!-- Bottom Navigation untuk Paparan Mobile Admin -->
+            <nav id="admin-bottom-nav" class="md:hidden fixed bottom-0 left-0 w-full bg-gray-900 text-gray-400 z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.3)] hidden justify-around items-center">
+                <button onclick="switchTab('dashboard')" id="btn-mobile-dashboard" class="mobile-nav-btn flex-1 flex flex-col items-center py-2.5 border-t-4 border-transparent hover:text-white transition-all">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 mb-1"></i>
+                    <span class="text-[10px] font-bold tracking-wider">UTAMA</span>
+                </button>
+                <button onclick="switchTab('students')" id="btn-mobile-students" class="mobile-nav-btn flex-1 flex flex-col items-center py-2.5 border-t-4 border-transparent hover:text-white transition-all">
+                    <i data-lucide="users" class="w-5 h-5 mb-1"></i>
+                    <span class="text-[10px] font-bold tracking-wider">PELAJAR</span>
+                </button>
+                <button onclick="switchTab('settings')" id="btn-mobile-settings" class="mobile-nav-btn flex-1 flex flex-col items-center py-2.5 border-t-4 border-transparent hover:text-white transition-all">
+                    <i data-lucide="settings" class="w-5 h-5 mb-1"></i>
+                    <span class="text-[10px] font-bold tracking-wider">TETAPAN</span>
+                </button>
+            </nav>
+            
         </main>
     </div>
 
@@ -619,25 +639,40 @@
                             </div>
                         </div>
 
+                        <!-- Score & Highlights Modal (4 Kategori) -->
                         <div class="space-y-4">
                             <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm text-center">
                                 <p class="text-sm text-gray-500 mb-1">Skor Keseluruhan</p>
-                                <div class="text-4xl font-bold text-quran-700" id="modal-overall-score">0%</div>
+                                <div class="text-4xl font-bold" id="modal-overall-score">0%</div>
                                 <p class="text-xs text-gray-400 mt-2">Berdasarkan markah asas pangkalan data</p>
                             </div>
 
-                            <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
-                                <h4 class="font-bold text-gray-800 mb-3 flex items-center text-sm">
-                                    <i data-lucide="check-circle-2" class="w-4 h-4 mr-2 text-green-500"></i> Penguasaan Baik
+                            <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                                <h4 class="font-bold text-gray-800 mb-2 flex items-center text-sm border-b border-gray-50 pb-2">
+                                    <i data-lucide="award" class="w-4 h-4 mr-2 text-emerald-500"></i> Cemerlang (≥ 90%)
                                 </h4>
-                                <ul id="modal-good-points" class="space-y-2 text-sm text-gray-600 max-h-[120px] overflow-y-auto custom-scrollbar"></ul>
+                                <ul id="modal-cemerlang" class="space-y-1.5 text-sm text-gray-600 max-h-[100px] overflow-y-auto custom-scrollbar"></ul>
                             </div>
-
-                            <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
-                                <h4 class="font-bold text-gray-800 mb-3 flex items-center text-sm">
-                                    <i data-lucide="alert-circle" class="w-4 h-4 mr-2 text-red-500"></i> Perlu Latihan
+                            
+                            <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                                <h4 class="font-bold text-gray-800 mb-2 flex items-center text-sm border-b border-gray-50 pb-2">
+                                    <i data-lucide="check-circle-2" class="w-4 h-4 mr-2 text-green-500"></i> Baik (70 - 89%)
                                 </h4>
-                                <ul id="modal-weak-points" class="space-y-2 text-sm text-gray-600 max-h-[120px] overflow-y-auto custom-scrollbar"></ul>
+                                <ul id="modal-baik" class="space-y-1.5 text-sm text-gray-600 max-h-[100px] overflow-y-auto custom-scrollbar"></ul>
+                            </div>
+                            
+                            <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                                <h4 class="font-bold text-gray-800 mb-2 flex items-center text-sm border-b border-gray-50 pb-2">
+                                    <i data-lucide="alert-triangle" class="w-4 h-4 mr-2 text-orange-500"></i> Sederhana (41 - 69%)
+                                </h4>
+                                <ul id="modal-sederhana" class="space-y-1.5 text-sm text-gray-600 max-h-[100px] overflow-y-auto custom-scrollbar"></ul>
+                            </div>
+                            
+                            <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                                <h4 class="font-bold text-gray-800 mb-2 flex items-center text-sm border-b border-gray-50 pb-2">
+                                    <i data-lucide="alert-circle" class="w-4 h-4 mr-2 text-red-500"></i> Lemah (≤ 40%)
+                                </h4>
+                                <ul id="modal-lemah" class="space-y-1.5 text-sm text-gray-600 max-h-[100px] overflow-y-auto custom-scrollbar"></ul>
                             </div>
                         </div>
                     </div>
@@ -961,6 +996,10 @@
                             document.getElementById('class-selector-container').classList.remove('hidden');
                             document.getElementById('class-selector-container').classList.add('flex');
                             
+                            // Paparkan Bottom Nav Bar untuk Admin di telefon
+                            document.getElementById('admin-bottom-nav').classList.remove('hidden');
+                            document.getElementById('admin-bottom-nav').classList.add('flex');
+                            
                             switchTab('dashboard'); 
                             fetchData(false);
                         } else {
@@ -1051,6 +1090,13 @@
             // Paparkan Login Screen
             document.getElementById('login-screen').classList.remove('hidden');
             document.getElementById('app-wrapper').classList.add('hidden');
+            
+            // Sembunyikan Nav Bottom Mobile jika Admin Logout
+            const adminBottomNav = document.getElementById('admin-bottom-nav');
+            if (adminBottomNav) {
+                adminBottomNav.classList.add('hidden');
+                adminBottomNav.classList.remove('flex');
+            }
             
             // Reset state sidebar
             isSidebarExpanded = false;
@@ -1320,9 +1366,11 @@
             document.getElementById('no-student-msg').classList.add('hidden');
 
             globalData.students.forEach((student, index) => {
-                let badgeClass = "bg-green-100 text-green-800";
-                if(student.overallAvg < 50) badgeClass = "bg-red-100 text-red-800";
-                else if(student.overallAvg < 80) badgeClass = "bg-yellow-100 text-yellow-800";
+                let badgeClass = "";
+                if(student.overallAvg >= 90) badgeClass = "bg-emerald-100 text-emerald-800 font-bold";
+                else if(student.overallAvg >= 70) badgeClass = "bg-green-100 text-green-800";
+                else if(student.overallAvg >= 41) badgeClass = "bg-orange-100 text-orange-800";
+                else badgeClass = "bg-red-100 text-red-800";
 
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-gray-50 transition cursor-pointer";
@@ -1384,22 +1432,22 @@
 
             document.getElementById('modal-student-name').textContent = student.nama;
             document.getElementById('modal-student-ic').textContent = student.ic || 'Tiada Rekod IC';
-            document.getElementById('modal-overall-score').textContent = student.overallAvg.toFixed(1) + '%';
             
             const modalPic = document.getElementById('modal-student-pic');
             modalPic.src = student.picUrl;
-            modalPic.onerror = function() {
-                this.src = generateAvatar(student.nama);
-            };
+            modalPic.onerror = function() { this.src = generateAvatar(student.nama); };
 
             const scoreEl = document.getElementById('modal-overall-score');
-            scoreEl.className = `text-4xl font-bold ${student.overallAvg >= 80 ? 'text-green-600' : (student.overallAvg >= 50 ? 'text-yellow-500' : 'text-red-500')}`;
+            scoreEl.textContent = student.overallAvg.toFixed(1) + '%';
+            scoreEl.className = `text-4xl font-bold ${student.overallAvg >= 90 ? 'text-emerald-600' : (student.overallAvg >= 70 ? 'text-green-600' : (student.overallAvg >= 41 ? 'text-orange-500' : 'text-red-600'))}`;
 
-            const ulGood = document.getElementById('modal-good-points');
-            const ulWeak = document.getElementById('modal-weak-points');
+            const ulCemerlang = document.getElementById('modal-cemerlang');
+            const ulBaik = document.getElementById('modal-baik');
+            const ulSederhana = document.getElementById('modal-sederhana');
+            const ulLemah = document.getElementById('modal-lemah');
             const tbodyDetail = document.getElementById('modal-detail-table');
             
-            ulGood.innerHTML = ''; ulWeak.innerHTML = ''; tbodyDetail.innerHTML = '';
+            ulCemerlang.innerHTML = ''; ulBaik.innerHTML = ''; ulSederhana.innerHTML = ''; ulLemah.innerHTML = ''; tbodyDetail.innerHTML = '';
 
             globalData.sectionsList.forEach(section => {
                 const secRow = document.createElement('tr');
@@ -1421,30 +1469,42 @@
 
                     const li = document.createElement('li');
                     li.className = "flex justify-between border-b border-gray-50 pb-1.5 pt-1 last:border-0";
-                    li.innerHTML = `<span class="truncate pr-2 text-xs" title="${header}">${header}</span> <strong class="text-xs">${pct.toFixed(0)}%</strong>`;
                     
-                    if (pct >= 80) ulGood.appendChild(li);
-                    else ulWeak.appendChild(li);
+                    let colorClass = "";
+                    let targetUl = null;
+                    if (pct >= 90) { colorClass = "text-emerald-600"; targetUl = ulCemerlang; }
+                    else if (pct >= 70) { colorClass = "text-green-600"; targetUl = ulBaik; }
+                    else if (pct >= 41) { colorClass = "text-orange-500"; targetUl = ulSederhana; }
+                    else { colorClass = "text-red-600"; targetUl = ulLemah; }
+
+                    li.innerHTML = `<span class="truncate pr-2 text-xs" title="${header}">${header}</span> <strong class="text-xs ${colorClass}">${pct.toFixed(0)}%</strong>`;
+                    targetUl.appendChild(li);
+
+                    let dotClass = pct >= 90 ? 'bg-emerald-400' : (pct >= 70 ? 'bg-green-400' : (pct >= 41 ? 'bg-orange-400' : 'bg-red-400'));
+                    let badgeClass = pct >= 90 ? 'text-emerald-600' : (pct >= 70 ? 'text-green-600' : (pct >= 41 ? 'text-orange-600' : 'text-red-600'));
 
                     const tr = document.createElement('tr');
                     tr.className = "hover:bg-gray-50 transition";
                     tr.innerHTML = `
                         <td class="px-5 py-2 border-b border-gray-50 pl-8 relative text-xs">
-                            <div class="absolute left-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full ${pct >= 80 ? 'bg-green-400' : (pct >= 50 ? 'bg-yellow-400' : 'bg-red-400')}"></div>
+                            <div class="absolute left-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full ${dotClass}"></div>
                             ${header}
                         </td>
                         <td class="px-5 py-2 border-b border-gray-50 text-center font-medium text-xs">${mark}</td>
                         <td class="px-5 py-2 border-b border-gray-50 text-center text-gray-500 text-xs">${base}</td>
                         <td class="px-5 py-2 border-b border-gray-50 text-center text-xs">
-                            <span class="${pct >= 80 ? 'text-green-600' : (pct >= 50 ? 'text-yellow-600' : 'text-red-600')} font-bold">${pct.toFixed(1)}%</span>
+                            <span class="${badgeClass} font-bold">${pct.toFixed(1)}%</span>
                         </td>
                     `;
                     tbodyDetail.appendChild(tr);
                 });
             });
 
-            if(ulGood.children.length === 0) ulGood.innerHTML = "<li class='text-gray-400 italic text-xs'>Tiada yang melepasi 80%. Teruskan usaha.</li>";
-            if(ulWeak.children.length === 0) ulWeak.innerHTML = "<li class='text-gray-400 italic text-xs'>Tahniah, tiada kelemahan ketara!</li>";
+            const emptyMsg = "<li class='text-gray-400 italic text-xs py-1'>Tiada rekod.</li>";
+            if(ulCemerlang.children.length === 0) ulCemerlang.innerHTML = emptyMsg;
+            if(ulBaik.children.length === 0) ulBaik.innerHTML = emptyMsg;
+            if(ulSederhana.children.length === 0) ulSederhana.innerHTML = emptyMsg;
+            if(ulLemah.children.length === 0) ulLemah.innerHTML = emptyMsg;
 
             const radarLabels = globalData.sectionsList;
             const radarData = radarLabels.map(s => student.sectionScores[s]);
@@ -1530,7 +1590,7 @@
                 const wrapper = document.createElement('div');
                 wrapper.className = "bg-gray-50 p-3 rounded-lg border border-gray-100";
                 
-                let selectHtml = `<select id="edit-mark-${header}" class="w-full mt-1.5 px-2 py-2 bg-white border border-gray-200 rounded-md text-sm focus:ring-quran-500 font-medium">`;
+                let selectHtml = `<select id="edit-mark-${header}" class="w-full mt-1.5 px-2 py-1.5 bg-white border border-gray-200 rounded-md text-sm focus:ring-quran-500 font-medium">`;
                 for (let i = 0; i <= maxMark; i++) {
                     const selected = (i === currentMark) ? 'selected' : '';
                     selectHtml += `<option value="${i}" ${selected}>${i}</option>`;
@@ -1613,6 +1673,12 @@
             document.getElementById('tab-dashboard').classList.add('hidden');
             document.getElementById('tab-students').classList.add('hidden');
             document.getElementById('tab-settings').classList.add('hidden');
+            
+            const adminBottomNav = document.getElementById('admin-bottom-nav');
+            if (adminBottomNav) {
+                adminBottomNav.classList.add('hidden');
+                adminBottomNav.classList.remove('flex');
+            }
 
             // Tunjuk Tab Portal Pelajar
             document.getElementById('tab-student-portal').classList.remove('hidden');
@@ -1672,13 +1738,15 @@
 
             const scoreEl = document.getElementById('portal-overall-score');
             scoreEl.textContent = student.overallAvg.toFixed(1) + '%';
-            scoreEl.className = `text-5xl md:text-6xl font-bold tracking-tight ${student.overallAvg >= 80 ? 'text-green-600' : (student.overallAvg >= 50 ? 'text-yellow-500' : 'text-red-500')}`;
+            scoreEl.className = `text-5xl md:text-6xl font-bold tracking-tight ${student.overallAvg >= 90 ? 'text-emerald-600' : (student.overallAvg >= 70 ? 'text-green-600' : (student.overallAvg >= 41 ? 'text-orange-500' : 'text-red-500'))}`;
 
-            const ulGood = document.getElementById('portal-good-points');
-            const ulWeak = document.getElementById('portal-weak-points');
+            const ulCemerlang = document.getElementById('portal-cemerlang');
+            const ulBaik = document.getElementById('portal-baik');
+            const ulSederhana = document.getElementById('portal-sederhana');
+            const ulLemah = document.getElementById('portal-lemah');
             const tbodyDetail = document.getElementById('portal-detail-table');
             
-            ulGood.innerHTML = ''; ulWeak.innerHTML = ''; tbodyDetail.innerHTML = '';
+            ulCemerlang.innerHTML = ''; ulBaik.innerHTML = ''; ulSederhana.innerHTML = ''; ulLemah.innerHTML = ''; tbodyDetail.innerHTML = '';
 
             globalData.sectionsList.forEach(section => {
                 const secRow = document.createElement('tr');
@@ -1702,22 +1770,31 @@
 
                     const li = document.createElement('li');
                     li.className = "flex justify-between border-b border-gray-50 pb-2 pt-2 last:border-0 text-[13px] md:text-sm";
-                    li.innerHTML = `<span class="truncate pr-2 text-gray-700" title="${header}">${header}</span> <strong class="${pct >= 80 ? 'text-green-600' : (pct >= 50 ? 'text-yellow-600' : 'text-red-600')}">${pct.toFixed(0)}%</strong>`;
                     
-                    if (pct >= 80) ulGood.appendChild(li);
-                    else ulWeak.appendChild(li);
+                    let colorClass = "";
+                    let targetUl = null;
+                    if (pct >= 90) { colorClass = "text-emerald-600"; targetUl = ulCemerlang; }
+                    else if (pct >= 70) { colorClass = "text-green-600"; targetUl = ulBaik; }
+                    else if (pct >= 41) { colorClass = "text-orange-500"; targetUl = ulSederhana; }
+                    else { colorClass = "text-red-600"; targetUl = ulLemah; }
+
+                    li.innerHTML = `<span class="truncate pr-2 text-gray-700" title="${header}">${header}</span> <strong class="${colorClass}">${pct.toFixed(0)}%</strong>`;
+                    targetUl.appendChild(li);
+
+                    let dotClass = pct >= 90 ? 'bg-emerald-400' : (pct >= 70 ? 'bg-green-400' : (pct >= 41 ? 'bg-orange-400' : 'bg-red-400'));
+                    let badgeClass = pct >= 90 ? 'bg-emerald-50 text-emerald-700' : (pct >= 70 ? 'bg-green-50 text-green-700' : (pct >= 41 ? 'bg-orange-50 text-orange-700' : 'bg-red-50 text-red-700'));
 
                     const tr = document.createElement('tr');
                     tr.className = "hover:bg-gray-50 transition";
                     tr.innerHTML = `
                         <td class="px-4 py-3 border-b border-gray-50 pl-6 md:pl-8 relative text-xs md:text-sm font-medium text-gray-700">
-                            <div class="absolute left-2 md:left-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full ${pct >= 80 ? 'bg-green-400' : (pct >= 50 ? 'bg-yellow-400' : 'bg-red-400')}"></div>
+                            <div class="absolute left-2 md:left-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full ${dotClass}"></div>
                             ${header}
                         </td>
                         <td class="px-4 py-3 border-b border-gray-50 text-center font-bold text-xs md:text-sm text-gray-800">${mark}</td>
                         <td class="px-4 py-3 border-b border-gray-50 text-center text-gray-400 text-xs md:text-sm">${base}</td>
                         <td class="px-4 py-3 border-b border-gray-50 text-center text-xs md:text-sm">
-                            <span class="${pct >= 80 ? 'bg-green-50 text-green-700' : (pct >= 50 ? 'bg-yellow-50 text-yellow-700' : 'bg-red-50 text-red-700')} px-2 py-1 rounded font-bold">
+                            <span class="${badgeClass} px-2 py-1 rounded font-bold">
                                 ${pct.toFixed(1)}%
                             </span>
                         </td>
@@ -1726,8 +1803,11 @@
                 });
             });
 
-            if(ulGood.children.length === 0) ulGood.innerHTML = "<li class='text-gray-400 italic text-sm py-2 text-center'>Tiada yang melepasi 80%. Teruskan usaha.</li>";
-            if(ulWeak.children.length === 0) ulWeak.innerHTML = "<li class='text-gray-400 italic text-sm py-2 text-center'>Tahniah, penguasaan yang sangat baik!</li>";
+            const emptyMsg = "<li class='text-gray-400 italic text-sm py-2 text-center'>Tiada rekod.</li>";
+            if(ulCemerlang.children.length === 0) ulCemerlang.innerHTML = emptyMsg;
+            if(ulBaik.children.length === 0) ulBaik.innerHTML = emptyMsg;
+            if(ulSederhana.children.length === 0) ulSederhana.innerHTML = emptyMsg;
+            if(ulLemah.children.length === 0) ulLemah.innerHTML = emptyMsg;
 
             // Render Radar Pelajar Dalam Portal
             const radarLabels = globalData.sectionsList;
@@ -1835,6 +1915,7 @@
             document.getElementById('tab-settings').classList.add('hidden');
             document.getElementById('tab-student-portal').classList.add('hidden');
 
+            // Tetapkan Butang Desktop Sidebar
             const btns = ['btn-dashboard', 'btn-students', 'btn-settings'];
             btns.forEach(id => {
                 const b = document.getElementById(id);
@@ -1844,6 +1925,16 @@
             const activeBtn = document.getElementById('btn-' + tabId);
             if (activeBtn) activeBtn.className = "nav-button w-full flex items-center text-sm font-medium bg-quran-800 border-l-4 border-gold-500 text-white transition-colors mt-1 py-3";
             
+            // Tetapkan Butang Mobile Bottom Tab Nav
+            const mobileBtns = ['btn-mobile-dashboard', 'btn-mobile-students', 'btn-mobile-settings'];
+            mobileBtns.forEach(id => {
+                const b = document.getElementById(id);
+                if (b) b.className = "mobile-nav-btn flex-1 flex flex-col items-center py-2.5 border-t-4 border-transparent hover:text-white transition-all";
+            });
+            
+            const activeMobileBtn = document.getElementById('btn-mobile-' + tabId);
+            if (activeMobileBtn) activeMobileBtn.className = "mobile-nav-btn mobile-nav-active flex-1 flex flex-col items-center py-2.5 border-t-4 transition-all shadow-inner";
+
             document.getElementById('tab-' + tabId).classList.remove('hidden');
             document.getElementById('main-scroll-area').scrollTop = 0;
         }
@@ -2026,7 +2117,7 @@
             if(tableContainer) tableContainer.classList.add('pdf-page-break'); // Paksa letak page break sebelum jadual mula
 
             const opt = {
-                margin: [0.4, 0.4],
+                margin: [0.5, 0.4], // Margin 0.5 inci atas/bawah
                 filename: `Laporan_${currentEditingStudent.nama.replace(/\s+/g, '_')}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true, windowWidth: 1024, scrollY: 0, scrollX: 0 },
@@ -2073,7 +2164,7 @@
             if(tableContainer) tableContainer.classList.add('pdf-page-break'); // Paksa muka surat baharu bermula di sini
 
             const opt = {
-                margin: [0.4, 0.4], 
+                margin: [0.5, 0.4], // Margin 0.5 inci atas/bawah
                 filename: `Profil_Prestasi_${currentLoggedInStudent.nama.replace(/\s+/g, '_')}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true, windowWidth: 1024, scrollY: 0, scrollX: 0 },
