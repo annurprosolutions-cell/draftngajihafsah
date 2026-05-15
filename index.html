@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kelas Mengaji Hafsah - Portal</title>
     
-    <!-- PWA / Home Screen App Icons & Meta Tags -->
     <link rel="icon" type="image/png" href="https://i.postimg.cc/TwZN5fP1/image.png">
     <link rel="apple-touch-icon" href="https://i.postimg.cc/TwZN5fP1/image.png">
     <meta name="apple-mobile-web-app-title" content="KM Hafsah">
@@ -14,7 +13,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#052e16">
     
-    <!-- Dynamic Manifest Generator for PWA -->
     <script>
         const manifestJSON = {
             "name": "Kelas Mengaji Hafsah",
@@ -42,22 +40,16 @@
         document.write('<link rel="manifest" href="' + manifestURL + '">');
     </script>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- PapaParse for CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     
-    <!-- HTML2PDF for PDF Generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
 
     <script>
@@ -144,11 +136,9 @@
     <div id="login-screen" class="fixed inset-0 z-[100] flex items-center justify-center islamic-pattern-bg p-4 transition-opacity duration-300 overflow-y-auto">
         <div class="bg-white p-8 md:p-10 rounded-3xl shadow-2xl w-full max-w-md relative overflow-hidden my-auto">
             
-            <!-- Decoration -->
             <div class="absolute top-0 right-0 w-32 h-32 bg-gold-400 rounded-bl-full opacity-10 -mr-10 -mt-10"></div>
             <div class="absolute bottom-0 left-0 w-32 h-32 bg-quran-600 rounded-tr-full opacity-10 -ml-10 -mb-10"></div>
 
-            <!-- Student Login Form -->
             <div id="student-login-form" class="relative z-10 transition-all duration-300">
                 <div class="flex flex-col items-center mb-8 text-center">
                     <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-gold-500 overflow-hidden mb-4">
@@ -178,7 +168,6 @@
                 </div>
             </div>
 
-            <!-- Admin Login Form -->
             <div id="admin-login-form" class="relative z-10 hidden transition-all duration-300">
                 <div class="flex flex-col items-center mb-8 text-center">
                     <div class="w-16 h-16 bg-quran-50 rounded-2xl flex items-center justify-center border border-quran-100 mb-4 text-quran-700">
@@ -212,9 +201,7 @@
 
     <div id="app-wrapper" class="hidden h-full w-full flex">
         
-        <!-- Sidebar (Admin Sahaja) -->
-        <aside id="admin-sidebar" class="admin-sidebar-slim islamic-pattern-bg text-white hidden flex-col shadow-xl z-20 shrink-0 relative transition-[width] duration-300">
-            <!-- Butang Toggle -->
+        <aside id="admin-sidebar" class="hidden islamic-pattern-bg text-white shadow-xl z-20 shrink-0 relative transition-[width] duration-300">
             <button onclick="toggleSidebar()" class="hidden md:flex absolute -right-3.5 top-8 bg-gold-500 hover:bg-gold-600 text-white rounded-full p-1 shadow-lg border-2 border-white z-50 transition-transform">
                 <i data-lucide="chevron-right" id="sidebar-toggle-icon" class="w-4 h-4"></i>
             </button>
@@ -246,16 +233,14 @@
                     <span class="sidebar-text whitespace-nowrap">Log Keluar</span>
                 </button>
                 <div class="sidebar-text text-[10px] text-center text-quran-500 uppercase tracking-widest whitespace-nowrap">
-                    &copy; KM Hafsah 2026
+                    © KM Hafsah 2026
                 </div>
             </div>
         </aside>
 
-        <!-- Kawasan Kandungan Utama -->
         <main class="flex-1 flex flex-col h-full overflow-hidden bg-gray-50 relative">
             
-            <!-- Mobile Header (Admin Sahaja) - Tanpa Menu Hamburg -->
-            <header id="admin-mobile-header" class="hidden md:hidden islamic-pattern-bg text-white p-3.5 justify-between items-center shadow-md z-20 shrink-0">
+            <header id="admin-mobile-header" class="hidden islamic-pattern-bg text-white p-3.5 justify-between items-center shadow-md z-20 shrink-0">
                 <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-gold-500 overflow-hidden shrink-0">
                         <img src="https://i.postimg.cc/TwZN5fP1/image.png" alt="Logo" class="w-full h-full object-contain p-0.5">
@@ -269,10 +254,8 @@
                 </div>
             </header>
 
-            <!-- Scrollable Content -->
             <div class="flex-1 overflow-y-auto w-full relative scroll-smooth pb-24 md:pb-0" id="main-scroll-area">
                 
-                <!-- Pemilih Kelas (Boleh-skrol melintang) -->
                 <div id="class-selector-container" class="hidden p-4 md:p-8 pb-0 flex-wrap bg-gray-50 z-10 sticky top-0 border-b border-gray-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
                     <div class="flex overflow-x-auto hide-scrollbar bg-white p-1.5 rounded-xl border border-gray-200 shadow-sm w-full md:w-max items-center mb-4 md:mb-6">
                         <button onclick="setClass('talaqqi')" id="btn-class-talaqqi" class="flex-none whitespace-nowrap px-5 py-2.5 rounded-lg bg-quran-700 text-white font-medium text-sm transition-all shadow-sm">
@@ -284,13 +267,11 @@
                     </div>
                 </div>
 
-                <!-- Loading State -->
                 <div id="loading-state" class="hidden flex-col items-center justify-center py-20">
                     <i data-lucide="loader-2" class="w-12 h-12 text-quran-600 animate-spin mb-4"></i>
                     <p class="text-quran-800 font-medium animate-pulse">Menarik data daripada Google Sheets...</p>
                 </div>
 
-                <!-- Error State -->
                 <div id="error-state" class="hidden flex-col items-center justify-center py-20 text-center">
                     <i data-lucide="alert-triangle" class="w-16 h-16 text-red-500 mb-4"></i>
                     <h2 class="text-xl font-bold text-gray-800 mb-2">Ralat Mengambil Data</h2>
@@ -314,7 +295,6 @@
                         </div>
                     </div>
 
-                    <!-- Stats Cards -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex items-center">
                             <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mr-4 shrink-0">
@@ -354,7 +334,6 @@
                         </div>
                     </div>
 
-                    <!-- Charts Section -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col">
                             <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Profil Prestasi Kelas</h3>
@@ -372,7 +351,6 @@
                     </div>
                 </div>
 
-                <!-- Tab Pelajar Sedia Ada -->
                 <div id="tab-students" class="hidden space-y-6 p-4 md:p-8 pt-4">
                     <div class="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-6">
                         <div>
@@ -403,8 +381,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="student-table-body" class="divide-y divide-gray-100">
-                                    <!-- Diisi oleh JS -->
-                                </tbody>
+                                    </tbody>
                             </table>
                         </div>
                         <div id="no-student-msg" class="hidden p-8 text-center text-gray-500">
@@ -413,7 +390,6 @@
                     </div>
                 </div>
 
-                <!-- TAB TETAPAN -->
                 <div id="tab-settings" class="hidden space-y-6 p-4 md:p-8 pt-4">
                     <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">Tetapan Sistem</h2>
                     
@@ -447,11 +423,9 @@
                 </div>
 
                 <div id="tab-student-portal" class="hidden w-full max-w-5xl mx-auto md:py-6 space-y-6 pb-12">
-                    <!-- Portal Pelajar -->
                     <div class="bg-white rounded-none md:rounded-2xl shadow-sm border-b md:border border-gray-100 overflow-hidden relative">
                         <div class="h-28 md:h-40 islamic-pattern-bg"></div>
                         
-                        <!-- Butang Action di Penjuru Atas Portal -->
                         <div class="absolute top-4 right-4 flex gap-2 z-10 no-print">
                             <button onclick="downloadPortalPDF(this)" class="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center transition border border-white/30 shadow-sm">
                                 <i data-lucide="download" class="w-4 h-4 md:mr-2"></i> <span class="hidden md:inline">Muat Turun PDF</span>
@@ -464,8 +438,7 @@
                         <div class="px-6 md:px-10 pb-6 md:pb-8 relative">
                             <div class="flex flex-col md:flex-row md:items-end mb-4">
                                 <div class="flex flex-col md:flex-row md:items-end w-full">
-                                    <div class="relative group inline-block mx-auto md:mx-0 -mt-14 md:-mt-20"> <!-- Margin ditarik pada avatar sahaja -->
-                                        <img id="portal-student-pic" src="" alt="Profile" class="w-28 h-28 md:w-40 md:h-40 rounded-full border-4 border-white object-cover bg-white shadow-xl">
+                                    <div class="relative group inline-block mx-auto md:mx-0 -mt-14 md:-mt-20"> <img id="portal-student-pic" src="" alt="Profile" class="w-28 h-28 md:w-40 md:h-40 rounded-full border-4 border-white object-cover bg-white shadow-xl">
                                         <button onclick="togglePortalEdit()" class="no-print absolute bottom-1 right-1 md:bottom-2 md:right-2 bg-gold-500 hover:bg-gold-600 text-white p-3 rounded-full shadow-lg transition transform hover:scale-105 border-2 border-white focus:outline-none">
                                             <i data-lucide="camera" class="w-4 h-4 md:w-5 md:h-5"></i>
                                         </button>
@@ -476,13 +449,11 @@
                                             <i data-lucide="credit-card" class="w-4 h-4 mr-1.5"></i> <span id="portal-student-ic">No IC</span>
                                         </p>
                                         <span class="inline-block mt-3 px-4 py-1.5 bg-quran-50 text-quran-700 text-xs md:text-sm font-bold rounded-full border border-quran-100" id="portal-student-class">Kelas</span>
-                                        <!-- Container untuk butang pilihan jika pelajar ada 2 kelas (scroll melintang) -->
                                         <div id="portal-class-selector" class="mt-3 flex flex-nowrap overflow-x-auto hide-scrollbar gap-2 justify-start md:justify-start hidden no-print pb-1"></div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Borang Kemaskini Gambar Sahaja (Pelajar) -->
                             <div id="portal-edit-section" class="hidden bg-gray-50 p-5 rounded-xl border border-gray-200 mt-6 md:mx-0 -mx-2 no-print">
                                 <h3 class="font-bold text-gray-800 mb-3 flex items-center text-sm"><i data-lucide="image" class="w-4 h-4 mr-2 text-quran-600"></i> Muat Naik Gambar Profil Baharu</h3>
                                 <div class="flex flex-col sm:flex-row items-end gap-3 sm:gap-4">
@@ -501,7 +472,6 @@
 
                     <div class="px-4 md:px-0 space-y-6">
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <!-- Radar Chart -->
                             <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                                 <h3 class="font-bold text-gray-800 mb-4 flex items-center text-lg">
                                     <i data-lucide="radar" class="w-5 h-5 mr-2 text-quran-600"></i> Profil Kompetensi
@@ -511,7 +481,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Score & Highlights (4 Kategori) -->
                             <div class="space-y-4">
                                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center flex flex-col justify-center min-h-[160px]">
                                     <p class="text-sm text-gray-500 font-medium mb-2">Markah Keseluruhan</p>
@@ -548,7 +517,6 @@
                             </div>
                         </div>
 
-                        <!-- Detailed Table -->
                         <div id="portal-table-container" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                             <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
                                 <h4 class="font-bold text-gray-800 text-sm">Pecahan Markah Terperinci</h4>
@@ -565,23 +533,20 @@
                                         </tr>
                                     </thead>
                                     <tbody id="portal-detail-table" class="divide-y divide-gray-100">
-                                        <!-- Rows injected here -->
-                                    </tbody>
+                                        </tbody>
                                 </table>
                             </div>
                         </div>
                         
-                        <!-- Footer in Portal -->
                         <div class="text-center pb-8 pt-4">
-                            <p class="text-xs text-gray-400">&copy; Kelas Mengaji Hafsah 2026. Hak Cipta Terpelihara.</p>
+                            <p class="text-xs text-gray-400">© Kelas Mengaji Hafsah 2026. Hak Cipta Terpelihara.</p>
                         </div>
                     </div>
                 </div>
 
             </div>
             
-            <!-- Bottom Navigation untuk Paparan Mobile Admin -->
-            <nav id="admin-bottom-nav" class="md:hidden fixed bottom-0 left-0 w-full bg-gray-900 text-gray-400 z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.3)] hidden justify-around items-center">
+            <nav id="admin-bottom-nav" class="hidden md:hidden fixed bottom-0 left-0 w-full bg-gray-900 text-gray-400 z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.3)] justify-around items-center">
                 <button onclick="switchTab('dashboard')" id="btn-mobile-dashboard" class="mobile-nav-btn flex-1 flex flex-col items-center py-2.5 border-t-4 border-transparent hover:text-white transition-all">
                     <i data-lucide="layout-dashboard" class="w-5 h-5 mb-1"></i>
                     <span class="text-[10px] font-bold tracking-wider">UTAMA</span>
@@ -599,7 +564,6 @@
         </main>
     </div>
 
-    <!-- Modal Admin Edit Sedia Ada... -->
     <div id="student-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4">
         <div id="admin-modal-content" class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col transform transition-all">
             
@@ -639,7 +603,6 @@
                             </div>
                         </div>
 
-                        <!-- Score & Highlights Modal (4 Kategori) -->
                         <div class="space-y-4">
                             <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm text-center">
                                 <p class="text-sm text-gray-500 mb-1">Skor Keseluruhan</p>
@@ -719,8 +682,7 @@
                         </h4>
                         
                         <div id="edit-marks-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-                            <!-- Diisi JS -->
-                        </div>
+                            </div>
 
                         <div class="mt-8 flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-100">
                             <button onclick="toggleEditMode()" class="px-5 py-2.5 text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg font-medium transition text-sm">Batal</button>
@@ -735,7 +697,6 @@
         </div>
     </div>
 
-    <!-- Modal Tambah Pelajar Baharu -->
     <div id="add-student-modal" class="fixed inset-0 z-[70] hidden items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col transform transition-all">
             <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center islamic-pattern-bg text-white">
@@ -988,17 +949,13 @@
                             document.getElementById('login-screen').classList.add('hidden');
                             document.getElementById('app-wrapper').classList.remove('hidden');
                             
-                            // Paparkan Elemen Admin
-                            document.getElementById('admin-sidebar').classList.remove('hidden');
-                            document.getElementById('admin-sidebar').classList.add('md:flex');
-                            document.getElementById('admin-mobile-header').classList.remove('hidden');
-                            document.getElementById('admin-mobile-header').classList.add('flex');
-                            document.getElementById('class-selector-container').classList.remove('hidden');
-                            document.getElementById('class-selector-container').classList.add('flex');
+                            // Paparkan Elemen Admin menggunakan CSS Utilities sedia ada
+                            document.getElementById('admin-sidebar').className = "admin-sidebar-slim islamic-pattern-bg text-white hidden md:flex flex-col shadow-xl z-20 shrink-0 relative transition-[width] duration-300";
+                            document.getElementById('admin-mobile-header').className = "flex md:hidden islamic-pattern-bg text-white p-3.5 justify-between items-center shadow-md z-20 shrink-0";
+                            document.getElementById('class-selector-container').className = "flex p-4 md:p-8 pb-0 flex-wrap bg-gray-50 z-10 sticky top-0 border-b border-gray-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]";
                             
                             // Paparkan Bottom Nav Bar untuk Admin di telefon
-                            document.getElementById('admin-bottom-nav').classList.remove('hidden');
-                            document.getElementById('admin-bottom-nav').classList.add('flex');
+                            document.getElementById('admin-bottom-nav').className = "flex md:hidden fixed bottom-0 left-0 w-full bg-gray-900 text-gray-400 z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.3)] justify-around items-center";
                             
                             switchTab('dashboard'); 
                             fetchData(false);
@@ -1091,25 +1048,21 @@
             document.getElementById('login-screen').classList.remove('hidden');
             document.getElementById('app-wrapper').classList.add('hidden');
             
-            // Sembunyikan Nav Bottom Mobile jika Admin Logout
-            const adminBottomNav = document.getElementById('admin-bottom-nav');
-            if (adminBottomNav) {
-                adminBottomNav.classList.add('hidden');
-                adminBottomNav.classList.remove('flex');
-            }
-            
-            // Reset state sidebar
+            // Reset state sidebar dan elemen admin
             isSidebarExpanded = false;
             const sidebar = document.getElementById('admin-sidebar');
             if (sidebar) {
-                sidebar.classList.remove('admin-sidebar-expanded');
-                sidebar.classList.add('admin-sidebar-slim');
+                sidebar.className = "hidden";
             }
             const icon = document.getElementById('sidebar-toggle-icon');
             if (icon) {
                 icon.setAttribute('data-lucide', 'chevron-right');
                 lucide.createIcons();
             }
+            
+            document.getElementById('admin-mobile-header').className = "hidden";
+            document.getElementById('class-selector-container').className = "hidden";
+            document.getElementById('admin-bottom-nav').className = "hidden";
             
             // Sembunyikan semua tab untuk pastikan UI betul-betul bersih (reset)
             document.getElementById('tab-dashboard').classList.add('hidden');
@@ -1665,20 +1618,17 @@
             // Tunjuk Pembalut Utama
             document.getElementById('app-wrapper').classList.remove('hidden');
             
-            // Sorok Elemen Admin
-            document.getElementById('admin-sidebar').classList.add('hidden');
-            document.getElementById('admin-sidebar').classList.remove('md:flex');
-            document.getElementById('admin-mobile-header').classList.add('hidden');
-            document.getElementById('class-selector-container').classList.add('hidden');
+            // Sembunyikan elemen admin sepenuhnya menggunakan class CSS
+            document.getElementById('admin-sidebar').className = 'hidden';
+            document.getElementById('admin-mobile-header').className = 'hidden';
+            document.getElementById('class-selector-container').className = 'hidden';
+            
+            const adminBottomNav = document.getElementById('admin-bottom-nav');
+            if (adminBottomNav) adminBottomNav.className = 'hidden';
+
             document.getElementById('tab-dashboard').classList.add('hidden');
             document.getElementById('tab-students').classList.add('hidden');
             document.getElementById('tab-settings').classList.add('hidden');
-            
-            const adminBottomNav = document.getElementById('admin-bottom-nav');
-            if (adminBottomNav) {
-                adminBottomNav.classList.add('hidden');
-                adminBottomNav.classList.remove('flex');
-            }
 
             // Tunjuk Tab Portal Pelajar
             document.getElementById('tab-student-portal').classList.remove('hidden');
