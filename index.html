@@ -41,15 +41,10 @@
     </script>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
     <script src="https://unpkg.com/lucide@latest"></script>
-
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
 
     <script>
@@ -98,23 +93,17 @@
             background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2315803d' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
 
-        /* --- Gaya Khas Sidebar Minimize & Expand --- */
         .admin-sidebar-slim { width: 5rem !important; }
         .admin-sidebar-expanded { width: 16rem !important; }
-        
         .admin-sidebar-slim .sidebar-text { display: none !important; }
         .admin-sidebar-expanded .sidebar-text { display: block !important; }
-        
         .admin-sidebar-slim .sidebar-logo-wrapper { width: 3rem !important; height: 3rem !important; }
         .admin-sidebar-expanded .sidebar-logo-wrapper { width: 6rem !important; height: 6rem !important; }
-        
         .admin-sidebar-slim .nav-button { justify-content: center !important; padding-left: 0 !important; padding-right: 0 !important; }
         .admin-sidebar-expanded .nav-button { justify-content: flex-start !important; padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
-        
         .admin-sidebar-slim .nav-icon { margin-right: 0 !important; }
         .admin-sidebar-expanded .nav-icon { margin-right: 0.75rem !important; }
 
-        /* --- Pengoptimuman Peranti Mudah Alih (Mobile-First CSS) --- */
         input[type="text"], input[type="password"], input[type="file"], select, textarea {
             font-size: 16px !important;
         }
@@ -126,7 +115,6 @@
             color: #fff !important;
             border-top-color: #eab308 !important; 
         }
-
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 antialiased h-screen w-screen overflow-hidden">
@@ -339,6 +327,8 @@
                             <div class="relative flex-1 min-h-[300px] w-full flex justify-center">
                                 <canvas id="sectionChart"></canvas>
                             </div>
+                            <!-- Legend Rujukan Carta Kelas -->
+                            <div id="dashboard-radar-legend" class="mt-4 flex flex-wrap justify-center gap-4 text-[11px] font-medium text-gray-600"></div>
                         </div>
                         <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col">
                             <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 border-b border-gray-100 pb-2 gap-2">
@@ -498,6 +488,8 @@
                                 <div class="relative h-[300px] md:h-[400px] w-full flex justify-center">
                                     <canvas id="portalRadarChart"></canvas>
                                 </div>
+                                <!-- Legend Rujukan Carta Pelajar -->
+                                <div id="portal-radar-legend" class="mt-4 flex flex-wrap justify-center gap-4 text-[11px] font-medium text-gray-600"></div>
                             </div>
                             
                             <div class="space-y-4">
@@ -550,7 +542,8 @@
                                             <th class="px-5 py-4 font-medium border-b border-gray-200">Aspek Penilaian</th>
                                             <th class="px-5 py-4 font-medium text-center border-b border-gray-200">Markah Diperolehi</th>
                                             <th class="px-5 py-4 font-medium text-center border-b border-gray-200">Markah Penuh</th>
-                                            <th class="px-5 py-4 font-medium text-center border-b border-gray-200">Pencapaian (%)</th>
+                                            <th class="px-5 py-4 font-medium text-center border-b border-gray-200">Peratusan (%)</th>
+                                            <th class="px-5 py-4 font-medium text-center border-b border-gray-200">Pencapaian</th>
                                         </tr>
                                     </thead>
                                     <tbody id="portal-detail-table" class="divide-y divide-gray-100">
@@ -622,6 +615,8 @@
                             <div class="relative h-[300px] md:h-[350px] w-full flex justify-center">
                                 <canvas id="radarChart"></canvas>
                             </div>
+                            <!-- Legend Rujukan Carta Admin Modal -->
+                            <div id="admin-radar-legend" class="mt-4 flex flex-wrap justify-center gap-4 text-[11px] font-medium text-gray-600"></div>
                         </div>
 
                         <div class="space-y-4">
@@ -674,6 +669,7 @@
                                         <th class="px-5 py-3 font-medium text-center">Markah Pelajar</th>
                                         <th class="px-5 py-3 font-medium text-center">Markah Penuh</th>
                                         <th class="px-5 py-3 font-medium text-center">Peratusan (%)</th>
+                                        <th class="px-5 py-3 font-medium text-center">Pencapaian</th>
                                     </tr>
                                 </thead>
                                 <tbody id="modal-detail-table" class="divide-y divide-gray-100"></tbody>
@@ -750,7 +746,24 @@
                             <input type="text" id="add-student-ic" oninput="resetAddStudentForm()" placeholder="Cth: 121212-10-1234" maxlength="14" class="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-quran-500 focus:border-transparent text-sm tracking-wide">
                             <button onclick="checkStudentIC()" id="btn-check-ic" class="px-5 py-2.5 bg-gray-800 hover:bg-gray-900 text-white rounded-lg font-medium transition text-sm flex items-center shadow-sm">
                                 Semak
-                <div class="mt-8 flex justify-end gap-3 pt-4 border-t border-gray-100">
+                            </button>
+                        </div>
+                        <div id="ic-check-msg" class="hidden mt-2"></div>
+                    </div>
+                </div>
+
+                <div class="space-y-5 mt-5 hidden" id="add-student-step-2">
+                    <div class="border-t border-gray-100 pt-5">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Penuh Pelajar <span class="text-red-500">*</span></label>
+                        <input type="text" id="add-student-name" placeholder="Cth: Ahmad bin Abu" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-quran-500 focus:border-transparent text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Gambar Profil (Pilihan)</label>
+                        <input type="file" id="add-student-image" accept="image/*" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-quran-50 file:text-quran-700 hover:file:bg-quran-100 bg-white">
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end gap-3 pt-4 border-t border-gray-100 hidden" id="add-student-footer">
                     <button onclick="toggleAddStudentModal()" class="px-5 py-2.5 text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg font-medium transition text-sm">Batal</button>
                     <button onclick="submitNewStudent()" id="btn-add-student-save" class="px-6 py-2.5 bg-quran-700 hover:bg-quran-800 text-white rounded-lg font-medium shadow-sm transition flex justify-center items-center text-sm">
                         <i data-lucide="save" class="w-4 h-4 mr-2"></i> Simpan Pelajar
@@ -1328,6 +1341,13 @@
 
             updateMainChart();
 
+            const targetScore = currentClassId === 'abahata' ? 90 : 100;
+            const targetLabel = currentClassId === 'abahata' ? 'Sasaran Sijil (90%)' : 'Sasaran Khatam (100%)';
+            document.getElementById('dashboard-radar-legend').innerHTML = `
+                <div class="flex items-center"><span class="w-3 h-3 rounded bg-[rgba(21,128,61,0.4)] border border-[rgba(21,128,61,1)] mr-2"></span> Purata Kelas</div>
+                <div class="flex items-center"><span class="w-4 h-0 border-t-2 border-dashed border-red-500 mr-2"></span> ${targetLabel}</div>
+            `;
+
             const ctxSec = document.getElementById('sectionChart').getContext('2d');
             if (sectionChartInstance) sectionChartInstance.destroy();
             const secLabels = globalData.sectionsList;
@@ -1336,17 +1356,28 @@
                 type: 'radar',
                 data: {
                     labels: secLabels,
-                    datasets: [{
-                        label: 'Purata Seksyen (%)',
-                        data: secDataPts,
-                        backgroundColor: 'rgba(21, 128, 61, 0.2)', 
-                        borderColor: 'rgb(21, 128, 61)',
-                        pointBackgroundColor: 'rgb(234, 179, 8)', 
-                        pointBorderColor: '#fff',
-                        pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: 'rgb(21, 128, 61)',
-                        borderWidth: 2
-                    }]
+                    datasets: [
+                        {
+                            label: 'Purata Kelas (%)',
+                            data: secDataPts,
+                            backgroundColor: 'rgba(21, 128, 61, 0.2)', 
+                            borderColor: 'rgba(21, 128, 61, 1)',
+                            pointBackgroundColor: 'rgb(234, 179, 8)', 
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgb(21, 128, 61)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Sasaran',
+                            data: secLabels.map(() => targetScore),
+                            backgroundColor: 'transparent',
+                            borderColor: 'rgba(239, 68, 68, 0.8)',
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            borderWidth: 2
+                        }
+                    ]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
@@ -1498,9 +1529,11 @@
                 const secRow = document.createElement('tr');
                 secRow.className = "bg-quran-50/80 border-b border-quran-100";
                 secRow.innerHTML = `
-                    <td colspan="4" class="px-5 py-2 text-xs font-bold text-quran-800 uppercase tracking-wider flex items-center">
-                        <i data-lucide="layers" class="w-3 h-3 mr-2"></i> ${section} 
-                        <span class="ml-auto bg-white px-2 py-0.5 rounded text-quran-600 border border-quran-100">Purata: ${student.sectionScores[section].toFixed(1)}%</span>
+                    <td colspan="5" class="px-5 py-2 text-xs font-bold text-quran-800 uppercase tracking-wider">
+                        <div class="flex items-center justify-between w-full">
+                            <span class="flex items-center"><i data-lucide="layers" class="w-3 h-3 mr-2 text-quran-600"></i> ${section}</span>
+                            <span class="bg-white px-2 py-0.5 rounded text-quran-700 border border-quran-100">Purata: ${student.sectionScores[section].toFixed(1)}%</span>
+                        </div>
                     </td>
                 `;
                 tbodyDetail.appendChild(secRow);
@@ -1515,11 +1548,11 @@
                     const li = document.createElement('li');
                     li.className = "flex justify-between border-b border-gray-50 pb-1.5 pt-1 last:border-0";
                     
-                    let itemColorClass = "", targetUl = null;
-                    if (pct >= 90) { itemColorClass = "text-emerald-600"; targetUl = ulCemerlang; }
-                    else if (pct >= 70) { itemColorClass = "text-green-600"; targetUl = ulBaik; }
-                    else if (pct >= 41) { itemColorClass = "text-orange-500"; targetUl = ulSederhana; }
-                    else { itemColorClass = "text-red-600"; targetUl = ulLemah; }
+                    let itemColorClass = "", targetUl = null, gradeTextRow = "";
+                    if (pct >= 90) { itemColorClass = "text-emerald-600"; targetUl = ulCemerlang; gradeTextRow = "Cemerlang"; }
+                    else if (pct >= 70) { itemColorClass = "text-green-600"; targetUl = ulBaik; gradeTextRow = "Baik"; }
+                    else if (pct >= 41) { itemColorClass = "text-orange-500"; targetUl = ulSederhana; gradeTextRow = "Sederhana"; }
+                    else { itemColorClass = "text-red-600"; targetUl = ulLemah; gradeTextRow = "Lemah"; }
 
                     li.innerHTML = `<span class="truncate pr-2 text-xs" title="${header}">${header}</span> <strong class="text-xs ${itemColorClass} shrink-0">${pct.toFixed(0)}%</strong>`;
                     targetUl.appendChild(li);
@@ -1539,6 +1572,9 @@
                         <td class="px-5 py-2 border-b border-gray-50 text-center text-xs">
                             <span class="${badgeClass} font-bold">${pct.toFixed(1)}%</span>
                         </td>
+                        <td class="px-5 py-2 border-b border-gray-50 text-center text-xs font-bold ${itemColorClass}">
+                            ${gradeTextRow}
+                        </td>
                     `;
                     tbodyDetail.appendChild(tr);
                 });
@@ -1550,6 +1586,13 @@
             if(ulSederhana.children.length === 0) ulSederhana.innerHTML = emptyMsg;
             if(ulLemah.children.length === 0) ulLemah.innerHTML = emptyMsg;
 
+            const targetScore = currentClassId === 'abahata' ? 90 : 100;
+            const targetLabel = currentClassId === 'abahata' ? 'Sasaran Sijil (90%)' : 'Sasaran Khatam (100%)';
+            document.getElementById('admin-radar-legend').innerHTML = `
+                <div class="flex items-center"><span class="w-3 h-3 rounded bg-[rgba(234,179,8,0.4)] border border-[rgba(202,138,4,1)] mr-1.5"></span> Prestasi Semasa</div>
+                <div class="flex items-center"><span class="w-3 h-0 border-t-2 border-dashed border-red-500 mr-1.5"></span> ${targetLabel}</div>
+            `;
+
             const radarLabels = globalData.sectionsList;
             const radarData = radarLabels.map(s => student.sectionScores[s]);
             const ctx = document.getElementById('radarChart').getContext('2d');
@@ -1560,17 +1603,28 @@
                 type: 'radar',
                 data: {
                     labels: radarLabels,
-                    datasets: [{
-                        label: 'Penguasaan',
-                        data: radarData,
-                        backgroundColor: 'rgba(234, 179, 8, 0.2)', 
-                        borderColor: 'rgba(202, 138, 4, 1)',     
-                        pointBackgroundColor: 'rgba(21, 128, 61, 1)', 
-                        pointBorderColor: '#fff',
-                        pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: 'rgba(21, 128, 61, 1)',
-                        borderWidth: 2
-                    }]
+                    datasets: [
+                        {
+                            label: 'Penguasaan',
+                            data: radarData,
+                            backgroundColor: 'rgba(234, 179, 8, 0.2)', 
+                            borderColor: 'rgba(202, 138, 4, 1)',     
+                            pointBackgroundColor: 'rgba(21, 128, 61, 1)', 
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(21, 128, 61, 1)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Sasaran',
+                            data: radarLabels.map(() => targetScore),
+                            backgroundColor: 'transparent',
+                            borderColor: 'rgba(239, 68, 68, 0.8)',
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            borderWidth: 2
+                        }
+                    ]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
@@ -1811,7 +1865,9 @@
             
             const picEl = document.getElementById('portal-student-pic');
             picEl.src = student.picUrl;
-            picEl.onerror = function() { this.src = generateAvatar(student.nama); };
+            picEl.onerror = function() {
+                this.src = generateAvatar(student.nama);
+            };
 
             const scoreEl = document.getElementById('portal-overall-score');
             const gradeEl = document.getElementById('portal-overall-grade');
@@ -1851,7 +1907,7 @@
                 const secRow = document.createElement('tr');
                 secRow.className = "bg-quran-50/80 border-b border-quran-100";
                 secRow.innerHTML = `
-                    <td colspan="4" class="px-4 py-3 text-[11px] md:text-xs font-bold text-quran-800 uppercase tracking-wider">
+                    <td colspan="5" class="px-4 py-3 text-[11px] md:text-xs font-bold text-quran-800 uppercase tracking-wider">
                         <div class="flex items-center justify-between w-full">
                             <span class="flex items-center"><i data-lucide="layers" class="w-3 h-3 md:w-4 md:h-4 mr-2 text-quran-600"></i> ${section}</span>
                             <span class="bg-white px-2 py-0.5 rounded text-quran-700 border border-quran-200">Purata: ${student.sectionScores[section].toFixed(1)}%</span>
@@ -1870,11 +1926,11 @@
                     const li = document.createElement('li');
                     li.className = "flex justify-between border-b border-gray-50 pb-2 pt-2 last:border-0 text-[13px] md:text-sm";
                     
-                    let itemColorClass = "", targetUl = null;
-                    if (pct >= 90) { itemColorClass = "text-emerald-600"; targetUl = ulCemerlang; }
-                    else if (pct >= 70) { itemColorClass = "text-green-600"; targetUl = ulBaik; }
-                    else if (pct >= 41) { itemColorClass = "text-orange-500"; targetUl = ulSederhana; }
-                    else { itemColorClass = "text-red-600"; targetUl = ulLemah; }
+                    let itemColorClass = "", targetUl = null, gradeTextRow = "";
+                    if (pct >= 90) { itemColorClass = "text-emerald-600"; targetUl = ulCemerlang; gradeTextRow = "Cemerlang"; }
+                    else if (pct >= 70) { itemColorClass = "text-green-600"; targetUl = ulBaik; gradeTextRow = "Baik"; }
+                    else if (pct >= 41) { itemColorClass = "text-orange-500"; targetUl = ulSederhana; gradeTextRow = "Sederhana"; }
+                    else { itemColorClass = "text-red-600"; targetUl = ulLemah; gradeTextRow = "Lemah"; }
 
                     li.innerHTML = `<span class="pr-2 text-gray-700 text-sm whitespace-normal leading-tight" title="${header}">${header}</span> <strong class="${itemColorClass} shrink-0 text-sm">${pct.toFixed(0)}%</strong>`;
                     targetUl.appendChild(li);
@@ -1894,6 +1950,9 @@
                         <td class="px-4 py-3 border-b border-gray-50 text-center text-xs md:text-sm">
                             <span class="${badgeClass} px-2 py-1 rounded font-bold">${pct.toFixed(1)}%</span>
                         </td>
+                        <td class="px-4 py-3 border-b border-gray-50 text-center text-xs md:text-sm font-bold ${itemColorClass}">
+                            ${gradeTextRow}
+                        </td>
                     `;
                     tbodyDetail.appendChild(tr);
                 });
@@ -1905,6 +1964,13 @@
             if(ulSederhana.children.length === 0) ulSederhana.innerHTML = emptyMsg;
             if(ulLemah.children.length === 0) ulLemah.innerHTML = emptyMsg;
 
+            const targetScore = currentLoggedInClass === 'abahata' ? 90 : 100;
+            const targetLabel = currentLoggedInClass === 'abahata' ? 'Sasaran Sijil (90%)' : 'Sasaran Khatam (100%)';
+            document.getElementById('portal-radar-legend').innerHTML = `
+                <div class="flex items-center"><span class="w-3 h-3 rounded bg-[rgba(234,179,8,0.4)] border border-[rgba(202,138,4,1)] mr-1.5"></span> Prestasi Semasa</div>
+                <div class="flex items-center"><span class="w-3 h-0 border-t-2 border-dashed border-red-500 mr-1.5"></span> ${targetLabel}</div>
+            `;
+
             const radarLabels = globalData.sectionsList;
             const radarData = radarLabels.map(s => student.sectionScores[s]);
             const ctx = document.getElementById('portalRadarChart').getContext('2d');
@@ -1915,17 +1981,28 @@
                 type: 'radar',
                 data: {
                     labels: radarLabels,
-                    datasets: [{
-                        label: 'Penguasaan Diri',
-                        data: radarData,
-                        backgroundColor: 'rgba(234, 179, 8, 0.15)',
-                        borderColor: 'rgba(202, 138, 4, 1)',
-                        pointBackgroundColor: 'rgba(21, 128, 61, 1)',
-                        pointBorderColor: '#fff',
-                        pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: 'rgba(21, 128, 61, 1)',
-                        borderWidth: 2
-                    }]
+                    datasets: [
+                        {
+                            label: 'Penguasaan Diri',
+                            data: radarData,
+                            backgroundColor: 'rgba(234, 179, 8, 0.15)',
+                            borderColor: 'rgba(202, 138, 4, 1)',
+                            pointBackgroundColor: 'rgba(21, 128, 61, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(21, 128, 61, 1)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Sasaran',
+                            data: radarLabels.map(() => targetScore),
+                            backgroundColor: 'transparent',
+                            borderColor: 'rgba(239, 68, 68, 0.8)',
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            borderWidth: 2
+                        }
+                    ]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
@@ -2059,9 +2136,6 @@
             });
         }
 
-        // ==========================================
-        // FUNGSI TAMBAH PELAJAR (2 Langkah & Semakan IC)
-        // ==========================================
         function resetAddStudentForm() {
             const step2 = document.getElementById('add-student-step-2');
             const footer = document.getElementById('add-student-footer');
@@ -2257,7 +2331,6 @@
             const noPrintEls = modalContainer.querySelectorAll('.no-print');
             noPrintEls.forEach(el => el.style.display = 'none');
 
-            // --- Buang had scroll list ---
             const scrollableLists = modalContainer.querySelectorAll('ul.overflow-y-auto');
             scrollableLists.forEach(ul => {
                 ul.dataset.origMaxHeight = ul.style.maxHeight || '';
@@ -2266,14 +2339,12 @@
                 ul.style.overflow = 'visible';
             });
             
-            // --- Buang had table ---
             const tableContainers = modalContainer.querySelectorAll('.overflow-x-auto');
             tableContainers.forEach(container => {
                 container.dataset.origOverflowX = container.style.overflowX || '';
                 container.style.overflowX = 'visible';
             });
 
-            // Regangkan modal 
             const origMaxHeight = modalContainer.style.maxHeight;
             const origOverflow = scrollArea.style.overflow;
             const origWidth = modalContainer.style.width;
@@ -2337,7 +2408,6 @@
                 container.style.overflowX = 'visible';
             });
 
-            // Regang kanvas pportal utama
             const origClasses = element.className;
             const origWidth = element.style.width;
             const origOverflow = element.style.overflow;
