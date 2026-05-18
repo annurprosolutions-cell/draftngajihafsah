@@ -46,7 +46,7 @@
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <script src="https://unpkg.com/lucide@latest"></script>
 
@@ -127,8 +127,6 @@
             border-top-color: #eab308 !important; 
         }
 
-        /* Pengurusan Page Break PDF */
-        .pdf-page-break { page-break-before: always !important; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 antialiased h-screen w-screen overflow-hidden">
@@ -145,7 +143,7 @@
                         <img src="https://i.postimg.cc/TwZN5fP1/image.png" alt="Logo" class="w-full h-full object-contain p-1">
                     </div>
                     <h2 class="text-2xl font-bold font-arabic text-gold-500 leading-tight">Kelas Mengaji<br>Hafsah</h2>
-                    <p class="text-xs text-quran-700 mt-2 font-medium bg-quran-50 px-3 py-1 rounded-full border border-quran-100">Portal Pelajar & Waris</p>
+                    <p class="text-xs text-quran-700 mt-2 font-medium bg-quran-50 px-3 py-1 rounded-full border border-quran-100">Portal Pelajar & Ibu Bapa</p>
                 </div>
                 
                 <div class="space-y-5">
@@ -286,8 +284,8 @@
                             <p class="text-sm text-gray-500 mt-1">Prestasi purata kelas berdasarkan pecahan tajwid dan kefasihan.</p>
                         </div>
                         <div class="flex gap-2 no-print w-full md:w-auto">
-                            <button onclick="downloadDashboardPDF(this)" class="flex-1 md:flex-none flex items-center justify-center text-sm bg-quran-700 border border-quran-700 shadow-sm px-4 py-2.5 rounded-lg text-white hover:bg-quran-800 transition font-medium">
-                                <i data-lucide="download" class="w-4 h-4 mr-2"></i> Muat Turun PDF
+                            <button onclick="downloadDashboardImage(this)" class="flex-1 md:flex-none flex items-center justify-center text-sm bg-quran-700 border border-quran-700 shadow-sm px-4 py-2.5 rounded-lg text-white hover:bg-quran-800 transition font-medium">
+                                <i data-lucide="image-down" class="w-4 h-4 mr-2"></i> Muat Turun Gambar
                             </button>
                             <button onclick="fetchData(true)" class="flex-1 md:flex-none flex items-center justify-center text-sm bg-white border border-gray-200 shadow-sm px-4 py-2.5 rounded-lg text-gray-600 hover:text-quran-700 transition font-medium">
                                 <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i> Segar Semula
@@ -343,9 +341,26 @@
                             </div>
                         </div>
                         <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col">
-                            <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Carta Purata Terperinci Mengikut Tajuk</h3>
+                            <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 border-b border-gray-100 pb-2 gap-2">
+                                <h3 class="text-lg font-bold text-gray-800">Carta Purata Terperinci</h3>
+                                <select id="chart-section-filter" onchange="updateMainChart()" class="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-1 focus:ring-quran-500 w-full sm:w-auto">
+                                    <option value="ALL">Semua Bahagian</option>
+                                </select>
+                            </div>
                             <div class="relative flex-1 min-h-[300px] w-full">
                                 <canvas id="mainChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-6">
+                        <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+                            <h4 class="font-bold text-gray-800 text-sm flex items-center">
+                                <i data-lucide="star" class="w-4 h-4 mr-2 text-gold-500"></i> Topik Cemerlang & Baik (Prestasi Kelas Tertinggi)
+                            </h4>
+                        </div>
+                        <div class="p-5">
+                            <div id="excellence-list-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                             </div>
                         </div>
                     </div>
@@ -362,6 +377,9 @@
                                 <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
                                 <input type="text" id="search-input" onkeyup="filterStudents()" placeholder="Cari nama atau IC..." class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-quran-500 focus:border-transparent text-sm">
                             </div>
+                            <button onclick="toggleSortOrder()" class="w-full md:w-auto px-4 py-2.5 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-lg text-sm font-medium transition flex items-center justify-center whitespace-nowrap shadow-sm">
+                                <i data-lucide="arrow-down" id="sort-icon" class="w-4 h-4 mr-2"></i> <span id="sort-text">Markah Tertinggi</span>
+                            </button>
                             <button onclick="toggleAddStudentModal()" class="w-full md:w-auto px-4 py-2.5 bg-quran-700 hover:bg-quran-800 text-white rounded-lg text-sm font-medium transition flex items-center justify-center whitespace-nowrap shadow-sm">
                                 <i data-lucide="user-plus" class="w-4 h-4 mr-2"></i> Tambah Pelajar
                             </button>
@@ -381,7 +399,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="student-table-body" class="divide-y divide-gray-100">
-                                    </tbody>
+                                </tbody>
                             </table>
                         </div>
                         <div id="no-student-msg" class="hidden p-8 text-center text-gray-500">
@@ -422,13 +440,13 @@
                     </div>
                 </div>
 
-                <div id="tab-student-portal" class="hidden w-full max-w-5xl mx-auto md:py-6 space-y-6 pb-12">
+                <div id="tab-student-portal" class="hidden w-full max-w-5xl mx-auto md:py-6 space-y-6 pb-12 relative">
                     <div class="bg-white rounded-none md:rounded-2xl shadow-sm border-b md:border border-gray-100 overflow-hidden relative">
                         <div class="h-28 md:h-40 islamic-pattern-bg"></div>
                         
                         <div class="absolute top-4 right-4 flex gap-2 z-10 no-print">
-                            <button onclick="downloadPortalPDF(this)" class="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center transition border border-white/30 shadow-sm">
-                                <i data-lucide="download" class="w-4 h-4 md:mr-2"></i> <span class="hidden md:inline">Muat Turun PDF</span>
+                            <button onclick="downloadPortalImage(this)" class="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center transition border border-white/30 shadow-sm">
+                                <i data-lucide="image-down" class="w-4 h-4 md:mr-2"></i> <span class="hidden md:inline">Muat Turun Gambar</span>
                             </button>
                             <button onclick="logout()" class="bg-red-500/80 hover:bg-red-500 backdrop-blur-sm text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center transition border border-red-500/50 shadow-sm">
                                 <i data-lucide="log-out" class="w-4 h-4 md:mr-2"></i> <span class="hidden md:inline">Keluar</span>
@@ -438,7 +456,8 @@
                         <div class="px-6 md:px-10 pb-6 md:pb-8 relative">
                             <div class="flex flex-col md:flex-row md:items-end mb-4">
                                 <div class="flex flex-col md:flex-row md:items-end w-full">
-                                    <div class="relative group inline-block mx-auto md:mx-0 -mt-14 md:-mt-20"> <img id="portal-student-pic" src="" alt="Profile" class="w-28 h-28 md:w-40 md:h-40 rounded-full border-4 border-white object-cover bg-white shadow-xl">
+                                    <div class="relative group inline-block mx-auto md:mx-0 -mt-14 md:-mt-20"> 
+                                        <img id="portal-student-pic" src="" alt="Profile" class="w-28 h-28 md:w-40 md:h-40 rounded-full border-4 border-white object-cover bg-white shadow-xl">
                                         <button onclick="togglePortalEdit()" class="no-print absolute bottom-1 right-1 md:bottom-2 md:right-2 bg-gold-500 hover:bg-gold-600 text-white p-3 rounded-full shadow-lg transition transform hover:scale-105 border-2 border-white focus:outline-none">
                                             <i data-lucide="camera" class="w-4 h-4 md:w-5 md:h-5"></i>
                                         </button>
@@ -483,36 +502,38 @@
                             
                             <div class="space-y-4">
                                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center flex flex-col justify-center min-h-[160px]">
-                                    <p class="text-sm text-gray-500 font-medium mb-2">Markah Keseluruhan</p>
+                                    <p class="text-sm text-gray-500 font-medium mb-1">Markah Keseluruhan</p>
                                     <div class="text-5xl md:text-6xl font-bold tracking-tight" id="portal-overall-score">0%</div>
+                                    <div id="portal-overall-grade" class="text-base md:text-lg font-bold tracking-widest mt-2 uppercase"></div>
+                                    <div id="portal-target-badge" class="mt-4 w-full"></div>
                                 </div>
                                 
                                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                                     <h4 class="font-bold text-gray-800 mb-2 flex items-center text-sm border-b border-gray-50 pb-2">
                                         <i data-lucide="award" class="w-4 h-4 mr-2 text-emerald-500"></i> Cemerlang (≥ 90%)
                                     </h4>
-                                    <ul id="portal-cemerlang" class="space-y-1 text-sm text-gray-600 max-h-[100px] overflow-y-auto pr-1 custom-scrollbar"></ul>
+                                    <ul id="portal-cemerlang" class="space-y-1.5 text-sm text-gray-600 overflow-y-auto custom-scrollbar" style="max-height: 100px;"></ul>
                                 </div>
                                 
                                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                                     <h4 class="font-bold text-gray-800 mb-2 flex items-center text-sm border-b border-gray-50 pb-2">
                                         <i data-lucide="check-circle-2" class="w-4 h-4 mr-2 text-green-500"></i> Baik (70 - 89%)
                                     </h4>
-                                    <ul id="portal-baik" class="space-y-1 text-sm text-gray-600 max-h-[100px] overflow-y-auto pr-1 custom-scrollbar"></ul>
+                                    <ul id="portal-baik" class="space-y-1.5 text-sm text-gray-600 overflow-y-auto custom-scrollbar" style="max-height: 100px;"></ul>
                                 </div>
                                 
                                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                                     <h4 class="font-bold text-gray-800 mb-2 flex items-center text-sm border-b border-gray-50 pb-2">
                                         <i data-lucide="alert-triangle" class="w-4 h-4 mr-2 text-orange-500"></i> Sederhana (41 - 69%)
                                     </h4>
-                                    <ul id="portal-sederhana" class="space-y-1 text-sm text-gray-600 max-h-[100px] overflow-y-auto pr-1 custom-scrollbar"></ul>
+                                    <ul id="portal-sederhana" class="space-y-1.5 text-sm text-gray-600 overflow-y-auto custom-scrollbar" style="max-height: 100px;"></ul>
                                 </div>
                                 
                                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                                     <h4 class="font-bold text-gray-800 mb-2 flex items-center text-sm border-b border-gray-50 pb-2">
                                         <i data-lucide="alert-circle" class="w-4 h-4 mr-2 text-red-500"></i> Lemah (≤ 40%)
                                     </h4>
-                                    <ul id="portal-lemah" class="space-y-1 text-sm text-gray-600 max-h-[100px] overflow-y-auto pr-1 custom-scrollbar"></ul>
+                                    <ul id="portal-lemah" class="space-y-1.5 text-sm text-gray-600 overflow-y-auto custom-scrollbar" style="max-height: 100px;"></ul>
                                 </div>
                             </div>
                         </div>
@@ -533,7 +554,7 @@
                                         </tr>
                                     </thead>
                                     <tbody id="portal-detail-table" class="divide-y divide-gray-100">
-                                        </tbody>
+                                    </tbody>
                                 </table>
                             </div>
                         </div>
@@ -565,7 +586,7 @@
     </div>
 
     <div id="student-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4">
-        <div id="admin-modal-content" class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col transform transition-all">
+        <div id="admin-modal-content" class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col transform transition-all relative">
             
             <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center islamic-pattern-bg text-white">
                 <div class="flex items-center">
@@ -578,8 +599,8 @@
                     </div>
                 </div>
                 <div class="flex space-x-2 items-center self-start no-print">
-                    <button onclick="downloadAdminStudentPDF(this)" id="btn-dl-admin-student" class="text-white hover:text-gold-300 transition bg-white/10 px-3 py-1.5 rounded-lg flex items-center text-xs md:text-sm font-medium">
-                        <i data-lucide="download" class="w-3 h-3 md:w-4 md:h-4 md:mr-1.5"></i> <span class="hidden md:inline">PDF</span>
+                    <button onclick="downloadAdminStudentImage(this)" id="btn-dl-admin-student" class="text-white hover:text-gold-300 transition bg-white/10 px-3 py-1.5 rounded-lg flex items-center text-xs md:text-sm font-medium">
+                        <i data-lucide="image-down" class="w-3 h-3 md:w-4 md:h-4 md:mr-1.5"></i> <span class="hidden md:inline">Gambar</span>
                     </button>
                     <button onclick="toggleEditMode()" id="btn-edit-mode" class="text-white hover:text-gold-300 transition bg-white/10 px-3 py-1.5 rounded-lg flex items-center text-xs md:text-sm font-medium">
                         <i data-lucide="edit" class="w-3 h-3 md:w-4 md:h-4 mr-1.5"></i> Edit
@@ -604,38 +625,39 @@
                         </div>
 
                         <div class="space-y-4">
-                            <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm text-center">
+                            <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm text-center flex flex-col justify-center">
                                 <p class="text-sm text-gray-500 mb-1">Skor Keseluruhan</p>
                                 <div class="text-4xl font-bold" id="modal-overall-score">0%</div>
-                                <p class="text-xs text-gray-400 mt-2">Berdasarkan markah asas pangkalan data</p>
+                                <div id="modal-overall-grade" class="text-sm font-bold tracking-widest mt-1 uppercase"></div>
+                                <div id="modal-target-badge" class="mt-3 w-full"></div>
                             </div>
 
                             <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                                 <h4 class="font-bold text-gray-800 mb-2 flex items-center text-sm border-b border-gray-50 pb-2">
                                     <i data-lucide="award" class="w-4 h-4 mr-2 text-emerald-500"></i> Cemerlang (≥ 90%)
                                 </h4>
-                                <ul id="modal-cemerlang" class="space-y-1.5 text-sm text-gray-600 max-h-[100px] overflow-y-auto custom-scrollbar"></ul>
+                                <ul id="modal-cemerlang" class="space-y-1.5 text-sm text-gray-600 overflow-y-auto custom-scrollbar" style="max-height: 100px;"></ul>
                             </div>
                             
                             <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                                 <h4 class="font-bold text-gray-800 mb-2 flex items-center text-sm border-b border-gray-50 pb-2">
                                     <i data-lucide="check-circle-2" class="w-4 h-4 mr-2 text-green-500"></i> Baik (70 - 89%)
                                 </h4>
-                                <ul id="modal-baik" class="space-y-1.5 text-sm text-gray-600 max-h-[100px] overflow-y-auto custom-scrollbar"></ul>
+                                <ul id="modal-baik" class="space-y-1.5 text-sm text-gray-600 overflow-y-auto custom-scrollbar" style="max-height: 100px;"></ul>
                             </div>
                             
                             <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                                 <h4 class="font-bold text-gray-800 mb-2 flex items-center text-sm border-b border-gray-50 pb-2">
                                     <i data-lucide="alert-triangle" class="w-4 h-4 mr-2 text-orange-500"></i> Sederhana (41 - 69%)
                                 </h4>
-                                <ul id="modal-sederhana" class="space-y-1.5 text-sm text-gray-600 max-h-[100px] overflow-y-auto custom-scrollbar"></ul>
+                                <ul id="modal-sederhana" class="space-y-1.5 text-sm text-gray-600 overflow-y-auto custom-scrollbar" style="max-height: 100px;"></ul>
                             </div>
                             
                             <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                                 <h4 class="font-bold text-gray-800 mb-2 flex items-center text-sm border-b border-gray-50 pb-2">
                                     <i data-lucide="alert-circle" class="w-4 h-4 mr-2 text-red-500"></i> Lemah (≤ 40%)
                                 </h4>
-                                <ul id="modal-lemah" class="space-y-1.5 text-sm text-gray-600 max-h-[100px] overflow-y-auto custom-scrollbar"></ul>
+                                <ul id="modal-lemah" class="space-y-1.5 text-sm text-gray-600 overflow-y-auto custom-scrollbar" style="max-height: 100px;"></ul>
                             </div>
                         </div>
                     </div>
@@ -684,11 +706,16 @@
                         <div id="edit-marks-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                             </div>
 
-                        <div class="mt-8 flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-100">
-                            <button onclick="toggleEditMode()" class="px-5 py-2.5 text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg font-medium transition text-sm">Batal</button>
-                            <button onclick="saveStudentData()" id="btn-save" class="px-6 py-2.5 bg-quran-700 hover:bg-quran-800 text-white rounded-lg font-medium shadow-sm transition flex justify-center items-center text-sm">
-                                <i data-lucide="save" class="w-4 h-4 mr-2"></i> Simpan Perubahan
+                        <div class="mt-8 flex flex-col sm:flex-row justify-between gap-3 pt-4 border-t border-gray-100">
+                            <button onclick="confirmDeleteStudent()" class="px-5 py-2.5 text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 rounded-lg font-medium transition text-sm flex items-center justify-center">
+                                <i data-lucide="trash-2" class="w-4 h-4 mr-2"></i> Padam Pelajar
                             </button>
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <button onclick="toggleEditMode()" class="px-5 py-2.5 text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg font-medium transition text-sm">Batal</button>
+                                <button onclick="saveStudentData()" id="btn-save" class="px-6 py-2.5 bg-quran-700 hover:bg-quran-800 text-white rounded-lg font-medium shadow-sm transition flex justify-center items-center text-sm">
+                                    <i data-lucide="save" class="w-4 h-4 mr-2"></i> Simpan Perubahan
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -708,27 +735,21 @@
                 </button>
             </div>
             <div class="p-6 overflow-y-auto max-h-[80vh] custom-scrollbar">
-                <div class="space-y-5">
+                
+                <div class="space-y-5" id="add-student-step-1">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Kelas <span class="text-red-500">*</span></label>
-                        <select id="add-student-class" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-quran-500 focus:border-transparent text-sm font-medium">
+                        <select id="add-student-class" onchange="resetAddStudentForm()" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-quran-500 focus:border-transparent text-sm font-medium">
                             <option value="TALAQQI AL QURAN">Talaqqi Al-Quran</option>
                             <option value="KELAS ABAHATA">Kelas ABAHATA</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Penuh Pelajar <span class="text-red-500">*</span></label>
-                        <input type="text" id="add-student-name" placeholder="Cth: Ahmad bin Abu" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-quran-500 focus:border-transparent text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">No. Kad Pengenalan (IC)</label>
-                        <input type="text" id="add-student-ic" placeholder="Cth: 121212-10-1234" maxlength="14" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-quran-500 focus:border-transparent text-sm tracking-wide">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Gambar Profil (Pilihan)</label>
-                        <input type="file" id="add-student-image" accept="image/*" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-quran-50 file:text-quran-700 hover:file:bg-quran-100 bg-white">
-                    </div>
-                </div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">No. Kad Pengenalan (IC) <span class="text-red-500">*</span></label>
+                        <div class="flex gap-2">
+                            <input type="text" id="add-student-ic" oninput="resetAddStudentForm()" placeholder="Cth: 121212-10-1234" maxlength="14" class="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-quran-500 focus:border-transparent text-sm tracking-wide">
+                            <button onclick="checkStudentIC()" id="btn-check-ic" class="px-5 py-2.5 bg-gray-800 hover:bg-gray-900 text-white rounded-lg font-medium transition text-sm flex items-center shadow-sm">
+                                Semak
                 <div class="mt-8 flex justify-end gap-3 pt-4 border-t border-gray-100">
                     <button onclick="toggleAddStudentModal()" class="px-5 py-2.5 text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg font-medium transition text-sm">Batal</button>
                     <button onclick="submitNewStudent()" id="btn-add-student-save" class="px-6 py-2.5 bg-quran-700 hover:bg-quran-800 text-white rounded-lg font-medium shadow-sm transition flex justify-center items-center text-sm">
@@ -739,40 +760,47 @@
         </div>
     </div>
 
+    <!-- Modal Pengesahan Padam Pelajar -->
+    <div id="delete-confirm-modal" class="fixed inset-0 z-[80] hidden items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col transform transition-all p-6 text-center">
+            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Pasti untuk hapus?</h3>
+            <p class="text-sm text-gray-500 mb-6">Tindakan ini akan memadamkan data pelajar ini secara <b>kekal</b> dari pangkalan data Google Sheet.</p>
+            <div class="flex gap-3 justify-center">
+                <button onclick="hideDeleteConfirm()" class="px-5 py-2.5 text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg font-medium transition text-sm">Batal</button>
+                <button onclick="proceedDeleteStudent()" id="btn-confirm-delete" class="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium shadow-sm transition flex items-center text-sm">
+                    Hapus Pelajar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        
-        // --- TETAPAN SISTEM & APPSCRIPT ---
-        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxANFgPKGYn07MiqrZOuApqaAovuD3B6uw8aGC2FZf1-_Q7eXyOYfuuIaArjf6ZhIJh/exec'; 
-        
+        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyRlTI-6vYIoxYlNjMKG_kES9vJnwB_pBEGUZkrWj5jPiq2tdZfY4_RGFJoj1tqBhz6/exec'; 
         const SPREADSHEET_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRDUxXg3B_ynNXzH2MpH0Utl45m2YUHABkKAPrPDmvD3s5fFeTwV6ruIttOLAUwZyuzpOoEEmAMDKIv/pub';
         const CLASSES = {
             talaqqi: { id: 'talaqqi', name: 'Talaqqi Al-Quran', url: SPREADSHEET_BASE + '?output=csv' },
             abahata: { id: 'abahata', name: 'Kelas ABAHATA', url: SPREADSHEET_BASE + '?gid=883851067&output=csv' }
         };
-
-        // CSV URL KATA LALUAN ADMIN
         const PASSWORD_CSV_URL = SPREADSHEET_BASE + '?gid=1794402337&single=true&output=csv';
-        let currentAdminPassword = ''; // Diisi apabila guru menekan log masuk
+        let currentAdminPassword = ''; 
 
-        // Pembolehubah Semasa
         let currentClassId = 'talaqqi';
         let classCache = {}; 
         let globalData = { headers: [], baseMarks: {}, students: [], classAverages: {}, classSectionAverages: {}, stats: {}, sectionsList: [] };
-        
-        // Sesi Log Masuk
         let currentLoggedInStudent = null;
         let currentLoggedInClass = null;
         let studentEnrolledClasses = [];
-
-        // Rujukan Carta & Edit
         let mainChartInstance = null;
         let radarChartInstance = null;
         let sectionChartInstance = null;
         let portalRadarChartInstance = null;
         let currentEditingStudent = null; 
-        let isSidebarExpanded = false; // Status sidebar lalai
+        let isSidebarExpanded = false; 
+        let currentSortOrder = 'desc'; 
 
-        // Fungsi Penjana Avatar Tempatan (Local SVG Avatar Generator)
         function generateAvatar(name) {
             let initials = (name || '?').trim().split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
             if(!initials) initials = '?';
@@ -780,12 +808,10 @@
             return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
         }
 
-        // Fungsi Toggle Sidebar
         function toggleSidebar() {
             isSidebarExpanded = !isSidebarExpanded;
             const sidebar = document.getElementById('admin-sidebar');
             const icon = document.getElementById('sidebar-toggle-icon');
-            
             if (isSidebarExpanded) {
                 sidebar.classList.remove('admin-sidebar-slim');
                 sidebar.classList.add('admin-sidebar-expanded');
@@ -798,7 +824,6 @@
             lucide.createIcons();
         }
 
-        // Pemetaan Kumpulan (Sections)
         function getSection(header, classId) {
             header = header.toUpperCase().trim();
             if (classId === 'talaqqi') {
@@ -820,8 +845,6 @@
         
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
-            
-            // Format Auto IC Pelajar
             const icInput = document.getElementById('login-ic');
             icInput.addEventListener('input', function(e) {
                 let val = e.target.value.replace(/\D/g, ''); 
@@ -831,8 +854,6 @@
                 if (val.length > 8) formatted = formatted.substring(0, 9) + '-' + formatted.substring(9);
                 e.target.value = formatted;
             });
-
-            // Format Auto IC untuk Add Student Form
             const addIcInput = document.getElementById('add-student-ic');
             if (addIcInput) {
                 addIcInput.addEventListener('input', function(e) {
@@ -878,24 +899,20 @@
 
         async function handleStudentLogin() {
             const icInputRaw = document.getElementById('login-ic').value;
-            const searchIC = icInputRaw.replace(/\D/g, ''); // Buang sengkang untuk carian selamat
-            
+            const searchIC = icInputRaw.replace(/\D/g, ''); 
             if (searchIC.length < 6) {
                 alert("Sila masukkan format no pengenalan / IC yang sah.");
                 return;
             }
-            
             const btn = document.getElementById('btn-login-student');
             const originalHtml = btn.innerHTML;
             btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin mr-2"></i> Menyemak Rekod...';
             btn.disabled = true;
 
             try {
-                // Muat turun dua-dua kelas sekaligus secara senyap
                 if (!classCache['talaqqi']) classCache['talaqqi'] = await fetchAndParseCSV(CLASSES.talaqqi.url, 'talaqqi');
                 if (!classCache['abahata']) classCache['abahata'] = await fetchAndParseCSV(CLASSES.abahata.url, 'abahata');
                 
-                // Cari profil di kedua-dua kelas
                 let tStudent = classCache['talaqqi'].students.find(s => s.ic && s.ic.replace(/\D/g, '') === searchIC);
                 let aStudent = classCache['abahata'].students.find(s => s.ic && s.ic.replace(/\D/g, '') === searchIC);
 
@@ -920,41 +937,33 @@
 
         function handleAdminLogin() {
             const pwdInput = document.getElementById('login-password').value;
-            
             const btn = document.getElementById('btn-login-admin');
             const originalHtml = btn.innerHTML;
             btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin mr-2"></i> Mengesahkan...';
             btn.disabled = true;
 
-            // Tarik Password secara masa nyata dari CSV GID 1794402337
             Papa.parse(PASSWORD_CSV_URL, {
                 download: true,
                 header: false,
                 complete: function(results) {
                     try {
                         let fetchedPwd = '';
-                        // Andaikan row 1 adalah header (cth: "PASSWORD") dan row 2 adalah isi
                         if (results.data.length > 1 && (results.data[0][0].toLowerCase().includes('password') || results.data[0][0].toLowerCase().includes('laluan'))) {
                             fetchedPwd = results.data[1][0].trim();
                         } else if (results.data.length > 0) {
                             fetchedPwd = results.data[0][0].trim();
                         }
-
-                        if (!fetchedPwd) fetchedPwd = 'hafsah123#'; // Fallback keselamatan minimum jika tab kosong
+                        if (!fetchedPwd) fetchedPwd = 'hafsah123#'; 
                         
                         currentAdminPassword = fetchedPwd;
 
                         if (pwdInput === fetchedPwd) {
-                            // Berjaya log masuk
                             document.getElementById('login-screen').classList.add('hidden');
                             document.getElementById('app-wrapper').classList.remove('hidden');
                             
-                            // Paparkan Elemen Admin menggunakan CSS Utilities sedia ada
                             document.getElementById('admin-sidebar').className = "admin-sidebar-slim islamic-pattern-bg text-white hidden md:flex flex-col shadow-xl z-20 shrink-0 relative transition-[width] duration-300";
                             document.getElementById('admin-mobile-header').className = "flex md:hidden islamic-pattern-bg text-white p-3.5 justify-between items-center shadow-md z-20 shrink-0";
                             document.getElementById('class-selector-container').className = "flex p-4 md:p-8 pb-0 flex-wrap bg-gray-50 z-10 sticky top-0 border-b border-gray-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]";
-                            
-                            // Paparkan Bottom Nav Bar untuk Admin di telefon
                             document.getElementById('admin-bottom-nav').className = "flex md:hidden fixed bottom-0 left-0 w-full bg-gray-900 text-gray-400 z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.3)] justify-around items-center";
                             
                             switchTab('dashboard'); 
@@ -1007,11 +1016,7 @@
             btn.disabled = true;
 
             try {
-                let payload = {
-                    action: "update_password",
-                    newPassword: newPwd
-                };
-
+                let payload = { action: "update_password", newPassword: newPwd };
                 const response = await fetch(APP_SCRIPT_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -1021,7 +1026,7 @@
 
                 if (result.status === "success") {
                     alert("Kata laluan berjaya dikemas kini di dalam Google Sheet!");
-                    currentAdminPassword = newPwd; // Set locally as well
+                    currentAdminPassword = newPwd; 
                     document.getElementById('setting-old-pwd').value = '';
                     document.getElementById('setting-new-pwd').value = '';
                     document.getElementById('setting-confirm-pwd').value = '';
@@ -1044,16 +1049,18 @@
             document.getElementById('login-ic').value = '';
             document.getElementById('login-password').value = '';
             
-            // Paparkan Login Screen
             document.getElementById('login-screen').classList.remove('hidden');
             document.getElementById('app-wrapper').classList.add('hidden');
             
-            // Reset state sidebar dan elemen admin
+            const adminBottomNav = document.getElementById('admin-bottom-nav');
+            if (adminBottomNav) {
+                adminBottomNav.classList.add('hidden');
+                adminBottomNav.classList.remove('flex');
+            }
+            
             isSidebarExpanded = false;
             const sidebar = document.getElementById('admin-sidebar');
-            if (sidebar) {
-                sidebar.className = "hidden";
-            }
+            if (sidebar) sidebar.className = "hidden";
             const icon = document.getElementById('sidebar-toggle-icon');
             if (icon) {
                 icon.setAttribute('data-lucide', 'chevron-right');
@@ -1064,20 +1071,17 @@
             document.getElementById('class-selector-container').className = "hidden";
             document.getElementById('admin-bottom-nav').className = "hidden";
             
-            // Sembunyikan semua tab untuk pastikan UI betul-betul bersih (reset)
             document.getElementById('tab-dashboard').classList.add('hidden');
             document.getElementById('tab-students').classList.add('hidden');
             document.getElementById('tab-settings').classList.add('hidden');
             document.getElementById('tab-student-portal').classList.add('hidden');
             
-            // Reset kepada Student Form by default
             document.getElementById('student-login-form').classList.remove('hidden');
             document.getElementById('admin-login-form').classList.add('hidden');
         }
 
         function processData(rows, targetClassId) {
             if(rows.length < 3) throw new Error("Format data CSV tidak lengkap.");
-
             let dataObj = { headers: [], baseMarks: {}, students: [], classAverages: {}, classSectionAverages: {}, stats: {}, sectionsList: [] };
 
             const rawHeaders = rows[0];
@@ -1100,7 +1104,6 @@
 
             rawStudents.forEach(row => {
                 if(!row[1] || row[1].trim() === "") return;
-
                 let rawPicUrl = row[picIndex] ? row[picIndex].trim() : '';
                 let picUrl = '';
                 if (rawPicUrl) {
@@ -1108,31 +1111,19 @@
                     if (driveIdMatch && driveIdMatch[1]) picUrl = `https://lh3.googleusercontent.com/d/${driveIdMatch[1]}`;
                     else picUrl = rawPicUrl; 
                 } else {
-                    picUrl = generateAvatar(row[1].trim()); // Guna penjana avatar tempatan
+                    picUrl = generateAvatar(row[1].trim()); 
                 }
 
-                let student = {
-                    bil: row[0],
-                    nama: row[1],
-                    ic: row[2],
-                    picUrl: picUrl,
-                    marks: {},
-                    percentages: {},
-                    overallAvg: 0,
-                    sectionScores: {} 
-                };
-
-                let totalPercent = 0;
-                let validCategories = 0;
-                let studentSecSums = {};
-                let studentSecCounts = {};
+                let student = { bil: row[0], nama: row[1], ic: row[2], picUrl: picUrl, marks: {}, percentages: {}, overallAvg: 0, sectionScores: {} };
+                let totalPercent = 0, validCategories = 0;
+                let studentSecSums = {}, studentSecCounts = {};
+                
                 dataObj.sectionsList.forEach(s => { studentSecSums[s] = 0; studentSecCounts[s] = 0; });
 
                 dataObj.headers.forEach((header, index) => {
                     const mark = parseFloat(row[index + 3]);
                     const actualMark = isNaN(mark) ? 0 : mark;
                     const base = dataObj.baseMarks[header];
-                    
                     student.marks[header] = actualMark;
                     
                     let pct = base > 0 ? (actualMark / base) * 100 : 0;
@@ -1154,7 +1145,6 @@
                 dataObj.sectionsList.forEach(sec => {
                     student.sectionScores[sec] = studentSecCounts[sec] > 0 ? (studentSecSums[sec] / studentSecCounts[sec]) : 0;
                 });
-
                 dataObj.students.push(student);
             });
 
@@ -1201,7 +1191,6 @@
 
         function fetchData(forceRefresh = false) {
             if (forceRefresh) classCache[currentClassId] = null; 
-
             if (classCache[currentClassId]) {
                 globalData = classCache[currentClassId];
                 renderDashboard();
@@ -1235,6 +1224,61 @@
             });
         }
 
+        function updateMainChart() {
+            const isMobile = window.innerWidth < 768;
+            const filterVal = document.getElementById('chart-section-filter') ? document.getElementById('chart-section-filter').value : 'ALL';
+            let labels = [], dataPts = [], bgColors = [], borderColors = [];
+
+            const colors = [
+                { bg: 'rgba(21, 128, 61, 0.7)', border: 'rgb(21, 128, 61)' }, 
+                { bg: 'rgba(234, 179, 8, 0.7)', border: 'rgb(202, 138, 4)' }, 
+                { bg: 'rgba(59, 130, 246, 0.7)', border: 'rgb(37, 99, 235)' }, 
+                { bg: 'rgba(239, 68, 68, 0.7)', border: 'rgb(220, 38, 38)' }, 
+                { bg: 'rgba(139, 92, 246, 0.7)', border: 'rgb(124, 58, 237)' }, 
+                { bg: 'rgba(20, 184, 166, 0.7)', border: 'rgb(13, 148, 136)' } 
+            ];
+
+            globalData.headers.forEach(h => {
+                const sec = getSection(h, currentClassId);
+                if (filterVal === 'ALL' || filterVal === sec) {
+                    labels.push(h);
+                    dataPts.push(globalData.classAverages[h]);
+                    const secIndex = globalData.sectionsList.indexOf(sec) % colors.length;
+                    bgColors.push(colors[secIndex].bg);
+                    borderColors.push(colors[secIndex].border);
+                }
+            });
+
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            if (mainChartInstance) mainChartInstance.destroy();
+            
+            mainChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Purata Kelas (%)',
+                        data: dataPts,
+                        backgroundColor: filterVal === 'ALL' ? bgColors : bgColors[0], 
+                        borderColor: filterVal === 'ALL' ? borderColors : borderColors[0],
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, max: 100 },
+                        x: { ticks: { maxRotation: 90, minRotation: 45, font: { size: isMobile ? 8 : 9 }, autoSkip: false } }
+                    },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: { callbacks: { afterLabel: function(context) { return 'Bahagian: ' + getSection(context.label, currentClassId); } } }
+                    }
+                }
+            });
+        }
+
         function renderDashboard() {
             document.getElementById('display-class-title').textContent = CLASSES[currentClassId].name;
             document.getElementById('stat-total-students').textContent = globalData.stats.total || 0;
@@ -1245,33 +1289,44 @@
             document.getElementById('stat-worst-category').title = globalData.stats.worst;
 
             const isMobile = window.innerWidth < 768;
+            const filterDropdown = document.getElementById('chart-section-filter');
+            if (filterDropdown) {
+                filterDropdown.innerHTML = '<option value="ALL">Semua Bahagian</option>';
+                globalData.sectionsList.forEach(sec => {
+                    filterDropdown.innerHTML += `<option value="${sec}">${sec}</option>`;
+                });
+            }
 
-            const ctx = document.getElementById('mainChart').getContext('2d');
-            if (mainChartInstance) mainChartInstance.destroy();
-            const labels = globalData.headers;
-            const dataPts = labels.map(l => globalData.classAverages[l]);
-            mainChartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Purata Kelas (%)',
-                        data: dataPts,
-                        backgroundColor: 'rgba(21, 128, 61, 0.7)', 
-                        borderColor: 'rgb(21, 128, 61)',
-                        borderWidth: 1,
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    scales: {
-                        y: { beginAtZero: true, max: 100 },
-                        x: { ticks: { maxRotation: 90, minRotation: 45, font: { size: isMobile ? 8 : 9 }, autoSkip: true } }
-                    },
-                    plugins: { legend: { display: false } }
-                }
-            });
+            const excellenceContainer = document.getElementById('excellence-list-container');
+            if (excellenceContainer) {
+                excellenceContainer.innerHTML = '';
+                let topicAverages = globalData.headers.map(h => {
+                    return { topic: h, avg: globalData.classAverages[h], section: getSection(h, currentClassId) };
+                });
+                
+                topicAverages.sort((a, b) => b.avg - a.avg);
+                let excellentTopics = topicAverages.filter(t => t.avg >= 70);
+                if(excellentTopics.length === 0) excellentTopics = topicAverages.slice(0, 3);
+
+                excellentTopics.forEach(t => {
+                    let badgeClass = t.avg >= 90 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-green-50 text-green-700 border-green-200';
+                    let iconColor = t.avg >= 90 ? 'text-emerald-500' : 'text-green-500';
+                    excellenceContainer.innerHTML += `
+                        <div class="flex items-center p-3 border rounded-xl ${badgeClass}">
+                            <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center mr-3 shrink-0 shadow-sm border ${badgeClass.split(' ')[2]}">
+                                <i data-lucide="award" class="w-5 h-5 ${iconColor}"></i>
+                            </div>
+                            <div class="flex-1 overflow-hidden pr-2">
+                                <p class="text-[10px] uppercase font-bold opacity-70 truncate">${t.section}</p>
+                                <h4 class="text-sm font-bold truncate" title="${t.topic}">${t.topic}</h4>
+                            </div>
+                            <div class="text-lg font-black ml-auto shrink-0">${t.avg.toFixed(1)}%</div>
+                        </div>
+                    `;
+                });
+            }
+
+            updateMainChart();
 
             const ctxSec = document.getElementById('sectionChart').getContext('2d');
             if (sectionChartInstance) sectionChartInstance.destroy();
@@ -1306,19 +1361,39 @@
                     plugins: { legend: { display: false } }
                 }
             });
+            lucide.createIcons();
+        }
+
+        function toggleSortOrder() {
+            currentSortOrder = currentSortOrder === 'desc' ? 'asc' : 'desc';
+            const icon = document.getElementById('sort-icon');
+            const text = document.getElementById('sort-text');
+            if (currentSortOrder === 'desc') {
+                text.textContent = 'Markah Tertinggi';
+                icon.setAttribute('data-lucide', 'arrow-down');
+            } else {
+                text.textContent = 'Markah Terendah';
+                icon.setAttribute('data-lucide', 'arrow-up');
+            }
+            lucide.createIcons();
+            renderStudentList();
+            filterStudents();
         }
 
         function renderStudentList() {
             const tbody = document.getElementById('student-table-body');
             tbody.innerHTML = '';
-
             if (globalData.students.length === 0) {
                 document.getElementById('no-student-msg').classList.remove('hidden');
                 return;
             }
             document.getElementById('no-student-msg').classList.add('hidden');
 
-            globalData.students.forEach((student, index) => {
+            const sortedStudents = [...globalData.students].sort((a, b) => {
+                return currentSortOrder === 'desc' ? b.overallAvg - a.overallAvg : a.overallAvg - b.overallAvg;
+            });
+
+            sortedStudents.forEach((student, index) => {
                 let badgeClass = "";
                 if(student.overallAvg >= 90) badgeClass = "bg-emerald-100 text-emerald-800 font-bold";
                 else if(student.overallAvg >= 70) badgeClass = "bg-green-100 text-green-800";
@@ -1329,24 +1404,23 @@
                 tr.className = "hover:bg-gray-50 transition cursor-pointer";
                 tr.onclick = () => showStudentDetail(student);
                 
-                // Gunakan fungsi jana avatar SVG tempatan jika pautan imej bermasalah
                 const escapedName = student.nama.replace(/'/g, "\\'");
                 tr.innerHTML = `
-                    <td class="px-6 py-4 text-sm text-gray-500">${index + 1}</td>
+                    <td class="px-6 py-4 text-sm font-bold text-gray-400">#${index + 1}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
-                            <img class="h-8 w-8 rounded-full object-cover border border-gray-200 bg-white" src="${student.picUrl}" alt="${student.nama}" onerror="this.src=generateAvatar('${escapedName}')">
+                            <img class="h-8 w-8 rounded-full object-cover border border-gray-200 bg-white shrink-0" src="${student.picUrl}" alt="${student.nama}" onerror="this.src=generateAvatar('${escapedName}')">
                             <div class="ml-3 text-sm font-medium text-gray-900">${student.nama}</div>
                         </div>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-500">${student.ic || '-'}</td>
                     <td class="px-6 py-4 text-center">
-                        <span class="px-3 py-1 rounded-full text-xs font-bold ${badgeClass}">
+                        <span class="px-3 py-1.5 rounded-full text-xs font-bold ${badgeClass} inline-flex items-center">
                             ${student.overallAvg.toFixed(1)}%
                         </span>
                     </td>
                     <td class="px-6 py-4 text-right text-sm font-medium">
-                        <button class="text-quran-600 hover:text-quran-800">Lihat <i data-lucide="chevron-right" class="w-4 h-4 inline"></i></button>
+                        <button class="text-quran-600 hover:text-quran-800 flex items-center justify-end w-full">Lihat <i data-lucide="chevron-right" class="w-4 h-4 ml-1"></i></button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -1358,11 +1432,9 @@
             const input = document.getElementById('search-input').value.toLowerCase().replace(/-/g, '');
             const rows = document.querySelectorAll('#student-table-body tr');
             let visibleCount = 0;
-
             rows.forEach(row => {
                 const name = row.cells[1].textContent.toLowerCase();
                 const ic = row.cells[2].textContent.toLowerCase().replace(/-/g, '');
-                
                 if (name.includes(input) || ic.includes(input)) {
                     row.style.display = '';
                     visibleCount++;
@@ -1370,12 +1442,10 @@
                     row.style.display = 'none';
                 }
             });
-
             const msg = document.getElementById('no-student-msg');
             if (visibleCount === 0) msg.classList.remove('hidden');
             else msg.classList.add('hidden');
         }
-
 
         function showStudentDetail(student) {
             currentEditingStudent = student;
@@ -1391,8 +1461,30 @@
             modalPic.onerror = function() { this.src = generateAvatar(student.nama); };
 
             const scoreEl = document.getElementById('modal-overall-score');
+            const gradeEl = document.getElementById('modal-overall-grade');
+            const targetEl = document.getElementById('modal-target-badge');
+
             scoreEl.textContent = student.overallAvg.toFixed(1) + '%';
-            scoreEl.className = `text-4xl font-bold ${student.overallAvg >= 90 ? 'text-emerald-600' : (student.overallAvg >= 70 ? 'text-green-600' : (student.overallAvg >= 41 ? 'text-orange-500' : 'text-red-600'))}`;
+            
+            let colorClass = "", gradeText = "";
+            if (student.overallAvg >= 90) { colorClass = "text-emerald-600"; gradeText = "Cemerlang"; }
+            else if (student.overallAvg >= 70) { colorClass = "text-green-600"; gradeText = "Baik"; }
+            else if (student.overallAvg >= 41) { colorClass = "text-orange-500"; gradeText = "Sederhana"; }
+            else { colorClass = "text-red-600"; gradeText = "Lemah"; }
+
+            scoreEl.className = `text-4xl font-bold ${colorClass}`;
+            gradeEl.className = `text-sm font-bold tracking-widest mt-1 uppercase ${colorClass}`;
+            gradeEl.textContent = gradeText;
+
+            if (currentClassId === 'talaqqi') {
+                targetEl.innerHTML = `<div class="bg-blue-50 text-blue-700 border border-blue-200 px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center"><i data-lucide="book-open" class="w-4 h-4 mr-2"></i> Sasaran Utama: Khatam 30 Juz</div>`;
+            } else {
+                if (student.overallAvg >= 90) {
+                    targetEl.innerHTML = `<div class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center"><i data-lucide="award" class="w-4 h-4 mr-2"></i> Layak Menerima Sijil ABAHATA</div>`;
+                } else {
+                    targetEl.innerHTML = `<div class="bg-amber-50 text-amber-700 border border-amber-200 px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center"><i data-lucide="target" class="w-4 h-4 mr-2"></i> Sasaran Kelayakan Sijil: 90%</div>`;
+                }
+            }
 
             const ulCemerlang = document.getElementById('modal-cemerlang');
             const ulBaik = document.getElementById('modal-baik');
@@ -1423,14 +1515,13 @@
                     const li = document.createElement('li');
                     li.className = "flex justify-between border-b border-gray-50 pb-1.5 pt-1 last:border-0";
                     
-                    let colorClass = "";
-                    let targetUl = null;
-                    if (pct >= 90) { colorClass = "text-emerald-600"; targetUl = ulCemerlang; }
-                    else if (pct >= 70) { colorClass = "text-green-600"; targetUl = ulBaik; }
-                    else if (pct >= 41) { colorClass = "text-orange-500"; targetUl = ulSederhana; }
-                    else { colorClass = "text-red-600"; targetUl = ulLemah; }
+                    let itemColorClass = "", targetUl = null;
+                    if (pct >= 90) { itemColorClass = "text-emerald-600"; targetUl = ulCemerlang; }
+                    else if (pct >= 70) { itemColorClass = "text-green-600"; targetUl = ulBaik; }
+                    else if (pct >= 41) { itemColorClass = "text-orange-500"; targetUl = ulSederhana; }
+                    else { itemColorClass = "text-red-600"; targetUl = ulLemah; }
 
-                    li.innerHTML = `<span class="truncate pr-2 text-xs" title="${header}">${header}</span> <strong class="text-xs ${colorClass}">${pct.toFixed(0)}%</strong>`;
+                    li.innerHTML = `<span class="truncate pr-2 text-xs" title="${header}">${header}</span> <strong class="text-xs ${itemColorClass} shrink-0">${pct.toFixed(0)}%</strong>`;
                     targetUl.appendChild(li);
 
                     let dotClass = pct >= 90 ? 'bg-emerald-400' : (pct >= 70 ? 'bg-green-400' : (pct >= 41 ? 'bg-orange-400' : 'bg-red-400'));
@@ -1461,7 +1552,6 @@
 
             const radarLabels = globalData.sectionsList;
             const radarData = radarLabels.map(s => student.sectionScores[s]);
-
             const ctx = document.getElementById('radarChart').getContext('2d');
             if (radarChartInstance) radarChartInstance.destroy();
 
@@ -1559,6 +1649,57 @@
             });
         }
 
+        function confirmDeleteStudent() {
+            document.getElementById('delete-confirm-modal').classList.remove('hidden');
+            document.getElementById('delete-confirm-modal').classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function hideDeleteConfirm() {
+            document.getElementById('delete-confirm-modal').classList.add('hidden');
+            document.getElementById('delete-confirm-modal').classList.remove('flex');
+        }
+
+        async function proceedDeleteStudent() {
+            const student = currentEditingStudent;
+            const btnConfirm = document.getElementById('btn-confirm-delete');
+            const originalHtml = btnConfirm.innerHTML;
+            btnConfirm.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin inline mr-2"></i> Memadam...';
+            btnConfirm.disabled = true;
+
+            let payload = {
+                action: 'delete_student',
+                tabName: currentClassId === 'talaqqi' ? 'TALAQQI AL QURAN' : 'KELAS ABAHATA',
+                rowIndex: student.rowIndex
+            };
+
+            try {
+                const response = await fetch(APP_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ payload: JSON.stringify(payload) })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === "success") {
+                    hideDeleteConfirm();
+                    closeModal();
+                    alert("Pelajar berjaya dihapuskan dari pangkalan data!");
+                    fetchData(true); 
+                } else {
+                    alert("Ralat pelayan: " + result.message);
+                    btnConfirm.innerHTML = originalHtml;
+                    btnConfirm.disabled = false;
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Terjadi masalah sistem semasa memadam pelajar.");
+                btnConfirm.innerHTML = originalHtml;
+                btnConfirm.disabled = false;
+            }
+        }
+
         async function saveStudentData() {
             const student = currentEditingStudent;
             const btnSave = document.getElementById('btn-save');
@@ -1611,14 +1752,8 @@
 
         function setupStudentPortal(enrolled) {
             studentEnrolledClasses = enrolled;
-
-            // Sorok Skrin Login
             document.getElementById('login-screen').classList.add('hidden');
-            
-            // Tunjuk Pembalut Utama
             document.getElementById('app-wrapper').classList.remove('hidden');
-            
-            // Sembunyikan elemen admin sepenuhnya menggunakan class CSS
             document.getElementById('admin-sidebar').className = 'hidden';
             document.getElementById('admin-mobile-header').className = 'hidden';
             document.getElementById('class-selector-container').className = 'hidden';
@@ -1629,11 +1764,8 @@
             document.getElementById('tab-dashboard').classList.add('hidden');
             document.getElementById('tab-students').classList.add('hidden');
             document.getElementById('tab-settings').classList.add('hidden');
-
-            // Tunjuk Tab Portal Pelajar
             document.getElementById('tab-student-portal').classList.remove('hidden');
             
-            // Urus Paparan Kelas (Butang atau Label)
             const selectorContainer = document.getElementById('portal-class-selector');
             const badgeSingle = document.getElementById('portal-student-class');
 
@@ -1641,7 +1773,6 @@
                 selectorContainer.classList.remove('hidden');
                 badgeSingle.classList.add('hidden');
                 selectorContainer.innerHTML = '';
-                
                 enrolled.forEach((enc, index) => {
                     const btn = document.createElement('button');
                     btn.className = `flex-none whitespace-nowrap px-4 py-2 text-sm font-bold rounded-full border transition-all ${index === 0 ? 'bg-quran-700 text-white border-quran-700 shadow-sm' : 'bg-white text-quran-700 border-quran-200 hover:bg-quran-50'}`;
@@ -1654,7 +1785,6 @@
                 badgeSingle.classList.remove('hidden');
                 badgeSingle.textContent = enrolled[0].classId === 'talaqqi' ? 'Talaqqi Al-Quran' : 'Kelas ABAHATA';
             }
-
             switchPortalClass(0, selectorContainer.children[0] || null);
         }
 
@@ -1671,7 +1801,6 @@
                 });
                 activeBtn.className = 'flex-none whitespace-nowrap px-4 py-2 text-sm font-bold rounded-full border transition-all bg-quran-700 text-white border-quran-700 shadow-sm';
             }
-
             renderStudentPortal(enc.student);
         }
 
@@ -1682,13 +1811,33 @@
             
             const picEl = document.getElementById('portal-student-pic');
             picEl.src = student.picUrl;
-            picEl.onerror = function() {
-                this.src = generateAvatar(student.nama);
-            };
+            picEl.onerror = function() { this.src = generateAvatar(student.nama); };
 
             const scoreEl = document.getElementById('portal-overall-score');
+            const gradeEl = document.getElementById('portal-overall-grade');
+            const targetEl = document.getElementById('portal-target-badge');
+
             scoreEl.textContent = student.overallAvg.toFixed(1) + '%';
-            scoreEl.className = `text-5xl md:text-6xl font-bold tracking-tight ${student.overallAvg >= 90 ? 'text-emerald-600' : (student.overallAvg >= 70 ? 'text-green-600' : (student.overallAvg >= 41 ? 'text-orange-500' : 'text-red-500'))}`;
+            
+            let colorClass = "", gradeText = "";
+            if (student.overallAvg >= 90) { colorClass = "text-emerald-600"; gradeText = "Cemerlang"; }
+            else if (student.overallAvg >= 70) { colorClass = "text-green-600"; gradeText = "Baik"; }
+            else if (student.overallAvg >= 41) { colorClass = "text-orange-500"; gradeText = "Sederhana"; }
+            else { colorClass = "text-red-600"; gradeText = "Lemah"; }
+
+            scoreEl.className = `text-5xl md:text-6xl font-bold tracking-tight ${colorClass}`;
+            gradeEl.className = `text-base md:text-lg font-bold tracking-widest mt-2 uppercase ${colorClass}`;
+            gradeEl.textContent = gradeText;
+
+            if (currentLoggedInClass === 'talaqqi') {
+                targetEl.innerHTML = `<div class="bg-blue-50 text-blue-700 border border-blue-200 px-3 py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center justify-center"><i data-lucide="book-open" class="w-4 h-4 md:w-5 md:h-5 mr-2"></i> Sasaran Utama: Khatam 30 Juz</div>`;
+            } else {
+                if (student.overallAvg >= 90) {
+                    targetEl.innerHTML = `<div class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center justify-center"><i data-lucide="award" class="w-4 h-4 md:w-5 md:h-5 mr-2"></i> Layak Menerima Sijil ABAHATA</div>`;
+                } else {
+                    targetEl.innerHTML = `<div class="bg-amber-50 text-amber-700 border border-amber-200 px-3 py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center justify-center"><i data-lucide="target" class="w-4 h-4 md:w-5 md:h-5 mr-2"></i> Sasaran Kelayakan Sijil: 90%</div>`;
+                }
+            }
 
             const ulCemerlang = document.getElementById('portal-cemerlang');
             const ulBaik = document.getElementById('portal-baik');
@@ -1721,14 +1870,13 @@
                     const li = document.createElement('li');
                     li.className = "flex justify-between border-b border-gray-50 pb-2 pt-2 last:border-0 text-[13px] md:text-sm";
                     
-                    let colorClass = "";
-                    let targetUl = null;
-                    if (pct >= 90) { colorClass = "text-emerald-600"; targetUl = ulCemerlang; }
-                    else if (pct >= 70) { colorClass = "text-green-600"; targetUl = ulBaik; }
-                    else if (pct >= 41) { colorClass = "text-orange-500"; targetUl = ulSederhana; }
-                    else { colorClass = "text-red-600"; targetUl = ulLemah; }
+                    let itemColorClass = "", targetUl = null;
+                    if (pct >= 90) { itemColorClass = "text-emerald-600"; targetUl = ulCemerlang; }
+                    else if (pct >= 70) { itemColorClass = "text-green-600"; targetUl = ulBaik; }
+                    else if (pct >= 41) { itemColorClass = "text-orange-500"; targetUl = ulSederhana; }
+                    else { itemColorClass = "text-red-600"; targetUl = ulLemah; }
 
-                    li.innerHTML = `<span class="truncate pr-2 text-gray-700" title="${header}">${header}</span> <strong class="${colorClass}">${pct.toFixed(0)}%</strong>`;
+                    li.innerHTML = `<span class="pr-2 text-gray-700 text-sm whitespace-normal leading-tight" title="${header}">${header}</span> <strong class="${itemColorClass} shrink-0 text-sm">${pct.toFixed(0)}%</strong>`;
                     targetUl.appendChild(li);
 
                     let dotClass = pct >= 90 ? 'bg-emerald-400' : (pct >= 70 ? 'bg-green-400' : (pct >= 41 ? 'bg-orange-400' : 'bg-red-400'));
@@ -1744,9 +1892,7 @@
                         <td class="px-4 py-3 border-b border-gray-50 text-center font-bold text-xs md:text-sm text-gray-800">${mark}</td>
                         <td class="px-4 py-3 border-b border-gray-50 text-center text-gray-400 text-xs md:text-sm">${base}</td>
                         <td class="px-4 py-3 border-b border-gray-50 text-center text-xs md:text-sm">
-                            <span class="${badgeClass} px-2 py-1 rounded font-bold">
-                                ${pct.toFixed(1)}%
-                            </span>
+                            <span class="${badgeClass} px-2 py-1 rounded font-bold">${pct.toFixed(1)}%</span>
                         </td>
                     `;
                     tbodyDetail.appendChild(tr);
@@ -1759,7 +1905,6 @@
             if(ulSederhana.children.length === 0) ulSederhana.innerHTML = emptyMsg;
             if(ulLemah.children.length === 0) ulLemah.innerHTML = emptyMsg;
 
-            // Render Radar Pelajar Dalam Portal
             const radarLabels = globalData.sectionsList;
             const radarData = radarLabels.map(s => student.sectionScores[s]);
             const ctx = document.getElementById('portalRadarChart').getContext('2d');
@@ -1865,7 +2010,6 @@
             document.getElementById('tab-settings').classList.add('hidden');
             document.getElementById('tab-student-portal').classList.add('hidden');
 
-            // Tetapkan Butang Desktop Sidebar
             const btns = ['btn-dashboard', 'btn-students', 'btn-settings'];
             btns.forEach(id => {
                 const b = document.getElementById(id);
@@ -1875,7 +2019,6 @@
             const activeBtn = document.getElementById('btn-' + tabId);
             if (activeBtn) activeBtn.className = "nav-button w-full flex items-center text-sm font-medium bg-quran-800 border-l-4 border-gold-500 text-white transition-colors mt-1 py-3";
             
-            // Tetapkan Butang Mobile Bottom Tab Nav
             const mobileBtns = ['btn-mobile-dashboard', 'btn-mobile-students', 'btn-mobile-settings'];
             mobileBtns.forEach(id => {
                 const b = document.getElementById(id);
@@ -1887,12 +2030,6 @@
 
             document.getElementById('tab-' + tabId).classList.remove('hidden');
             document.getElementById('main-scroll-area').scrollTop = 0;
-        }
-
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobile-menu');
-            if (menu.classList.contains('hidden')) menu.classList.remove('hidden');
-            else menu.classList.add('hidden');
         }
 
         function showLoading() {
@@ -1922,10 +2059,33 @@
             });
         }
 
-        // FUNGSI TAMBAH PELAJAR BAHARU
+        // ==========================================
+        // FUNGSI TAMBAH PELAJAR (2 Langkah & Semakan IC)
+        // ==========================================
+        function resetAddStudentForm() {
+            const step2 = document.getElementById('add-student-step-2');
+            const footer = document.getElementById('add-student-footer');
+            const msg = document.getElementById('ic-check-msg');
+            if (step2) step2.classList.add('hidden');
+            if (footer) footer.classList.add('hidden');
+            if (msg) {
+                msg.classList.add('hidden');
+                msg.innerHTML = '';
+            }
+        }
+
         function toggleAddStudentModal() {
             const modal = document.getElementById('add-student-modal');
+            if (!modal) return;
             if (modal.classList.contains('hidden')) {
+                const nameInput = document.getElementById('add-student-name');
+                const icInput = document.getElementById('add-student-ic');
+                const imgInput = document.getElementById('add-student-image');
+                if(nameInput) nameInput.value = '';
+                if(icInput) icInput.value = '';
+                if(imgInput) imgInput.value = '';
+                resetAddStudentForm();
+
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
                 setTimeout(() => { modal.children[0].classList.add('modal-enter-active'); }, 10);
@@ -1935,6 +2095,60 @@
                     modal.classList.add('hidden');
                     modal.classList.remove('flex');
                 }, 200);
+            }
+        }
+
+        async function checkStudentIC() {
+            const icInput = document.getElementById('add-student-ic').value.trim();
+            const searchIC = icInput.replace(/\D/g, '');
+            const classIdRaw = document.getElementById('add-student-class').value;
+            const classId = classIdRaw === 'TALAQQI AL QURAN' ? 'talaqqi' : 'abahata';
+            
+            const msgEl = document.getElementById('ic-check-msg');
+            const step2 = document.getElementById('add-student-step-2');
+            const footer = document.getElementById('add-student-footer');
+            const btnCheck = document.getElementById('btn-check-ic');
+
+            if (searchIC.length < 6) {
+                msgEl.textContent = "Sila masukkan no IC sekurang-kurangnya 6 digit.";
+                msgEl.className = "text-[13px] font-medium text-red-500 block mt-2";
+                msgEl.classList.remove('hidden');
+                return;
+            }
+
+            const originalHtml = btnCheck.innerHTML;
+            btnCheck.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>';
+            btnCheck.disabled = true;
+
+            try {
+                if (!classCache[classId]) {
+                    classCache[classId] = await fetchAndParseCSV(CLASSES[classId].url, classId);
+                }
+
+                const existingStudent = classCache[classId].students.find(s => s.ic && s.ic.replace(/\D/g, '') === searchIC);
+
+                if (existingStudent) {
+                    msgEl.innerHTML = `<i data-lucide="x-circle" class="w-4 h-4 inline mr-1 mb-0.5"></i> Pelajar telah berdaftar dalam kelas ini.`;
+                    msgEl.className = "text-xs font-semibold text-red-700 bg-red-50 p-2.5 rounded-lg border border-red-200 block mt-3 flex items-center";
+                    step2.classList.add('hidden');
+                    footer.classList.add('hidden');
+                } else {
+                    msgEl.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 inline mr-1 mb-0.5"></i> IC Sah. Sila lengkapkan butiran.`;
+                    msgEl.className = "text-xs font-semibold text-emerald-700 bg-emerald-50 p-2.5 rounded-lg border border-emerald-200 block mt-3 flex items-center";
+                    step2.classList.remove('hidden');
+                    footer.classList.remove('hidden');
+                    setTimeout(() => document.getElementById('add-student-name').focus(), 100);
+                }
+                msgEl.classList.remove('hidden');
+                lucide.createIcons();
+            } catch (e) {
+                msgEl.textContent = "Ralat ketika menyemak pangkalan data.";
+                msgEl.className = "text-xs font-medium text-red-500 block mt-2";
+                msgEl.classList.remove('hidden');
+            } finally {
+                btnCheck.innerHTML = originalHtml;
+                btnCheck.disabled = false;
+                lucide.createIcons();
             }
         }
 
@@ -1981,13 +2195,6 @@
                 if (result.status === "success") {
                     alert("Pelajar baharu berjaya ditambah ke dalam pangkalan data!");
                     toggleAddStudentModal();
-                    
-                    // Kosongkan input form
-                    document.getElementById('add-student-name').value = '';
-                    document.getElementById('add-student-ic').value = '';
-                    document.getElementById('add-student-image').value = '';
-                    
-                    // Segar semula data
                     fetchData(true); 
                 } else {
                     alert("Ralat pelayan: " + result.message);
@@ -2003,90 +2210,102 @@
         }
 
         // ==========================================
-        // FUNGSI MUAT TURUN PDF (HTML2PDF)
+        // FUNGSI MUAT TURUN GAMBAR (HTML2CANVAS)
         // ==========================================
         
-        async function downloadDashboardPDF(btn) {
+        async function downloadDashboardImage(btn) {
             const element = document.getElementById('tab-dashboard');
             const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i> Menyediakan PDF...';
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i> Menyediakan Gambar...';
             btn.disabled = true;
 
             const noPrintEls = element.querySelectorAll('.no-print');
             noPrintEls.forEach(el => el.style.display = 'none');
             
-            // [FIX CROP]: Paksa lebar elemen 
             const origWidth = element.style.width;
+            const origOverflow = element.style.overflow;
             element.style.width = '1200px';
-
-            const opt = {
-                margin: [0.4, 0.4],
-                filename: `Laporan_Kelas_${CLASSES[currentClassId].name.replace(/\s+/g, '_')}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, scrollY: 0, scrollX: 0 },
-                jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' },
-                pagebreak: { mode: ['css', 'avoid-all'], avoid: ['.bg-white'] } // [FIX SPLIT]: Halang kad/carta terpotong 
-            };
+            element.style.overflow = 'visible';
 
             try {
-                await html2pdf().set(opt).from(element).save();
+                const canvas = await html2canvas(element, { scale: 2, useCORS: true, windowWidth: 1200, scrollY: 0, scrollX: 0 });
+                const link = document.createElement('a');
+                link.download = `Laporan_Kelas_${CLASSES[currentClassId].name.replace(/\s+/g, '_')}.jpg`;
+                link.href = canvas.toDataURL('image/jpeg', 0.98);
+                link.click();
             } catch (e) {
                 console.error(e);
-                alert('Gagal memuat turun PDF. Ralat sistem.');
+                alert('Gagal memuat turun gambar. Ralat sistem.');
             }
 
-            // Restore semula
             element.style.width = origWidth;
+            element.style.overflow = origOverflow;
             noPrintEls.forEach(el => el.style.display = '');
             btn.innerHTML = originalHtml;
             btn.disabled = false;
             lucide.createIcons();
         }
 
-        async function downloadAdminStudentPDF(btn) {
+        async function downloadAdminStudentImage(btn) {
             const modalContainer = document.getElementById('admin-modal-content');
             const scrollArea = document.getElementById('admin-modal-scroll-area');
-            const tableContainer = document.getElementById('admin-table-container');
             
             const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 md:mr-1.5 animate-spin"></i> <span class="hidden md:inline">Loading</span>';
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 md:mr-1.5 animate-spin"></i> <span class="hidden md:inline">Sedia...</span>';
             btn.disabled = true;
 
             const noPrintEls = modalContainer.querySelectorAll('.no-print');
             noPrintEls.forEach(el => el.style.display = 'none');
 
-            // [FIX CROP & PAGE BREAK]: Set width yang sesuai untuk Portrait A4
+            // --- Buang had scroll list ---
+            const scrollableLists = modalContainer.querySelectorAll('ul.overflow-y-auto');
+            scrollableLists.forEach(ul => {
+                ul.dataset.origMaxHeight = ul.style.maxHeight || '';
+                ul.dataset.origOverflow = ul.style.overflow || '';
+                ul.style.maxHeight = 'none';
+                ul.style.overflow = 'visible';
+            });
+            
+            // --- Buang had table ---
+            const tableContainers = modalContainer.querySelectorAll('.overflow-x-auto');
+            tableContainers.forEach(container => {
+                container.dataset.origOverflowX = container.style.overflowX || '';
+                container.style.overflowX = 'visible';
+            });
+
+            // Regangkan modal 
             const origMaxHeight = modalContainer.style.maxHeight;
             const origOverflow = scrollArea.style.overflow;
             const origWidth = modalContainer.style.width;
             
+            modalContainer.classList.remove('overflow-hidden');
             modalContainer.style.maxHeight = 'none';
             scrollArea.style.overflow = 'visible';
-            modalContainer.style.width = '1024px'; // Optimum untuk Portrait Grid 3 Kolum
-            
-            if(tableContainer) tableContainer.classList.add('pdf-page-break'); // Paksa letak page break sebelum jadual mula
-
-            const opt = {
-                margin: [0.5, 0.4], // Margin 0.5 inci atas/bawah
-                filename: `Laporan_${currentEditingStudent.nama.replace(/\s+/g, '_')}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, windowWidth: 1024, scrollY: 0, scrollX: 0 },
-                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }, // TUKAR KEMBALI KEPADA PORTRAIT 
-                pagebreak: { mode: ['css', 'avoid-all'], before: '.pdf-page-break', avoid: ['tr'] } // Halang Row jadual terpotong
-            };
+            modalContainer.style.width = '1200px';
 
             try {
-                await html2pdf().set(opt).from(modalContainer).save();
+                const canvas = await html2canvas(modalContainer, { scale: 2, useCORS: true, windowWidth: 1200, scrollY: 0, scrollX: 0 });
+                const link = document.createElement('a');
+                link.download = `Laporan_${currentEditingStudent.nama.replace(/\s+/g, '_')}.jpg`;
+                link.href = canvas.toDataURL('image/jpeg', 0.98);
+                link.click();
             } catch (e) {
                 console.error(e);
-                alert('Gagal memuat turun PDF.');
+                alert('Gagal memuat turun gambar.');
             }
 
-            // Restore semula layout
-            if(tableContainer) tableContainer.classList.remove('pdf-page-break');
+            modalContainer.classList.add('overflow-hidden');
             modalContainer.style.maxHeight = origMaxHeight;
             scrollArea.style.overflow = origOverflow;
             modalContainer.style.width = origWidth;
+            
+            scrollableLists.forEach(ul => {
+                ul.style.maxHeight = ul.dataset.origMaxHeight;
+                ul.style.overflow = ul.dataset.origOverflow;
+            });
+            tableContainers.forEach(container => {
+                container.style.overflowX = container.dataset.origOverflowX;
+            });
             
             noPrintEls.forEach(el => el.style.display = '');
             btn.innerHTML = originalHtml;
@@ -2094,45 +2313,60 @@
             lucide.createIcons();
         }
 
-        async function downloadPortalPDF(btn) {
+        async function downloadPortalImage(btn) {
             const element = document.getElementById('tab-student-portal');
-            const tableContainer = document.getElementById('portal-table-container');
             
             const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 md:mr-2 animate-spin"></i> <span class="hidden md:inline">Menyediakan PDF...</span>';
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 md:mr-2 animate-spin"></i> <span class="hidden md:inline">Sedia...</span>';
             btn.disabled = true;
 
             const noPrintEls = element.querySelectorAll('.no-print');
             noPrintEls.forEach(el => el.style.display = 'none');
+            
+            const scrollableLists = element.querySelectorAll('ul.overflow-y-auto');
+            scrollableLists.forEach(ul => {
+                ul.dataset.origMaxHeight = ul.style.maxHeight || '';
+                ul.dataset.origOverflow = ul.style.overflow || '';
+                ul.style.maxHeight = 'none';
+                ul.style.overflow = 'visible';
+            });
+            
+            const tableContainers = element.querySelectorAll('.overflow-x-auto');
+            tableContainers.forEach(container => {
+                container.dataset.origOverflowX = container.style.overflowX || '';
+                container.style.overflowX = 'visible';
+            });
 
-            // [FIX CROP & PAGE BREAK]: Set width optimum untuk Portrait A4
+            // Regang kanvas pportal utama
             const origClasses = element.className;
             const origWidth = element.style.width;
-            element.classList.remove('mx-auto', 'max-w-5xl');
-            element.style.width = '1024px'; // Kekalkan Desktop Width
+            const origOverflow = element.style.overflow;
+            element.classList.remove('mx-auto', 'max-w-5xl', 'overflow-hidden');
+            element.style.width = '1200px'; 
+            element.style.overflow = 'visible';
             
-            if(tableContainer) tableContainer.classList.add('pdf-page-break'); // Paksa muka surat baharu bermula di sini
-
-            const opt = {
-                margin: [0.5, 0.4], // Margin 0.5 inci atas/bawah
-                filename: `Profil_Prestasi_${currentLoggedInStudent.nama.replace(/\s+/g, '_')}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, windowWidth: 1024, scrollY: 0, scrollX: 0 },
-                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }, // TUKAR KEMBALI KEPADA PORTRAIT 
-                pagebreak: { mode: ['css', 'avoid-all'], before: '.pdf-page-break', avoid: ['tr'] } // Pastikan setiap markah tidak terpotong separuh
-            };
-
             try {
-                await html2pdf().set(opt).from(element).save();
+                const canvas = await html2canvas(element, { scale: 2, useCORS: true, windowWidth: 1200, scrollY: 0, scrollX: 0 });
+                const link = document.createElement('a');
+                link.download = `Profil_Prestasi_${currentLoggedInStudent.nama.replace(/\s+/g, '_')}.jpg`;
+                link.href = canvas.toDataURL('image/jpeg', 0.98);
+                link.click();
             } catch (e) {
                 console.error(e);
-                alert('Gagal memuat turun PDF.');
+                alert('Gagal memuat turun gambar.');
             }
 
-            // Restore semula layout
-            if(tableContainer) tableContainer.classList.remove('pdf-page-break');
             element.className = origClasses;
             element.style.width = origWidth;
+            element.style.overflow = origOverflow;
+            
+            scrollableLists.forEach(ul => {
+                ul.style.maxHeight = ul.dataset.origMaxHeight;
+                ul.style.overflow = ul.dataset.origOverflow;
+            });
+            tableContainers.forEach(container => {
+                container.style.overflowX = container.dataset.origOverflowX;
+            });
             
             noPrintEls.forEach(el => el.style.display = '');
             btn.innerHTML = originalHtml;
