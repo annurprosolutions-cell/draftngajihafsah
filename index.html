@@ -396,6 +396,10 @@
                                 <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
                                 <input type="text" id="search-input" onkeyup="filterStudents()" placeholder="Cari nama atau IC..." class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-quran-500 focus:border-transparent text-sm">
                             </div>
+                            <!-- Butang Muat Turun Kelas Excel Baru -->
+                            <button onclick="downloadAllStudentsExcel(this)" class="w-full md:w-auto px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition flex items-center justify-center whitespace-nowrap shadow-sm">
+                                <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-2"></i> Eksport Excel
+                            </button>
                             <button onclick="toggleSortOrder()" class="w-full md:w-auto px-4 py-2.5 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-lg text-sm font-medium transition flex items-center justify-center whitespace-nowrap shadow-sm">
                                 <i data-lucide="arrow-down" id="sort-icon" class="w-4 h-4 mr-2"></i> <span id="sort-text">Markah Tertinggi</span>
                             </button>
@@ -464,7 +468,11 @@
                     <div class="bg-white rounded-none md:rounded-2xl shadow-sm border-b md:border border-gray-100 overflow-hidden relative">
                         <div class="h-28 md:h-40 islamic-pattern-bg"></div>
                         
-                        <div class="absolute top-4 right-4 flex gap-2 z-10 no-print">
+                        <div class="absolute top-4 right-4 flex gap-2 z-10 no-print flex-wrap justify-end">
+                            <!-- Butang Excel Baru -->
+                            <button onclick="downloadPortalExcel(this)" class="bg-green-600/90 hover:bg-green-600 backdrop-blur-sm text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center transition border border-green-500/50 shadow-sm">
+                                <i data-lucide="file-spreadsheet" class="w-4 h-4 md:mr-2"></i> <span class="hidden md:inline">Excel</span>
+                            </button>
                             <!-- Butang Muat Turun -->
                             <button onclick="downloadPortalPDF(this)" class="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center transition border border-white/30 shadow-sm">
                                 <i data-lucide="file-text" class="w-4 h-4 md:mr-2"></i> <span class="hidden md:inline">PDF</span>
@@ -625,9 +633,13 @@
                         </p>
                     </div>
                 </div>
-                <div class="flex space-x-2 items-center self-start no-print">
+                <div class="flex space-x-2 items-center self-start no-print flex-wrap justify-end">
+                    <!-- Butang Excel Baru -->
+                    <button onclick="downloadAdminStudentExcel(this)" class="text-white hover:text-gold-300 transition bg-white/10 px-3 py-1.5 rounded-lg flex items-center text-xs md:text-sm font-medium">
+                        <i data-lucide="file-spreadsheet" class="w-3 h-3 md:w-4 md:h-4 md:mr-1.5"></i> <span class="hidden md:inline">Excel</span>
+                    </button>
                     <!-- Butang PDF -->
-                    <button onclick="downloadAdminStudentPDF(this)" class="text-white hover:text-gold-300 transition bg-white/10 px-3 py-1.5 rounded-lg flex items-center text-xs md:text-sm font-medium">
+                    <button onclick="downloadAdminStudentPDF(this)" id="btn-dl-admin-student" class="text-white hover:text-gold-300 transition bg-white/10 px-3 py-1.5 rounded-lg flex items-center text-xs md:text-sm font-medium">
                         <i data-lucide="file-text" class="w-3 h-3 md:w-4 md:h-4 md:mr-1.5"></i> <span class="hidden md:inline">PDF</span>
                     </button>
                     <!-- Butang Gambar -->
@@ -2334,11 +2346,11 @@
         }
 
         // ==========================================
-        // FUNGSI MUAT TURUN PDF & GAMBAR
+        // FUNGSI MUAT TURUN PDF (HTML2PDF)
         // ==========================================
-        
         async function downloadDashboardPDF(btn) {
             const element = document.getElementById('tab-dashboard');
+            const scrollArea = document.getElementById('main-scroll-area');
             const originalHtml = btn.innerHTML;
             btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i> Sedia PDF...';
             btn.disabled = true;
@@ -2346,19 +2358,27 @@
             const noPrintEls = element.querySelectorAll('.no-print');
             noPrintEls.forEach(el => el.style.display = 'none');
             
+            // Simpan kedudukan skrol asal & paksa skrol ke atas
+            const origScrollTop = scrollArea.scrollTop;
+            scrollArea.scrollTop = 0;
+            window.scrollTo(0, 0);
+
+            // [Trik Fit Kertas]: Besarkan width supaya konten memanjang, 
+            // bila html2pdf kecilkan ke A4, ia tidak akan overflow ke page 2
             const origWidth = element.style.width;
             const origPosition = element.style.position;
             const origLeft = element.style.left;
             const origTop = element.style.top;
+            const origZIndex = element.style.zIndex;
             
-            // Regangkan ke 1440px untuk paksa html2pdf kecilkan (zoom out) kandungan agar muat Landscape A4
             element.style.position = 'absolute';
             element.style.left = '0px';
             element.style.top = '0px';
             element.style.width = '1440px'; 
+            element.style.zIndex = '9999';
             
-            // Tunggu render carta
-            await new Promise(resolve => setTimeout(resolve, 800));
+            // Tunggu render & animasi selesai
+            await new Promise(resolve => setTimeout(resolve, 1000));
 
             const contentHeight = element.scrollHeight;
 
@@ -2367,7 +2387,6 @@
                 filename: `Laporan_Kelas_${CLASSES[currentClassId].name.replace(/\s+/g, '_')}.pdf`,
                 image: { type: 'jpeg', quality: 1.0 },
                 html2canvas: { scale: 2, useCORS: true, scrollY: 0, scrollX: 0, windowWidth: 1440 },
-                // Kami menggunakan custom "px" dimension untuk pastikan tak ada page break
                 jsPDF: { unit: 'px', format: [1440, contentHeight], orientation: 1440 > contentHeight ? 'landscape' : 'portrait' } 
             };
 
@@ -2383,6 +2402,9 @@
             element.style.left = origLeft;
             element.style.top = origTop;
             element.style.width = origWidth;
+            element.style.zIndex = origZIndex;
+            scrollArea.scrollTop = origScrollTop; // Kembalikan posisi skrol
+
             noPrintEls.forEach(el => el.style.display = '');
             btn.innerHTML = originalHtml;
             btn.disabled = false;
@@ -2415,25 +2437,35 @@
                 container.style.overflowX = 'visible';
             });
 
+            // Simpan kedudukan skrol asal & paksa skrol ke atas
+            const origScrollTop = scrollArea.scrollTop;
+            scrollArea.scrollTop = 0;
+            window.scrollTo(0, 0);
+
+            const origClasses = modalContainer.className;
             const origMaxHeight = modalContainer.style.maxHeight;
             const origOverflow = scrollArea.style.overflow;
             const origWidth = modalContainer.style.width;
             
-            modalContainer.classList.remove('overflow-hidden');
+            modalContainer.classList.remove('overflow-hidden', 'max-w-4xl');
             modalContainer.style.maxHeight = 'none';
             scrollArea.style.overflow = 'visible';
-            modalContainer.style.width = '1200px'; 
+            modalContainer.style.width = '1024px'; 
             
             const origTransform = modalContainer.style.transform;
             const origPosition = modalContainer.style.position;
             const origLeft = modalContainer.style.left;
             const origTop = modalContainer.style.top;
+            const origZIndex = modalContainer.style.zIndex;
 
             modalContainer.style.transform = 'none'; 
             modalContainer.style.position = 'absolute'; 
             modalContainer.style.left = '0px'; 
             modalContainer.style.top = '0px'; 
+            modalContainer.style.zIndex = '9999';
             
+            if(tableContainer) tableContainer.classList.add('pdf-page-break'); 
+
             // Tunggu render
             await new Promise(resolve => setTimeout(resolve, 800));
 
@@ -2443,20 +2475,21 @@
                 margin: 0, 
                 filename: `Laporan_${currentEditingStudent.nama.replace(/\s+/g, '_')}.pdf`,
                 image: { type: 'jpeg', quality: 1.0 },
-                html2canvas: { scale: 2, useCORS: true, windowWidth: 1200, scrollY: 0, scrollX: 0 },
-                // Memakai exact format saiz 1 muka surat berterusan untuk elakkan potongan
-                jsPDF: { unit: 'px', format: [1200, contentHeight], orientation: 'portrait' } 
+                html2canvas: { scale: 2, useCORS: true, windowWidth: 1024, scrollY: 0, scrollX: 0 },
+                jsPDF: { unit: 'px', format: [1024, contentHeight], orientation: 'portrait' } 
             };
 
             try {
-                const canvas = await html2canvas(modalContainer, { scale: 2, useCORS: true, windowWidth: 1200, scrollY: 0, scrollX: 0 });
+                const canvas = await html2canvas(modalContainer, { scale: 2, useCORS: true, windowWidth: 1024, scrollY: 0, scrollX: 0 });
                 await html2pdf().set(opt).from(canvas).save();
             } catch (e) {
                 console.error(e);
                 alert('Gagal memuat turun PDF.');
             }
 
-            modalContainer.classList.add('overflow-hidden');
+            if(tableContainer) tableContainer.classList.remove('pdf-page-break');
+            
+            modalContainer.className = origClasses;
             modalContainer.style.maxHeight = origMaxHeight;
             scrollArea.style.overflow = origOverflow;
             modalContainer.style.width = origWidth;
@@ -2465,6 +2498,9 @@
             modalContainer.style.position = origPosition;
             modalContainer.style.left = origLeft;
             modalContainer.style.top = origTop;
+            modalContainer.style.zIndex = origZIndex;
+
+            scrollArea.scrollTop = origScrollTop;
             
             scrollableLists.forEach(ul => {
                 ul.style.maxHeight = ul.dataset.origMaxHeight;
@@ -2482,6 +2518,7 @@
 
         async function downloadPortalPDF(btn) {
             const element = document.getElementById('tab-student-portal');
+            const scrollArea = document.getElementById('main-scroll-area');
             const tableContainer = document.getElementById('portal-table-container');
             
             const originalHtml = btn.innerHTML;
@@ -2505,22 +2542,32 @@
                 container.style.overflowX = 'visible';
             });
 
+            // Simpan kedudukan skrol asal & paksa skrol ke atas
+            const origScrollTop = scrollArea.scrollTop;
+            scrollArea.scrollTop = 0;
+            window.scrollTo(0, 0);
+
             const origClasses = element.className;
             const origWidth = element.style.width;
             const origOverflow = element.style.overflow;
+            
             element.classList.remove('mx-auto', 'max-w-5xl', 'overflow-hidden');
-            element.style.width = '1200px'; 
+            element.style.width = '1024px'; 
             element.style.overflow = 'visible';
 
             const origPosition = element.style.position;
             const origLeft = element.style.left;
             const origTop = element.style.top;
+            const origZIndex = element.style.zIndex;
             
             element.style.position = 'absolute';
             element.style.left = '0px';
             element.style.top = '0px';
+            element.style.zIndex = '9999';
 
-            await new Promise(resolve => setTimeout(resolve, 800));
+            if(tableContainer) tableContainer.classList.add('pdf-page-break'); 
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
             
             const contentHeight = element.scrollHeight;
 
@@ -2528,26 +2575,30 @@
                 margin: 0, 
                 filename: `Profil_Prestasi_${currentLoggedInStudent.nama.replace(/\s+/g, '_')}.pdf`,
                 image: { type: 'jpeg', quality: 1.0 },
-                html2canvas: { scale: 2, useCORS: true, windowWidth: 1200, scrollY: 0, scrollX: 0 },
-                // Satu mukasurat panjang yg takkan terpotong
-                jsPDF: { unit: 'px', format: [1200, contentHeight], orientation: 'portrait' } 
+                html2canvas: { scale: 2, useCORS: true, windowWidth: 1024, scrollY: 0, scrollX: 0 },
+                jsPDF: { unit: 'px', format: [1024, contentHeight], orientation: 'portrait' } 
             };
             
             try {
-                const canvas = await html2canvas(element, { scale: 2, useCORS: true, windowWidth: 1200, scrollY: 0, scrollX: 0 });
+                const canvas = await html2canvas(element, { scale: 2, useCORS: true, windowWidth: 1024, scrollY: 0, scrollX: 0 });
                 await html2pdf().set(opt).from(canvas).save();
             } catch (e) {
                 console.error(e);
                 alert('Gagal memuat turun PDF.');
             }
 
+            if(tableContainer) tableContainer.classList.remove('pdf-page-break');
+            
             element.className = origClasses;
             element.style.width = origWidth;
             element.style.overflow = origOverflow;
             element.style.position = origPosition;
             element.style.left = origLeft;
             element.style.top = origTop;
+            element.style.zIndex = origZIndex;
             
+            scrollArea.scrollTop = origScrollTop; // Kembalikan posisi skrol
+
             scrollableLists.forEach(ul => {
                 ul.style.maxHeight = ul.dataset.origMaxHeight;
                 ul.style.overflow = ul.dataset.origOverflow;
@@ -2562,8 +2613,90 @@
             lucide.createIcons();
         }
 
+        // ==========================================
+        // FUNGSI MUAT TURUN EXCEL (CSV)
+        // ==========================================
+
+        function downloadCSV(csvContent, filename) {
+            // Tambah BOM supaya Excel baca UTF-8 (elak ralat font Arabic/Special Chars)
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' }); 
+            const link = document.createElement("a");
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        function generateSingleStudentCSV(student, classId) {
+            let className = classId === 'talaqqi' ? 'Talaqqi Al-Quran' : 'Kelas ABAHATA';
+            
+            let csv = `Nama Pelajar,${student.nama}\n`;
+            csv += `No. IC,${student.ic || '-'}\n`;
+            csv += `Kelas,${className}\n`;
+            csv += `Skor Keseluruhan,${student.overallAvg.toFixed(2)}%\n\n`;
+            
+            csv += `Aspek Penilaian,Markah Diperolehi,Markah Penuh,Peratusan (%)\n`;
+            
+            globalData.headers.forEach(header => {
+                const mark = student.marks[header];
+                const base = globalData.baseMarks[header];
+                const pct = student.percentages[header];
+                csv += `"${header}",${mark},${base},${pct.toFixed(2)}%\n`;
+            });
+            
+            return csv;
+        }
+
+        function downloadPortalExcel(btn) {
+            const csv = generateSingleStudentCSV(currentLoggedInStudent, currentLoggedInClass);
+            downloadCSV(csv, `Profil_${currentLoggedInStudent.nama.replace(/\s+/g, '_')}.csv`);
+        }
+
+        function downloadAdminStudentExcel(btn) {
+            const csv = generateSingleStudentCSV(currentEditingStudent, currentClassId);
+            downloadCSV(csv, `Laporan_${currentEditingStudent.nama.replace(/\s+/g, '_')}.csv`);
+        }
+
+        function downloadAllStudentsExcel(btn) {
+            let csv = `Senarai Laporan Prestasi - ${CLASSES[currentClassId].name}\n\n`;
+            
+            // Header Jadual
+            csv += `Bil,Nama Pelajar,No. IC,Skor Purata Keseluruhan (%)`;
+            globalData.headers.forEach(header => {
+                csv += `,"${header} (Markah)"`;
+            });
+            csv += `\n`;
+
+            // Susun pelajar sama seperti di paparan UI sekarang
+            const sortedStudents = [...globalData.students].sort((a, b) => {
+                return currentSortOrder === 'desc' ? b.overallAvg - a.overallAvg : a.overallAvg - b.overallAvg;
+            });
+
+            // Isi Data Pelajar
+            sortedStudents.forEach((student, index) => {
+                csv += `${index + 1},"${student.nama}","${student.ic || '-'}",${student.overallAvg.toFixed(2)}%`;
+                
+                globalData.headers.forEach(header => {
+                    csv += `,${student.marks[header]}`;
+                });
+                csv += `\n`;
+            });
+
+            downloadCSV(csv, `Rekod_Kelas_${CLASSES[currentClassId].name.replace(/\s+/g, '_')}.csv`);
+        }
+
+        // ==========================================
+        // FUNGSI MUAT TURUN GAMBAR (HTML2CANVAS)
+        // ==========================================
+        
         async function downloadDashboardImage(btn) {
             const element = document.getElementById('tab-dashboard');
+            const scrollArea = document.getElementById('main-scroll-area');
             const originalHtml = btn.innerHTML;
             btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i> Menyediakan Gambar...';
             btn.disabled = true;
@@ -2571,26 +2704,50 @@
             const noPrintEls = element.querySelectorAll('.no-print');
             noPrintEls.forEach(el => el.style.display = 'none');
             
+            // Simpan kedudukan skrol asal & paksa skrol ke atas
+            const origScrollTop = scrollArea.scrollTop;
+            scrollArea.scrollTop = 0;
+            window.scrollTo(0, 0);
+
             const origWidth = element.style.width;
             const origOverflow = element.style.overflow;
-            element.style.width = '1200px';
+            const origPosition = element.style.position;
+            const origLeft = element.style.left;
+            const origTop = element.style.top;
+            const origZIndex = element.style.zIndex;
+            const origBg = element.style.backgroundColor;
+
+            element.style.position = 'absolute';
+            element.style.left = '0px';
+            element.style.top = '0px';
+            element.style.width = '1440px';
             element.style.overflow = 'visible';
+            element.style.zIndex = '9999';
+            element.style.backgroundColor = '#f9fafb';
             
-            await new Promise(resolve => setTimeout(resolve, 800));
+            await new Promise(resolve => setTimeout(resolve, 1000));
 
             try {
-                const canvas = await html2canvas(element, { scale: 2, useCORS: true, windowWidth: 1200, scrollY: 0, scrollX: 0 });
+                const canvas = await html2canvas(element, { scale: 2, useCORS: true, windowWidth: 1440, scrollY: 0, scrollX: 0 });
                 const link = document.createElement('a');
                 link.download = `Laporan_Kelas_${CLASSES[currentClassId].name.replace(/\s+/g, '_')}.jpg`;
-                link.href = canvas.toDataURL('image/jpeg', 0.98);
+                link.href = canvas.toDataURL('image/jpeg', 1.0);
                 link.click();
             } catch (e) {
                 console.error(e);
                 alert('Gagal memuat turun gambar. Ralat sistem.');
             }
 
+            element.style.position = origPosition;
+            element.style.left = origLeft;
+            element.style.top = origTop;
             element.style.width = origWidth;
             element.style.overflow = origOverflow;
+            element.style.zIndex = origZIndex;
+            element.style.backgroundColor = origBg;
+            
+            scrollArea.scrollTop = origScrollTop;
+
             noPrintEls.forEach(el => el.style.display = '');
             btn.innerHTML = originalHtml;
             btn.disabled = false;
@@ -2622,39 +2779,47 @@
                 container.style.overflowX = 'visible';
             });
 
+            // Simpan kedudukan skrol asal & paksa skrol ke atas
+            const origScrollTop = scrollArea.scrollTop;
+            scrollArea.scrollTop = 0;
+            window.scrollTo(0, 0);
+
+            const origClasses = modalContainer.className;
             const origMaxHeight = modalContainer.style.maxHeight;
             const origOverflow = scrollArea.style.overflow;
             const origWidth = modalContainer.style.width;
             
-            modalContainer.classList.remove('overflow-hidden');
+            modalContainer.classList.remove('overflow-hidden', 'max-w-4xl');
             modalContainer.style.maxHeight = 'none';
             scrollArea.style.overflow = 'visible';
-            modalContainer.style.width = '1200px';
+            modalContainer.style.width = '1024px';
 
             const origTransform = modalContainer.style.transform;
             const origPosition = modalContainer.style.position;
             const origLeft = modalContainer.style.left;
             const origTop = modalContainer.style.top;
+            const origZIndex = modalContainer.style.zIndex;
 
             modalContainer.style.transform = 'none'; 
             modalContainer.style.position = 'absolute'; 
             modalContainer.style.left = '0px'; 
             modalContainer.style.top = '0px'; 
+            modalContainer.style.zIndex = '9999';
             
-            await new Promise(resolve => setTimeout(resolve, 800));
+            await new Promise(resolve => setTimeout(resolve, 1000));
 
             try {
-                const canvas = await html2canvas(modalContainer, { scale: 2, useCORS: true, windowWidth: 1200, scrollY: 0, scrollX: 0 });
+                const canvas = await html2canvas(modalContainer, { scale: 2, useCORS: true, windowWidth: 1024, scrollY: 0, scrollX: 0 });
                 const link = document.createElement('a');
                 link.download = `Laporan_${currentEditingStudent.nama.replace(/\s+/g, '_')}.jpg`;
-                link.href = canvas.toDataURL('image/jpeg', 0.98);
+                link.href = canvas.toDataURL('image/jpeg', 1.0);
                 link.click();
             } catch (e) {
                 console.error(e);
                 alert('Gagal memuat turun gambar.');
             }
 
-            modalContainer.classList.add('overflow-hidden');
+            modalContainer.className = origClasses;
             modalContainer.style.maxHeight = origMaxHeight;
             scrollArea.style.overflow = origOverflow;
             modalContainer.style.width = origWidth;
@@ -2663,6 +2828,9 @@
             modalContainer.style.position = origPosition;
             modalContainer.style.left = origLeft;
             modalContainer.style.top = origTop;
+            modalContainer.style.zIndex = origZIndex;
+            
+            scrollArea.scrollTop = origScrollTop;
             
             scrollableLists.forEach(ul => {
                 ul.style.maxHeight = ul.dataset.origMaxHeight;
@@ -2680,6 +2848,7 @@
 
         async function downloadPortalImage(btn) {
             const element = document.getElementById('tab-student-portal');
+            const scrollArea = document.getElementById('main-scroll-area');
             
             const originalHtml = btn.innerHTML;
             btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 md:mr-2 animate-spin"></i> <span class="hidden md:inline">Sedia...</span>';
@@ -2702,27 +2871,35 @@
                 container.style.overflowX = 'visible';
             });
 
+            // Simpan kedudukan skrol asal & paksa skrol ke atas
+            const origScrollTop = scrollArea.scrollTop;
+            scrollArea.scrollTop = 0;
+            window.scrollTo(0, 0);
+
             const origClasses = element.className;
             const origWidth = element.style.width;
             const origOverflow = element.style.overflow;
             element.classList.remove('mx-auto', 'max-w-5xl', 'overflow-hidden');
-            element.style.width = '1200px'; 
+            element.style.width = '1024px'; 
             element.style.overflow = 'visible';
             
             const origPosition = element.style.position;
             const origLeft = element.style.left;
             const origTop = element.style.top;
+            const origZIndex = element.style.zIndex;
+
             element.style.position = 'absolute';
             element.style.left = '0px';
             element.style.top = '0px';
+            element.style.zIndex = '9999';
 
-            await new Promise(resolve => setTimeout(resolve, 800));
+            await new Promise(resolve => setTimeout(resolve, 1000));
             
             try {
-                const canvas = await html2canvas(element, { scale: 2, useCORS: true, windowWidth: 1200, scrollY: 0, scrollX: 0 });
+                const canvas = await html2canvas(element, { scale: 2, useCORS: true, windowWidth: 1024, scrollY: 0, scrollX: 0 });
                 const link = document.createElement('a');
                 link.download = `Profil_Prestasi_${currentLoggedInStudent.nama.replace(/\s+/g, '_')}.jpg`;
-                link.href = canvas.toDataURL('image/jpeg', 0.98);
+                link.href = canvas.toDataURL('image/jpeg', 1.0);
                 link.click();
             } catch (e) {
                 console.error(e);
@@ -2735,6 +2912,9 @@
             element.style.position = origPosition;
             element.style.left = origLeft;
             element.style.top = origTop;
+            element.style.zIndex = origZIndex;
+            
+            scrollArea.scrollTop = origScrollTop;
             
             scrollableLists.forEach(ul => {
                 ul.style.maxHeight = ul.dataset.origMaxHeight;
