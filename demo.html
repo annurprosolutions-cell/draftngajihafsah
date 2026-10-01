@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+<title>Demo Kelas Mengaji Hafsah</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: phone mockup (the real app is mobile-first) beside a narration panel; stacks on phone width. */
+:root {
+  --bg: #f3f6f1;
+  --fg: #142019;
+  --muted: #5b6b61;
+  --line: #d9e2da;
+  --panel: #ffffff;
+  --accent: #15803d;
+  --accent-soft: #e3f3e8;
+  --gold: #b48a06;
+  --bezel: #0f1a14;
+  --font-display: "Amiri", Georgia, "Times New Roman", serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Product screen colours: the app itself is a light UI, kept identical in both themes */
+  --app-bg: #f8faf8;
+  --app-card: #ffffff;
+  --app-ink: #1f2937;
+  --app-sub: #6b7280;
+  --app-line: #e5e7eb;
+  --app-green: #15803d;
+  --app-green-dk: #052e16;
+  --app-green-50: #f0fdf4;
+  --app-gold: #eab308;
+  --app-gold-lt: #facc15;
+  --app-emerald: #059669;
+  --app-orange: #f97316;
+  --app-red: #dc2626;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1511; --fg: #e6efe8; --muted: #9db0a3; --line: #23332a; --panel: #131f18;
+    --accent: #4ade80; --accent-soft: #173524; --gold: #facc15; --bezel: #000000;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1511; --fg: #e6efe8; --muted: #9db0a3; --line: #23332a; --panel: #131f18;
+  --accent: #4ade80; --accent-soft: #173524; --gold: #facc15; --bezel: #000000;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 40px; }
+
+.top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 20px; margin-bottom: 22px; }
+.top h1 { font-family: var(--font-display); font-size: 34px; line-height: 1.1; margin: 0; text-wrap: balance; }
+.top h1 span { color: var(--gold); }
+.top p { margin: 0; color: var(--muted); font-size: 14px; }
+.tag { display: inline-block; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 4px 10px; border-radius: 999px; }
+
+.grid { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 36px; align-items: start; }
+@media (max-width: 820px) { .grid { grid-template-columns: minmax(0, 1fr); gap: 20px; } }
+
+/* Phone */
+.phone-holder { width: 390px; max-width: 100%; margin: 0 auto; }
+.phone-scale { width: 390px; height: 760px; transform-origin: top left; }
+.phone { width: 390px; height: 760px; background: var(--bezel); border-radius: 46px; padding: 11px; box-shadow: 0 30px 60px -30px rgba(5, 46, 22, .45); }
+.screen { position: relative; width: 100%; height: 100%; border-radius: 36px; overflow: hidden; background: var(--app-bg); color: var(--app-ink); font-family: var(--font-body); font-size: 13px; }
+
+.scene { position: absolute; inset: 0; opacity: 0; visibility: hidden; transition: opacity .45s ease, visibility .45s; }
+.scene.on { opacity: 1; visibility: visible; }
+
+.pattern { background-color: var(--app-green-dk); background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%2315803d' stroke-opacity='.35'%3E%3Cpath d='M30 4l7.5 18.5L56 30l-18.5 7.5L30 56l-7.5-18.5L4 30l18.5-7.5z'/%3E%3C/g%3E%3C/svg%3E"); }
+
+.appbar { color: #fff; padding: 46px 18px 14px; display: flex; align-items: center; gap: 10px; }
+.logo { width: 38px; height: 38px; border-radius: 50%; background: #fff; border: 2px solid var(--app-gold); display: grid; place-items: center; flex: none; }
+.logo svg { width: 20px; height: 20px; }
+.appbar .nm { font-family: var(--font-display); color: var(--app-gold-lt); font-weight: 700; font-size: 17px; line-height: 1.05; }
+.appbar .nm small { display: block; font-family: var(--font-body); color: #dcfce7; font-size: 9px; letter-spacing: .12em; font-weight: 600; text-transform: uppercase; margin-top: 3px; }
+.appbar .who { margin-left: auto; font-size: 10px; background: rgba(255,255,255,.12); padding: 4px 9px; border-radius: 999px; color: #dcfce7; }
+.body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.card { background: var(--app-card); border: 1px solid var(--app-line); border-radius: 14px; padding: 12px; }
+.h { font-weight: 700; font-size: 14px; color: var(--app-ink); margin: 0; }
+.sub { color: var(--app-sub); font-size: 11px; }
+.fade { opacity: 0; transform: translateY(8px); transition: opacity .35s, transform .35s; }
+.fade.in { opacity: 1; transform: none; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* S1 intro */
+#s1 { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #fff; padding: 30px; gap: 14px; }
+#s1 .biglogo { width: 96px; height: 96px; border-radius: 50%; background: #fff; border: 3px solid var(--app-gold); display: grid; place-items: center; transform: scale(.4); opacity: 0; }
+#s1 .biglogo svg { width: 50px; height: 50px; }
+#s1 h2 { font-family: var(--font-display); color: var(--app-gold-lt); font-size: 36px; line-height: 1.05; margin: 6px 0 0; }
+#s1 .s1sub { font-size: 12px; color: #dcfce7; letter-spacing: .14em; text-transform: uppercase; font-weight: 600; }
+#s1 .pills { display: flex; flex-direction: column; gap: 8px; margin-top: 18px; width: 100%; }
+#s1 .pill { background: rgba(255,255,255,.1); border: 1px solid rgba(250,204,21,.35); border-radius: 12px; padding: 10px 12px; font-size: 13px; display: flex; gap: 10px; align-items: center; text-align: left; }
+#s1 .pill b { color: var(--app-gold-lt); font-weight: 700; }
+.ico { width: 26px; height: 26px; border-radius: 8px; background: rgba(250,204,21,.18); display: grid; place-items: center; flex: none; }
+.ico svg { width: 15px; height: 15px; }
+
+/* S2 sheet */
+#s2 { background: #fff; }
+.gs-top { padding: 46px 14px 10px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--app-line); }
+.gs-icon { width: 26px; height: 32px; background: #0f9d58; border-radius: 3px; position: relative; flex: none; }
+.gs-icon::after { content: ""; position: absolute; inset: 9px 6px 7px; border: 2px solid #fff; border-radius: 1px; background: linear-gradient(#fff,#fff) 50% 0/2px 100% no-repeat, linear-gradient(#fff,#fff) 0 50%/100% 2px no-repeat; }
+.gs-title { font-size: 13px; font-weight: 600; }
+.gs-title small { display: block; color: var(--app-sub); font-weight: 400; font-size: 10px; }
+.sheet { margin: 12px; border: 1px solid #c7ccd1; border-radius: 4px; overflow: hidden; font-size: 11px; }
+.sheet table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+.sheet th, .sheet td { border: 1px solid #dadce0; padding: 6px 4px; text-align: center; height: 30px; }
+.sheet th { background: #f1f3f4; font-weight: 600; color: #3c4043; font-size: 9.5px; line-height: 1.15; }
+.sheet td.nm { text-align: left; font-weight: 600; }
+.sheet tr.base td { background: #fef9e7; color: #8a6d00; font-weight: 600; font-size: 10px; }
+.sheet td.cur { outline: 2px solid #1a73e8; outline-offset: -2px; background: #e8f0fe; }
+.sheet td .v { opacity: 0; }
+.sheet td .v.in { opacity: 1; }
+.syncbar { margin: 4px 12px; border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 10px; font-size: 12.5px; font-weight: 600; background: var(--app-green-50); color: var(--app-green); border: 1px solid #bbf7d0; }
+.spin { width: 18px; height: 18px; border: 2.5px solid #bbf7d0; border-top-color: var(--app-green); border-radius: 50%; animation: sp 0.8s linear infinite; flex: none; }
+@keyframes sp { to { transform: rotate(360deg); } }
+.tick { width: 18px; height: 18px; border-radius: 50%; background: var(--app-green); display: grid; place-items: center; flex: none; }
+.tick svg { width: 11px; height: 11px; }
+.note { margin: 10px 12px; font-size: 11px; color: var(--app-sub); line-height: 1.5; }
+
+/* S3 dashboard */
+.tabs { display: flex; gap: 4px; background: #fff; border: 1px solid var(--app-line); border-radius: 10px; padding: 4px; }
+.tabs span { flex: 1; text-align: center; font-size: 11px; font-weight: 600; padding: 7px 4px; border-radius: 7px; color: var(--app-sub); }
+.tabs span.act { background: var(--app-green); color: #fff; }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tile { background: #fff; border: 1px solid var(--app-line); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tile .k { font-size: 9.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--app-sub); font-weight: 600; }
+.tile .val { font-size: 21px; font-weight: 800; color: var(--app-ink); }
+.tile .val.sm { font-size: 13px; padding-top: 5px; }
+.tile.good { border-left: 3px solid var(--app-emerald); }
+.tile.warn { border-left: 3px solid var(--app-orange); }
+.bars { display: flex; flex-direction: column; gap: 9px; margin-top: 8px; }
+.bar { display: grid; grid-template-columns: 96px 1fr 40px; align-items: center; gap: 8px; font-size: 10.5px; border-radius: 8px; padding: 3px 4px; transition: background .3s; }
+.bar .lb { font-weight: 600; color: #374151; }
+.bar .tr { display: block; height: 10px; background: #eef2ef; border-radius: 99px; overflow: hidden; }
+.bar .fl { display: block; height: 100%; width: 0; border-radius: 99px; background: var(--app-green); }
+.bar .pc { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.bar.hl-bad { background: #fff7ed; box-shadow: 0 0 0 1.5px var(--app-orange); }
+.bar.hl-good { background: #ecfdf5; box-shadow: 0 0 0 1.5px var(--app-emerald); }
+.callout { font-size: 11px; font-weight: 600; padding: 8px 10px; border-radius: 10px; display: flex; gap: 8px; align-items: center; background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
+
+/* S4 list */
+.search { display: flex; align-items: center; gap: 8px; background: #fff; border: 2px solid var(--app-line); border-radius: 12px; padding: 9px 12px; font-size: 13px; transition: border-color .3s; }
+.search.focus { border-color: var(--app-green); }
+.search svg { width: 15px; height: 15px; flex: none; }
+.caret { display: inline-block; width: 1.5px; height: 15px; background: var(--app-ink); vertical-align: -3px; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.ph { color: #9ca3af; }
+.rows { display: flex; flex-direction: column; gap: 7px; }
+.row { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--app-line); border-radius: 12px; padding: 8px 10px; transition: opacity .35s, transform .35s, box-shadow .3s, max-height .4s, padding .4s, margin .4s; max-height: 60px; }
+.row.out { opacity: 0; max-height: 0; padding-block: 0; margin-top: -7px; border-width: 0; }
+.row.sel { box-shadow: 0 0 0 2px var(--app-green); }
+.rk { width: 20px; font-weight: 700; color: var(--app-sub); font-size: 11px; text-align: center; flex: none; }
+.av { width: 32px; height: 32px; border-radius: 50%; background: var(--app-green); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 11px; flex: none; }
+.row .who2 { flex: 1; min-width: 0; }
+.row .who2 b { display: block; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .who2 span { font-size: 10px; color: var(--app-sub); }
+.chip { font-size: 10px; font-weight: 700; padding: 4px 7px; border-radius: 7px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.g-cem { background: #ecfdf5; color: #047857; }
+.g-baik { background: #f0fdf4; color: #15803d; }
+.g-sed { background: #fff7ed; color: #c2410c; }
+.g-lem { background: #fef2f2; color: #b91c1c; }
+
+/* S5 login */
+#s5 { display: flex; align-items: center; justify-content: center; padding: 22px; }
+.login { background: #fff; border-radius: 26px; padding: 26px 22px; width: 100%; box-shadow: 0 24px 50px -20px rgba(0,0,0,.5); display: flex; flex-direction: column; gap: 14px; text-align: center; }
+.login .logo { width: 70px; height: 70px; margin: 0 auto; }
+.login .logo svg { width: 34px; height: 34px; }
+.login h3 { font-family: var(--font-display); color: #b48a06; font-size: 25px; line-height: 1.05; margin: 0; }
+.login .badge { align-self: center; font-size: 10.5px; color: var(--app-green); background: var(--app-green-50); border: 1px solid #dcfce7; padding: 3px 10px; border-radius: 99px; font-weight: 600; }
+.login label { font-size: 12px; font-weight: 600; color: #374151; }
+.ic { border: 2px solid var(--app-line); border-radius: 12px; padding: 12px; font-size: 16px; font-weight: 600; letter-spacing: .04em; min-height: 50px; transition: border-color .3s; font-variant-numeric: tabular-nums; }
+.ic.focus { border-color: var(--app-green); }
+.btn { background: var(--app-green); color: #fff; font-weight: 700; padding: 13px; border-radius: 12px; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform .15s, background .2s; }
+.btn.press { transform: scale(.96); background: #166534; }
+.btn .spin { border-color: rgba(255,255,255,.35); border-top-color: #fff; width: 16px; height: 16px; }
+.found { font-size: 12px; font-weight: 600; color: var(--app-green); display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+/* S6 portal */
+.prof { display: flex; gap: 12px; align-items: center; }
+.prof .av { width: 52px; height: 52px; font-size: 17px; border: 2px solid var(--app-gold); }
+.prof .n { font-family: var(--font-display); font-size: 19px; font-weight: 700; line-height: 1.1; }
+.prof .m { font-size: 10.5px; color: var(--app-sub); }
+.score { display: flex; flex-direction: column; gap: 4px; }
+.score .top2 { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
+.score .big { font-size: 40px; font-weight: 800; color: var(--app-green); line-height: 1; letter-spacing: -.02em; }
+.score .gr { font-size: 12px; font-weight: 800; letter-spacing: .14em; color: var(--app-green); text-transform: uppercase; margin-top: 4px; }
+.radar { width: 100%; height: 190px; display: block; }
+.lists { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.lists .card { padding: 10px; }
+.lists h4 { margin: 0 0 6px; font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; }
+.lists ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.lists li { display: flex; justify-content: space-between; gap: 4px; font-size: 10.5px; }
+.lists li b { font-variant-numeric: tabular-nums; }
+.tip { font-size: 11px; padding: 9px 11px; border-radius: 10px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-weight: 600; }
+
+/* S7 export + close */
+.dl { display: flex; flex-direction: column; gap: 8px; }
+.dlb { display: flex; align-items: center; gap: 10px; background: #fff; border: 1.5px solid var(--app-line); border-radius: 12px; padding: 11px 12px; font-weight: 600; font-size: 12.5px; transition: border-color .25s, background .25s, transform .2s; }
+.dlb .ico { background: var(--app-green-50); }
+.dlb.hot { border-color: var(--app-green); background: var(--app-green-50); transform: scale(1.02); }
+.dlb small { display: block; font-weight: 400; color: var(--app-sub); font-size: 10.5px; }
+.toast { background: #111827; color: #fff; font-size: 11.5px; padding: 10px 12px; border-radius: 10px; display: flex; gap: 8px; align-items: center; }
+.close { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; gap: 14px; padding: 28px; color: #fff; opacity: 0; transition: opacity .5s; }
+.close.in { opacity: 1; }
+.close h2 { font-family: var(--font-display); color: var(--app-gold-lt); font-size: 32px; line-height: 1.05; margin: 0; text-align: center; }
+.close ul { list-style: none; padding: 0; margin: 6px 0 0; display: flex; flex-direction: column; gap: 10px; }
+.close li { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; line-height: 1.4; }
+.close .cta { margin-top: 10px; text-align: center; background: var(--app-gold); color: var(--app-green-dk); font-weight: 800; padding: 13px; border-radius: 12px; font-size: 14px; }
+
+/* Narration panel */
+.panel { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.now { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 22px; display: flex; flex-direction: column; gap: 10px; min-height: 200px; }
+.now .who-tag { align-self: flex-start; }
+.now h2 { margin: 0; font-size: 22px; line-height: 1.25; text-wrap: balance; }
+.now p { margin: 0; color: var(--muted); font-size: 15.5px; max-width: 60ch; }
+.ctrl { display: flex; align-items: center; gap: 12px; }
+.pbtn { width: 46px; height: 46px; border-radius: 50%; border: 0; background: var(--accent); color: var(--bg); display: grid; place-items: center; cursor: pointer; flex: none; }
+.pbtn svg { width: 18px; height: 18px; }
+.pbtn:focus-visible, .chap:focus-visible, .track:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.track { flex: 1; height: 8px; background: var(--line); border-radius: 99px; position: relative; cursor: pointer; }
+.track .fill { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--accent); border-radius: 99px; }
+.time { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 78px; text-align: right; }
+.chaps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.chap { width: 100%; display: grid; grid-template-columns: 44px 1fr; gap: 10px; align-items: baseline; text-align: left; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 14px; padding: 8px 10px; border-radius: 10px; cursor: pointer; }
+.chap .ts { font-variant-numeric: tabular-nums; font-size: 12px; }
+.chap:hover { background: var(--accent-soft); }
+.chap.on { background: var(--accent-soft); color: var(--fg); font-weight: 600; }
+.chap.on .ts { color: var(--accent); }
+.disc { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 14px; }
+@media (max-width: 820px) { .chaps { display: none; } .now { min-height: 0; } }
+@media (prefers-reduced-motion: reduce) { .scene, .fade, .row, .close { transition: none; } .spin, .caret { animation: none; } }
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <span class="tag">Demo 1 minit · Data contoh</span>
+      <h1>Kelas Mengaji <span>Hafsah</span></h1>
+    </div>
+    <p>Sistem rekod &amp; laporan prestasi mengaji untuk guru dan ibu bapa.</p>
+  </div>
+
+  <div class="grid">
+    <div class="phone-holder" id="holder">
+      <div class="phone-scale" id="pscale">
+        <div class="phone">
+          <div class="screen" id="screen">
+
+            <!-- S1 Intro -->
+            <section class="scene pattern on" id="s1">
+              <div class="biglogo" id="s1logo"></div>
+              <div class="fade" id="s1t"><h2>Kelas Mengaji<br>Hafsah</h2></div>
+              <div class="fade s1sub" id="s1s">Pemantauan Prestasi Pelajar</div>
+              <div class="pills">
+                <div class="pill fade" id="s1p1"><span class="ico" data-i="sheet"></span><span><b>Guru</b> isi markah dalam Google Sheets</span></div>
+                <div class="pill fade" id="s1p2"><span class="ico" data-i="chart"></span><span><b>Sistem</b> kira purata &amp; gred sendiri</span></div>
+                <div class="pill fade" id="s1p3"><span class="ico" data-i="user"></span><span><b>Ibu bapa</b> semak laporan anak guna IC</span></div>
+              </div>
+            </section>
+
+            <!-- S2 Google Sheets -->
+            <section class="scene" id="s2">
+              <div class="gs-top">
+                <span class="gs-icon"></span>
+                <div class="gs-title">Markah Talaqqi 2026<small>Google Sheets · disunting oleh Ustazah</small></div>
+              </div>
+              <div class="sheet">
+                <table>
+                  <colgroup><col style="width:34%"><col><col><col><col></colgroup>
+                  <thead><tr><th>NAMA</th><th>SEBUTAN MAKHRAJ</th><th>QALQALAH</th><th>MAD ASLI</th><th>FASIH</th></tr></thead>
+                  <tbody id="sheetBody"></tbody>
+                </table>
+              </div>
+              <div class="syncbar fade" id="sync"><span class="spin" id="syncIcon"></span><span id="syncTxt">Menghantar markah ke sistem...</span></div>
+              <p class="note fade" id="s2note">Baris kuning ialah markah penuh. Sistem tukar setiap markah kepada peratus secara automatik.</p>
+            </section>
+
+            <!-- S3 Dashboard -->
+            <section class="scene" id="s3">
+              <div class="appbar pattern">
+                <span class="logo" data-i="book"></span>
+                <div class="nm">Kelas Mengaji Hafsah<small>Dashboard Guru</small></div>
+                <span class="who">Admin</span>
+              </div>
+              <div class="body">
+                <div class="tabs"><span class="act">Talaqqi Al-Quran</span><span>Kelas ABAHATA</span></div>
+                <div class="tiles">
+                  <div class="tile"><span class="k">Jumlah pelajar</span><span class="val num" id="tTotal">0</span></div>
+                  <div class="tile"><span class="k">Purata kelas</span><span class="val num" id="tAvg">0%</span></div>
+                  <div class="tile good"><span class="k">Paling kuat</span><span class="val sm fade" id="tBest">Sebutan Makhraj</span></div>
+                  <div class="tile warn"><span class="k">Perlu fokus</span><span class="val sm fade" id="tWorst">Hukum Tajwid</span></div>
+                </div>
+                <div class="card">
+                  <p class="h">Purata kelas ikut bahagian</p>
+                  <div class="bars" id="bars"></div>
+                </div>
+                <div class="callout fade" id="s3call"><span class="ico" style="background:#ffedd5" data-i="target"></span>Kelas minggu depan: tambah latihan Hukum Tajwid.</div>
+              </div>
+            </section>
+
+            <!-- S4 Student list -->
+            <section class="scene" id="s4">
+              <div class="appbar pattern">
+                <span class="logo" data-i="book"></span>
+                <div class="nm">Senarai Pelajar<small>Talaqqi · 28 pelajar</small></div>
+                <span class="who">Admin</span>
+              </div>
+              <div class="body">
+                <div class="search" id="search"><span data-i="search"></span><span id="q"><span class="ph">Cari nama atau IC...</span></span></div>
+                <div class="rows" id="rows"></div>
+                <p class="sub fade" id="more" style="text-align:center">+ 22 pelajar lagi</p>
+              </div>
+            </section>
+
+            <!-- S5 Parent login -->
+            <section class="scene pattern" id="s5">
+              <div class="login">
+                <span class="logo" data-i="book"></span>
+                <h3>Kelas Mengaji<br>Hafsah</h3>
+                <span class="badge">Portal Pelajar &amp; Ibu Bapa</span>
+                <label for="icShow">No. Kad Pengenalan Pelajar</label>
+                <div class="ic" id="icShow"></div>
+                <div class="btn" id="loginBtn">Semak Rekod</div>
+                <div class="found fade" id="found"><span class="tick" data-i="check"></span>Rekod Aisyah dijumpai</div>
+              </div>
+            </section>
+
+            <!-- S6 Parent portal -->
+            <section class="scene" id="s6">
+              <div class="appbar pattern">
+                <span class="logo" data-i="book"></span>
+                <div class="nm">Laporan Anak<small>Portal Ibu Bapa</small></div>
+                <span class="who">Ibu bapa</span>
+              </div>
+              <div class="body">
+                <div class="card prof">
+                  <span class="av">AH</span>
+                  <div><div class="n">Aisyah Humaira</div><div class="m">150312-10-1234 · Talaqqi Al-Quran</div></div>
+                </div>
+                <div class="card score">
+                  <div class="top2"><div><div class="sub">Markah keseluruhan</div><div class="big num" id="pScore">0.0%</div></div><div class="gr fade" id="pGrade">Baik</div></div>
+                  <svg class="radar" id="radar" viewBox="0 0 220 180" aria-label="Carta radar prestasi ikut bahagian"></svg>
+                </div>
+                <div class="lists">
+                  <div class="card fade" id="pGood"><h4 style="color:#047857">Paling mahir</h4><ul>
+                    <li><span>Qalqalah</span><b style="color:#047857">95%</b></li>
+                    <li><span>Sebutan Makhraj</span><b style="color:#047857">92%</b></li>
+                    <li><span>Mad Asli</span><b style="color:#047857">90%</b></li></ul></div>
+                  <div class="card fade" id="pBad"><h4 style="color:#c2410c">Perlu latih lagi</h4><ul>
+                    <li><span>Ikhfa' Haqiqi</span><b style="color:#c2410c">58%</b></li>
+                    <li><span>Idgham Mutamathilain</span><b style="color:#c2410c">62%</b></li>
+                    <li><span>Iklab</span><b style="color:#c2410c">66%</b></li></ul></div>
+                </div>
+                <div class="tip fade" id="pTip">Cadangan: ulang kaji bacaan dengung (Hukum Tajwid) 10 minit sehari di rumah.</div>
+              </div>
+            </section>
+
+            <!-- S7 Export + close -->
+            <section class="scene" id="s7">
+              <div class="appbar pattern">
+                <span class="logo" data-i="book"></span>
+                <div class="nm">Muat Turun Laporan<small>Aisyah Humaira</small></div>
+              </div>
+              <div class="body">
+                <div class="dl">
+                  <div class="dlb" id="d1"><span class="ico" data-i="file"></span><span>Laporan PDF<small>Untuk cetak atau simpan</small></span></div>
+                  <div class="dlb" id="d2"><span class="ico" data-i="sheet"></span><span>Fail Excel<small>Semua markah terperinci</small></span></div>
+                  <div class="dlb" id="d3"><span class="ico" data-i="image"></span><span>Gambar laporan<small>Senang hantar di WhatsApp</small></span></div>
+                </div>
+                <div class="toast fade" id="toast"><span class="tick" data-i="check"></span><span id="toastTxt">Laporan_Aisyah.pdf disimpan</span></div>
+              </div>
+              <div class="close pattern" id="closing">
+                <h2>Kelas Mengaji<br>Hafsah</h2>
+                <ul>
+                  <li><span class="ico" data-i="sheet"></span>Guru kekal guna Google Sheets. Tiada sistem baru nak belajar.</li>
+                  <li><span class="ico" data-i="chart"></span>Purata, gred dan carta dikira automatik.</li>
+                  <li><span class="ico" data-i="user"></span>Ibu bapa semak sendiri guna IC anak, 24 jam.</li>
+                  <li><span class="ico" data-i="file"></span>Laporan PDF, Excel dan gambar dengan satu tekan.</li>
+                </ul>
+                <div class="cta">Hubungi kami untuk setup kelas anda</div>
+              </div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="now" aria-live="polite">
+        <span class="tag who-tag" id="capWho">Pengenalan</span>
+        <h2 id="capTitle"></h2>
+        <p id="capText"></p>
+      </div>
+      <div class="ctrl">
+        <button class="pbtn" id="play" aria-label="Jeda"></button>
+        <div class="track" id="track" role="slider" tabindex="0" aria-label="Kedudukan demo" aria-valuemin="0" aria-valuemax="60" aria-valuenow="0"><div class="fill" id="fill"></div></div>
+        <span class="time" id="time">0:00 / 1:00</span>
+      </div>
+      <ul class="chaps" id="chaps"></ul>
+      <p class="disc">Semua nama, nombor IC dan markah dalam demo ini adalah rekaan untuk tujuan tunjuk cara sahaja.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // ---------- Icons ----------
+  var IC = {
+    book: '<svg viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg>',
+    sheet: '<svg viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>',
+    chart: '<svg viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+    user: '<svg viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
+    file: '<svg viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>',
+    image: '<svg viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>',
+    target: '<svg viewBox="0 0 24 24" fill="none" stroke="#c2410c" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>',
+    search: '<svg viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>',
+    play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>',
+    pause: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>',
+    replay: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>'
+  };
+  document.querySelectorAll('[data-i]').forEach(function (el) { el.innerHTML = IC[el.dataset.i]; });
+  document.getElementById('s1logo').innerHTML = IC.book;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var clamp = function (x, a, b) { return Math.max(a, Math.min(b, x)); };
+  var prog = function (t, a, b) { return clamp((t - a) / (b - a), 0, 1); };
+  var ease = function (p) { return 1 - Math.pow(1 - p, 3); };
+  var show = function (el, on) { el.classList.toggle('in', !!on); };
+
+  // ---------- Dummy data ----------
+  var SHEET = [
+    { nm: 'Markah penuh', v: [25, 20, 10, 10], base: true },
+    { nm: 'Aisyah Humaira', v: [23, 19, 9, 8] },
+    { nm: 'Muhd Irfan', v: [24, 19, 10, 9] },
+    { nm: 'Nur Damia', v: [21, 16, 8, 7] }
+  ];
+  var SECTIONS = [
+    { n: 'Sebutan Makhraj', v: 88 },
+    { n: 'Cara Bacaan', v: 79 },
+    { n: 'Hukum Tajwid', v: 64 },
+    { n: 'Fasih', v: 74 },
+    { n: 'Lancar', v: 77 }
+  ];
+  var STUDENTS = [
+    { n: 'Muhammad Irfan bin Zaki', ic: '140821-14-5521', s: 91.2 },
+    { n: 'Siti Khadijah binti Omar', ic: '150107-10-6634', s: 88.0 },
+    { n: 'Aisyah Humaira binti Rahman', ic: '150312-10-1234', s: 82.5 },
+    { n: 'Nur Damia binti Hakim', ic: '141130-08-2210', s: 76.8 },
+    { n: 'Ahmad Danish bin Faizal', ic: '150619-10-3307', s: 68.4 },
+    { n: 'Umar Haziq bin Azlan', ic: '151002-06-4419', s: 54.9 }
+  ];
+  var AISYAH = [92, 86, 71, 80, 84];
+  var grade = function (p) {
+    if (p >= 90) return ['Cemerlang', 'g-cem'];
+    if (p >= 70) return ['Baik', 'g-baik'];
+    if (p >= 41) return ['Sederhana', 'g-sed'];
+    return ['Lemah', 'g-lem'];
+  };
+  var initials = function (n) { return n.split(' ').filter(function (w) { return !/^(bin|binti)$/i.test(w); }).slice(0, 2).map(function (w) { return w[0]; }).join(''); };
+
+  // Build sheet
+  var cells = [];
+  SHEET.forEach(function (r, ri) {
+    var tr = document.createElement('tr');
+    if (r.base) tr.className = 'base';
+    var html = '<td class="nm">' + r.nm + '</td>';
+    r.v.forEach(function (v) { html += '<td><span class="v">' + v + '</span></td>'; });
+    tr.innerHTML = html;
+    $('sheetBody').appendChild(tr);
+    tr.querySelectorAll('td .v').forEach(function (sp, ci) {
+      var at = r.base ? 0 : 0.8 + (ri - 1) * 2.0 + ci * 0.42;
+      cells.push({ el: sp, td: sp.parentNode, at: at, base: r.base });
+    });
+  });
+
+  // Build bars
+  SECTIONS.forEach(function (s, i) {
+    var d = document.createElement('div');
+    d.className = 'bar';
+    d.innerHTML = '<span class="lb">' + s.n + '</span><span class="tr"><span class="fl"></span></span><span class="pc">0%</span>';
+    $('bars').appendChild(d);
+    s.el = d; s.fl = d.querySelector('.fl'); s.pc = d.querySelector('.pc');
+  });
+
+  // Build rows
+  STUDENTS.forEach(function (s, i) {
+    var g = grade(s.s);
+    var d = document.createElement('div');
+    d.className = 'row fade';
+    d.innerHTML = '<span class="rk">' + (i + 1) + '</span><span class="av">' + initials(s.n) + '</span><span class="who2"><b>' + s.n + '</b><span>' + s.ic + '</span></span><span class="chip ' + g[1] + '">' + s.s.toFixed(1) + '% · ' + g[0] + '</span>';
+    $('rows').appendChild(d);
+    s.el = d;
+  });
+
+  // Radar
+  var R = { cx: 110, cy: 94, r: 66 };
+  var pt = function (i, v) { var a = -Math.PI / 2 + i * 2 * Math.PI / 5; return [R.cx + Math.cos(a) * R.r * v / 100, R.cy + Math.sin(a) * R.r * v / 100]; };
+  var poly = function (vals) { return vals.map(function (v, i) { return pt(i, v).map(function (n) { return n.toFixed(1); }).join(','); }).join(' '); };
+  (function () {
+    var svg = '';
+    [25, 50, 75, 100].forEach(function (lv) { svg += '<polygon points="' + poly([lv, lv, lv, lv, lv]) + '" fill="none" stroke="#e5e7eb" stroke-width="1"/>'; });
+    for (var i = 0; i < 5; i++) { var p = pt(i, 100); svg += '<line x1="' + R.cx + '" y1="' + R.cy + '" x2="' + p[0] + '" y2="' + p[1] + '" stroke="#eef0ee"/>'; }
+    svg += '<polygon points="' + poly([100, 100, 100, 100, 100]) + '" fill="none" stroke="#ef4444" stroke-opacity=".75" stroke-dasharray="4 4" stroke-width="1.5"/>';
+    svg += '<polygon id="rPoly" points="' + poly([0, 0, 0, 0, 0]) + '" fill="rgba(234,179,8,.22)" stroke="#ca8a04" stroke-width="2"/>';
+    var labels = ['Sebutan', 'Bacaan', 'Tajwid', 'Fasih', 'Lancar'];
+    labels.forEach(function (l, i) {
+      var p = pt(i, 128), anchor = Math.abs(p[0] - R.cx) < 4 ? 'middle' : (p[0] > R.cx ? 'start' : 'end');
+      if (i === 1 || i === 4) p = [p[0] + (i === 1 ? -14 : 14), p[1]];
+      svg += '<text x="' + p[0].toFixed(1) + '" y="' + (p[1] + 3).toFixed(1) + '" text-anchor="' + anchor + '" font-size="10" font-weight="700" fill="#15803d" font-family="Inter, sans-serif">' + l + '</text>';
+    });
+    $('radar').innerHTML = svg;
+  })();
+
+  var typeText = function (full, p) { return full.slice(0, Math.round(full.length * p)); };
+
+  // ---------- Timeline ----------
+  var SCENES = [
+    { id: 's1', d: 7, who: 'Pengenalan', title: 'Satu sistem untuk guru dan ibu bapa',
+      text: 'Kelas Mengaji Hafsah ialah sistem rekod prestasi mengaji. Ustazah isi markah, sistem buat kiraan, dan ibu bapa boleh tengok sendiri perkembangan anak.',
+      up: function (t) {
+        var p = ease(prog(t, 0, 1));
+        $('s1logo').style.transform = 'scale(' + (0.4 + 0.6 * p) + ')'; $('s1logo').style.opacity = p;
+        show($('s1t'), t > 0.6); show($('s1s'), t > 1.2);
+        show($('s1p1'), t > 2.2); show($('s1p2'), t > 3.2); show($('s1p3'), t > 4.2);
+      } },
+    { id: 's2', d: 10, who: 'Langkah 1 · Guru', title: 'Ustazah isi markah dalam Google Sheets',
+      text: 'Tak perlu belajar software baru. Guru cuma isi markah setiap aspek bacaan dalam Google Sheets macam biasa. Sistem tarik data dari situ.',
+      up: function (t) {
+        var cur = null;
+        cells.forEach(function (c) {
+          var on = c.base || t >= c.at; c.el.classList.toggle('in', on);
+          if (!c.base && t >= c.at && t < c.at + 0.42) cur = c;
+          c.td.classList.remove('cur');
+        });
+        if (cur) cur.td.classList.add('cur');
+        show($('sync'), t > 7.0);
+        var done = t > 8.2;
+        $('syncIcon').className = done ? 'tick' : 'spin';
+        $('syncIcon').innerHTML = done ? IC.check : '';
+        $('syncTxt').textContent = done ? 'Markah dikira automatik dalam sistem' : 'Menghantar markah ke sistem...';
+        show($('s2note'), t > 8.6);
+      } },
+    { id: 's3', d: 12, who: 'Langkah 2 · Guru', title: 'Dashboard terus tunjuk prestasi kelas',
+      text: 'Sistem kira purata kelas dan pecahkan ikut bahagian. Sekali pandang, guru tahu bahagian mana pelajar dah kuat dan mana yang perlu lebih masa di kelas.',
+      up: function (t) {
+        var p = ease(prog(t, 0.3, 2.0));
+        $('tTotal').textContent = Math.round(28 * p);
+        $('tAvg').textContent = (76.4 * p).toFixed(1) + '%';
+        show($('tBest'), t > 2.0); show($('tWorst'), t > 2.3);
+        SECTIONS.forEach(function (s, i) {
+          var q = ease(prog(t, 2.2 + i * 0.25, 3.6 + i * 0.25));
+          s.fl.style.width = (s.v * q) + '%';
+          s.fl.style.background = s.v >= 80 ? '#059669' : (s.v >= 70 ? '#15803d' : '#f97316');
+          s.pc.textContent = Math.round(s.v * q) + '%';
+          s.el.classList.toggle('hl-good', i === 0 && t > 5.5);
+          s.el.classList.toggle('hl-bad', i === 2 && t > 7.0);
+        });
+        show($('s3call'), t > 8.2);
+      } },
+    { id: 's4', d: 8, who: 'Langkah 3 · Guru', title: 'Cari mana-mana pelajar dalam sesaat',
+      text: 'Senarai pelajar disusun ikut markah tertinggi, siap dengan gred. Taip nama atau IC untuk terus jumpa profil pelajar.',
+      up: function (t) {
+        STUDENTS.forEach(function (s, i) {
+          show(s.el, t > 0.2 + i * 0.22);
+          s.el.classList.toggle('out', t > 4.6 && i !== 2);
+          s.el.classList.toggle('sel', t > 5.4 && i === 2);
+        });
+        show($('more'), t > 1.6 && t < 4.6);
+        var focus = t > 2.8; $('search').classList.toggle('focus', focus);
+        if (!focus) $('q').innerHTML = '<span class="ph">Cari nama atau IC...</span>';
+        else $('q').innerHTML = typeText('Aisyah', prog(t, 3.0, 4.4)) + '<span class="caret"></span>';
+      } },
+    { id: 's5', d: 6, who: 'Langkah 4 · Ibu bapa', title: 'Ibu bapa log masuk guna IC anak',
+      text: 'Tiada username, tiada app perlu download. Buka link, taip nombor IC anak, terus nampak rekod. Sesuai untuk semua peringkat umur ibu bapa.',
+      up: function (t) {
+        var f = t > 0.4; $('icShow').classList.toggle('focus', f);
+        $('icShow').innerHTML = f ? typeText('150312-10-1234', prog(t, 0.6, 2.8)) + (t < 3.4 ? '<span class="caret"></span>' : '') : '<span class="ph" style="font-weight:400">Cth: 121212-10-1234</span>';
+        var b = $('loginBtn');
+        b.classList.toggle('press', t > 3.4 && t < 3.7);
+        if (t > 3.6 && t < 5.0) b.innerHTML = '<span class="spin"></span>Menyemak Rekod...';
+        else b.textContent = 'Semak Rekod';
+        show($('found'), t > 5.0);
+      } },
+    { id: 's6', d: 10, who: 'Langkah 5 · Ibu bapa', title: 'Laporan anak yang senang difahami',
+      text: 'Ibu bapa nampak markah keseluruhan, gred, carta kekuatan, dan senarai aspek yang anak perlu latih lagi. Jadi latihan di rumah lebih terarah.',
+      up: function (t) {
+        var p = ease(prog(t, 0.3, 2.0));
+        $('pScore').textContent = (82.5 * p).toFixed(1) + '%';
+        show($('pGrade'), t > 2.0);
+        var r = ease(prog(t, 1.2, 3.2));
+        $('rPoly').setAttribute('points', poly(AISYAH.map(function (v) { return v * r; })));
+        show($('pGood'), t > 3.8); show($('pBad'), t > 5.2); show($('pTip'), t > 7.0);
+      } },
+    { id: 's7', d: 7, who: 'Langkah 6 · Laporan', title: 'Simpan atau kongsi laporan dengan satu tekan',
+      text: 'Laporan boleh dimuat turun sebagai PDF, Excel atau gambar. Guru boleh hantar ke group WhatsApp kelas, ibu bapa boleh simpan untuk rekod sendiri.',
+      up: function (t) {
+        var k = t < 0.6 ? 0 : t < 1.6 ? 1 : t < 2.6 ? 2 : t < 3.6 ? 3 : 0;
+        ['d1', 'd2', 'd3'].forEach(function (id, i) { $(id).classList.toggle('hot', k === i + 1); });
+        show($('toast'), t > 0.9 && t < 3.9);
+        $('toastTxt').textContent = t < 1.9 ? 'Laporan_Aisyah.pdf disimpan' : t < 2.9 ? 'Markah_Aisyah.xlsx disimpan' : 'Laporan_Aisyah.png sedia untuk WhatsApp';
+        show($('closing'), t > 3.9);
+        if (t > 3.9) {
+          $('capTitle').textContent = 'Ringkasnya';
+          $('capText').textContent = 'Guru jimat masa buat laporan, ibu bapa dapat maklumat yang jelas, dan kelas nampak lebih profesional.';
+        }
+      } }
+  ];
+  var TOTAL = 0;
+  SCENES.forEach(function (s) { s.start = TOTAL; TOTAL += s.d; });
+
+  var fmt = function (s) { s = Math.floor(s); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); };
+  SCENES.forEach(function (s, i) {
+    var li = document.createElement('li');
+    li.innerHTML = '<button class="chap" type="button"><span class="ts">' + fmt(s.start) + '</span><span>' + s.title + '</span></button>';
+    li.firstChild.addEventListener('click', function () { seek(s.start + 0.01); play(); });
+    $('chaps').appendChild(li);
+    s.chap = li.firstChild;
+  });
+
+  var t = 0, playing = false, last = 0, curScene = -1;
+
+  function render() {
+    var idx = SCENES.length - 1;
+    for (var i = 0; i < SCENES.length; i++) { if (t < SCENES[i].start + SCENES[i].d) { idx = i; break; } }
+    var s = SCENES[idx];
+    if (idx !== curScene) {
+      SCENES.forEach(function (x, j) { $(x.id).classList.toggle('on', j === idx); x.chap.classList.toggle('on', j === idx); });
+      $('capWho').textContent = s.who; $('capTitle').textContent = s.title; $('capText').textContent = s.text;
+      curScene = idx;
+    }
+    if (s.id === 's7' && t - s.start <= 3.9) { $('capTitle').textContent = s.title; $('capText').textContent = s.text; }
+    s.up(t - s.start);
+    $('fill').style.width = (t / TOTAL * 100) + '%';
+    $('time').textContent = fmt(t) + ' / ' + fmt(TOTAL);
+    $('track').setAttribute('aria-valuenow', Math.floor(t));
+  }
+  function setBtn() {
+    var ended = t >= TOTAL;
+    $('play').innerHTML = playing ? IC.pause : (ended ? IC.replay : IC.play);
+    $('play').setAttribute('aria-label', playing ? 'Jeda' : (ended ? 'Main semula' : 'Main'));
+  }
+  function frame(now) {
+    if (!playing) return;
+    var dt = Math.min(0.1, (now - last) / 1000); last = now;
+    t = Math.min(TOTAL, t + dt);
+    render();
+    if (t >= TOTAL) { playing = false; setBtn(); return; }
+    requestAnimationFrame(frame);
+  }
+  function play() {
+    if (t >= TOTAL) { t = 0; curScene = -1; }
+    if (playing) return;
+    playing = true; last = performance.now(); setBtn(); requestAnimationFrame(frame);
+  }
+  function pause() { playing = false; setBtn(); }
+  function seek(x) { t = clamp(x, 0, TOTAL); render(); setBtn(); }
+
+  $('play').addEventListener('click', function () { playing ? pause() : play(); });
+  $('track').addEventListener('click', function (e) {
+    var r = this.getBoundingClientRect(); seek((e.clientX - r.left) / r.width * TOTAL);
+  });
+  $('track').addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight') { seek(t + 5); e.preventDefault(); }
+    if (e.key === 'ArrowLeft') { seek(t - 5); e.preventDefault(); }
+  });
+
+  // Scale phone to fit narrow screens
+  function fit() {
+    var w = $('holder').clientWidth, sc = Math.min(1, w / 390);
+    $('pscale').style.transform = 'scale(' + sc + ')';
+    $('holder').style.height = (760 * sc) + 'px';
+  }
+  window.addEventListener('resize', fit); fit();
+
+  render(); setBtn();
+  setTimeout(play, 400);
+})();
+</script>
+
+</body>
+</html>
