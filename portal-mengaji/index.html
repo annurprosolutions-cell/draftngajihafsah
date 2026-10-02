@@ -1,0 +1,2667 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Portal Kelas Mengaji</title>
+
+    <!-- PWA / Home Screen (ikon & nama dikemaskini secara dinamik dari tetapan) -->
+    <link rel="icon" id="meta-favicon" href="data:,">
+    <link rel="apple-touch-icon" id="meta-apple-icon" href="data:,">
+    <meta name="apple-mobile-web-app-title" id="meta-apple-title" content="Portal Mengaji">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#052e16">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- Gambar (HTML2Canvas) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- PDF (jsPDF + AutoTable) : teks sebenar, berbilang muka surat, tidak terpotong -->
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        arabic: ['Amiri', 'serif'],
+                    },
+                    colors: {
+                        quran: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d', 950: '#052e16' },
+                        gold: { 50: '#fefce8', 300: '#fde047', 400: '#facc15', 500: '#eab308', 600: '#ca8a04' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #15803d; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #166534; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; }
+
+        .modal-enter { opacity: 0; transform: scale(0.95); }
+        .modal-enter-active { opacity: 1; transform: scale(1); transition: all 0.3s ease-out; }
+
+        .islamic-pattern-bg {
+            background-color: #052e16;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2315803d' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* Sidebar minimize & expand */
+        .admin-sidebar-slim { width: 5rem !important; }
+        .admin-sidebar-expanded { width: 16rem !important; }
+        .admin-sidebar-slim .sidebar-text { display: none !important; }
+        .admin-sidebar-expanded .sidebar-text { display: block !important; }
+        .admin-sidebar-slim .sidebar-logo-wrapper { width: 3rem !important; height: 3rem !important; }
+        .admin-sidebar-expanded .sidebar-logo-wrapper { width: 6rem !important; height: 6rem !important; }
+        .admin-sidebar-slim .nav-button { justify-content: center !important; padding-left: 0 !important; padding-right: 0 !important; }
+        .admin-sidebar-expanded .nav-button { justify-content: flex-start !important; padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
+        .admin-sidebar-slim .nav-icon { margin-right: 0 !important; }
+        .admin-sidebar-expanded .nav-icon { margin-right: 0.75rem !important; }
+
+        /* Mobile-first */
+        input[type="text"], input[type="password"], input[type="number"], input[type="url"], input[type="file"], select, textarea { font-size: 16px !important; }
+        @media (min-width: 768px) {
+            .cfg-input { font-size: 14px !important; }
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .mobile-nav-active { background-color: #000 !important; color: #fff !important; border-top-color: #eab308 !important; }
+
+        /* ===== Mod tangkapan gambar (html2canvas) =====
+           Dipakai pada salinan dokumen sahaja, jadi paparan sebenar tidak berubah.
+           img inline-block: elak teks "turun" & terpotong (isu html2canvas + Tailwind preflight). */
+        .capturing img { display: inline-block; }
+        .capturing .no-print { display: none !important; }
+        .capturing .truncate { overflow: visible !important; text-overflow: clip !important; white-space: normal !important; }
+        .capturing ul.overflow-y-auto { max-height: none !important; overflow: visible !important; }
+        .capturing .overflow-x-auto, .capturing .overflow-y-auto { overflow: visible !important; }
+        .capturing .whitespace-nowrap { white-space: normal !important; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased h-screen w-screen overflow-hidden">
+
+    <!-- ================= LOGIN ================= -->
+    <div id="login-screen" class="fixed inset-0 z-[100] flex items-center justify-center islamic-pattern-bg p-4 transition-opacity duration-300 overflow-y-auto">
+        <div class="bg-white p-8 md:p-10 rounded-3xl shadow-2xl w-full max-w-md relative overflow-hidden my-auto">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-gold-400 rounded-bl-full opacity-10 -mr-10 -mt-10"></div>
+            <div class="absolute bottom-0 left-0 w-32 h-32 bg-quran-600 rounded-tr-full opacity-10 -ml-10 -mb-10"></div>
+
+            <div id="config-error-banner" class="hidden relative z-10 mb-6 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-xl p-3"></div>
+
+            <div id="student-login-form" class="relative z-10 transition-all duration-300">
+                <div class="flex flex-col items-center mb-8 text-center">
+                    <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-gold-500 overflow-hidden mb-4">
+                        <img src="" alt="Logo" class="brand-logo w-full h-full object-contain p-1">
+                    </div>
+                    <h2 class="brand-name text-2xl font-bold font-arabic text-gold-500 leading-tight"></h2>
+                    <p class="brand-login-subtitle text-xs text-quran-700 mt-2 font-medium bg-quran-50 px-3 py-1 rounded-full border border-quran-100"></p>
+                </div>
+
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5 text-center">No. Kad Pengenalan Pelajar</label>
+                        <div class="relative">
+                            <i data-lucide="credit-card" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5"></i>
+                            <input type="text" id="login-ic" inputmode="numeric" placeholder="Cth: 121212-10-1234" maxlength="14" onkeydown="if(event.key==='Enter') handleStudentLogin()" class="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-0 focus:border-quran-500 transition-colors text-center text-lg tracking-[0.1em] font-bold text-gray-800 placeholder:font-normal placeholder:tracking-normal placeholder:text-gray-300">
+                        </div>
+                    </div>
+                    <button onclick="handleStudentLogin()" id="btn-login-student" class="w-full bg-quran-700 hover:bg-quran-800 text-white font-bold py-3.5 rounded-xl shadow-[0_4px_14px_0_rgba(21,128,61,0.39)] hover:-translate-y-0.5 transition-all flex justify-center items-center">
+                        Semak Rekod
+                    </button>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-gray-100 text-center">
+                    <button onclick="toggleAdminLogin()" class="text-xs font-medium text-gray-400 hover:text-quran-600 transition inline-flex items-center">
+                        <i data-lucide="shield" class="w-3.5 h-3.5 mr-1.5"></i> Log Masuk Pentadbir
+                    </button>
+                </div>
+            </div>
+
+            <div id="admin-login-form" class="relative z-10 hidden transition-all duration-300">
+                <div class="flex flex-col items-center mb-8 text-center">
+                    <div class="w-16 h-16 bg-quran-50 rounded-2xl flex items-center justify-center border border-quran-100 mb-4 text-quran-700">
+                        <i data-lucide="shield-check" class="w-8 h-8"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800">Akses Guru / Pentadbir</h2>
+                    <p class="brand-tagline text-sm text-gray-500 mt-1"></p>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Pengguna</label>
+                        <div class="relative">
+                            <i data-lucide="user" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5"></i>
+                            <input type="text" id="login-username" autocapitalize="none" autocomplete="username" placeholder="cth: superadmin" class="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-0 focus:border-gray-800 transition-colors text-lg font-medium text-gray-800">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Kata Laluan</label>
+                        <div class="relative">
+                            <i data-lucide="lock" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5"></i>
+                            <input type="password" id="login-password" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter') handleAdminLogin()" class="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-0 focus:border-gray-800 transition-colors text-lg font-medium text-gray-800">
+                        </div>
+                    </div>
+                    <button onclick="handleAdminLogin()" id="btn-login-admin" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-3.5 rounded-xl shadow-lg hover:-translate-y-0.5 transition-all flex justify-center items-center">
+                        Log Masuk Sistem
+                    </button>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-gray-100 text-center">
+                    <button onclick="toggleAdminLogin()" class="text-xs font-medium text-gray-500 hover:text-gray-800 transition inline-flex items-center">
+                        <i data-lucide="arrow-left" class="w-3.5 h-3.5 mr-1.5"></i> Kembali ke Portal Pelajar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= APP ================= -->
+    <div id="app-wrapper" class="hidden h-full w-full flex">
+
+        <!-- Sidebar (Admin Desktop) -->
+        <aside id="admin-sidebar" class="hidden islamic-pattern-bg text-white shadow-xl z-20 shrink-0 relative transition-[width] duration-300">
+            <button onclick="toggleSidebar()" class="hidden md:flex absolute -right-3.5 top-8 bg-gold-500 hover:bg-gold-600 text-white rounded-full p-1 shadow-lg border-2 border-white z-50 transition-transform">
+                <i data-lucide="chevron-right" id="sidebar-toggle-icon" class="w-4 h-4"></i>
+            </button>
+
+            <div class="p-6 flex flex-col items-center border-b border-quran-800 overflow-hidden">
+                <div class="sidebar-logo-wrapper w-12 h-12 transition-all duration-300 bg-white rounded-full flex items-center justify-center mb-4 shadow-lg border-2 border-gold-500 overflow-hidden shrink-0">
+                    <img src="" alt="Logo" class="brand-logo w-full h-full object-contain p-1.5">
+                </div>
+                <h1 class="brand-name sidebar-text text-xl font-bold text-center font-arabic leading-tight text-gold-400 w-full break-words"></h1>
+                <p class="brand-tagline sidebar-text text-xs text-quran-100 mt-2 uppercase tracking-wider text-center"></p>
+            </div>
+            <nav class="flex-1 py-4 overflow-x-hidden">
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" title="Dashboard Utama" class="nav-button w-full flex items-center text-sm font-medium text-quran-100 border-l-4 border-transparent transition-colors mt-1 py-3">
+                    <i data-lucide="layout-dashboard" class="nav-icon w-5 h-5 shrink-0"></i>
+                    <span class="sidebar-text whitespace-nowrap">Dashboard Utama</span>
+                </button>
+                <button onclick="switchTab('students')" id="btn-students" title="Senarai Pelajar" class="nav-button w-full flex items-center text-sm font-medium text-quran-100 border-l-4 border-transparent transition-colors mt-1 py-3">
+                    <i data-lucide="users" class="nav-icon w-5 h-5 shrink-0"></i>
+                    <span class="sidebar-text whitespace-nowrap">Senarai Pelajar</span>
+                </button>
+                <button onclick="switchTab('settings')" id="btn-settings" title="Akaun Saya" class="nav-button w-full flex items-center text-sm font-medium text-quran-100 border-l-4 border-transparent transition-colors mt-1 py-3">
+                    <i data-lucide="key-round" class="nav-icon w-5 h-5 shrink-0"></i>
+                    <span class="sidebar-text whitespace-nowrap">Akaun Saya</span>
+                </button>
+                <button onclick="switchTab('config')" id="btn-config" title="Konfigurasi Sistem" class="superadmin-only hidden nav-button w-full flex items-center text-sm font-medium text-quran-100 border-l-4 border-transparent transition-colors mt-1 py-3">
+                    <i data-lucide="sliders-horizontal" class="nav-icon w-5 h-5 shrink-0"></i>
+                    <span class="sidebar-text whitespace-nowrap">Konfigurasi</span>
+                </button>
+            </nav>
+            <div class="p-4 border-t border-quran-800 flex flex-col items-center overflow-x-hidden">
+                <button onclick="logout()" title="Log Keluar" class="nav-button w-full py-2.5 mb-3 bg-red-500/20 hover:bg-red-500/40 text-white rounded-lg text-xs font-medium transition flex items-center">
+                    <i data-lucide="log-out" class="nav-icon w-4 h-4 shrink-0"></i>
+                    <span class="sidebar-text whitespace-nowrap">Log Keluar</span>
+                </button>
+                <div class="brand-short sidebar-text text-[10px] text-center text-quran-500 uppercase tracking-widest whitespace-nowrap"></div>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col h-full overflow-hidden bg-gray-50 relative">
+
+            <header id="admin-mobile-header" class="hidden islamic-pattern-bg text-white p-3.5 justify-between items-center shadow-md z-20 shrink-0">
+                <div class="flex items-center space-x-3 min-w-0">
+                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-gold-500 overflow-hidden shrink-0">
+                        <img src="" alt="Logo" class="brand-logo w-full h-full object-contain p-0.5">
+                    </div>
+                    <div class="min-w-0">
+                        <h1 class="brand-name font-bold font-arabic text-gold-400 leading-tight text-lg truncate"></h1>
+                        <p class="brand-tagline text-[10px] font-sans text-quran-100 uppercase tracking-wide truncate"></p>
+                    </div>
+                </div>
+                <button onclick="logout()" class="text-white hover:text-red-300 flex items-center text-sm font-medium px-2 shrink-0">
+                    <i data-lucide="log-out" class="w-5 h-5 mr-1.5"></i> Keluar
+                </button>
+            </header>
+
+            <div class="flex-1 overflow-y-auto w-full relative scroll-smooth pb-24 md:pb-0" id="main-scroll-area">
+
+                <div id="class-selector-container" class="hidden">
+                    <div id="class-selector" class="flex overflow-x-auto hide-scrollbar bg-white p-1.5 rounded-xl border border-gray-200 shadow-sm w-full md:w-max items-center mb-4 md:mb-6 gap-1"></div>
+                </div>
+
+                <div id="loading-state" class="hidden flex-col items-center justify-center py-20">
+                    <i data-lucide="loader-2" class="w-12 h-12 text-quran-600 animate-spin mb-4"></i>
+                    <p class="text-quran-800 font-medium animate-pulse">Menarik data daripada Google Sheets...</p>
+                </div>
+
+                <div id="error-state" class="hidden flex-col items-center justify-center py-20 text-center px-4">
+                    <i data-lucide="alert-triangle" class="w-16 h-16 text-red-500 mb-4"></i>
+                    <h2 class="text-xl font-bold text-gray-800 mb-2">Ralat Mengambil Data</h2>
+                    <p class="text-gray-600 mb-4" id="error-msg">Sila pastikan sambungan internet anda stabil.</p>
+                    <button onclick="fetchData(true)" class="px-6 py-2.5 bg-quran-700 text-white rounded-lg shadow hover:bg-quran-800 transition font-medium">Cuba Semula</button>
+                </div>
+
+                <div id="empty-subject-state" class="hidden flex-col items-center justify-center py-20 text-center px-4">
+                    <i data-lucide="book-plus" class="w-16 h-16 text-quran-600 mb-4"></i>
+                    <h2 class="text-xl font-bold text-gray-800 mb-2">Belum Ada Subjek / Kelas</h2>
+                    <p class="text-gray-600 mb-4">Superadmin perlu menambah subjek dan aspek bacaan di bahagian Konfigurasi.</p>
+                </div>
+
+                <!-- TAB DASHBOARD -->
+                <div id="tab-dashboard" class="hidden space-y-6 p-4 md:p-8 pt-4">
+                    <div class="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">Analisis <span id="display-class-title" class="text-quran-700"></span></h2>
+                            <p class="text-sm text-gray-500 mt-1">Prestasi purata kelas mengikut bahagian dan aspek penilaian.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2 no-print w-full md:w-auto">
+                            <button onclick="downloadDashboardPDF(this)" class="flex-1 md:flex-none flex items-center justify-center text-sm bg-blue-600 border border-blue-600 shadow-sm px-4 py-2.5 rounded-lg text-white hover:bg-blue-700 transition font-medium">
+                                <i data-lucide="file-text" class="w-4 h-4 mr-2"></i> PDF
+                            </button>
+                            <button onclick="downloadDashboardImage(this)" class="flex-1 md:flex-none flex items-center justify-center text-sm bg-quran-700 border border-quran-700 shadow-sm px-4 py-2.5 rounded-lg text-white hover:bg-quran-800 transition font-medium">
+                                <i data-lucide="image-down" class="w-4 h-4 mr-2"></i> Gambar
+                            </button>
+                            <button onclick="refreshAll()" class="flex-1 md:flex-none flex items-center justify-center text-sm bg-white border border-gray-200 shadow-sm px-4 py-2.5 rounded-lg text-gray-600 hover:text-quran-700 transition font-medium">
+                                <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i> Segar Semula
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex items-center">
+                            <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mr-4 shrink-0"><i data-lucide="users" class="w-6 h-6"></i></div>
+                            <div class="min-w-0">
+                                <p class="text-sm text-gray-500 font-medium">Jumlah Pelajar</p>
+                                <h3 class="text-2xl font-bold text-gray-800" id="stat-total-students">0</h3>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex items-center">
+                            <div class="w-12 h-12 rounded-full bg-quran-50 text-quran-600 flex items-center justify-center mr-4 shrink-0"><i data-lucide="activity" class="w-6 h-6"></i></div>
+                            <div class="min-w-0">
+                                <p class="text-sm text-gray-500 font-medium">Purata Kelas (%)</p>
+                                <h3 class="text-2xl font-bold text-gray-800" id="stat-avg-class">0%</h3>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex items-center">
+                            <div class="w-12 h-12 rounded-full bg-gold-50 text-gold-600 flex items-center justify-center mr-4 shrink-0"><i data-lucide="award" class="w-6 h-6"></i></div>
+                            <div class="min-w-0">
+                                <p class="text-sm text-gray-500 font-medium">Penguasaan Terbaik</p>
+                                <h3 class="text-sm font-bold text-gray-800 leading-snug break-words" id="stat-best-category">-</h3>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex items-center">
+                            <div class="w-12 h-12 rounded-full bg-red-50 text-red-600 flex items-center justify-center mr-4 shrink-0"><i data-lucide="trending-down" class="w-6 h-6"></i></div>
+                            <div class="min-w-0">
+                                <p class="text-sm text-gray-500 font-medium">Perlu Penekanan</p>
+                                <h3 class="text-sm font-bold text-gray-800 leading-snug break-words" id="stat-worst-category">-</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Profil Prestasi Kelas</h3>
+                            <p class="text-xs text-gray-500 mb-4">Purata keseluruhan mengikut bahagian utama.</p>
+                            <div class="relative flex-1 min-h-[300px] w-full flex justify-center"><canvas id="sectionChart"></canvas></div>
+                            <div id="dashboard-radar-legend" class="mt-4 flex flex-wrap justify-center gap-4 text-[11px] font-medium text-gray-600"></div>
+                        </div>
+                        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col">
+                            <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 border-b border-gray-100 pb-2 gap-2">
+                                <h3 class="text-lg font-bold text-gray-800">Carta Purata Terperinci</h3>
+                                <select id="chart-section-filter" onchange="updateMainChart()" class="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-1 focus:ring-quran-500 w-full sm:w-auto"></select>
+                            </div>
+                            <div class="relative flex-1 min-h-[300px] w-full"><canvas id="mainChart"></canvas></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-6">
+                        <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+                            <h4 class="font-bold text-gray-800 text-sm flex items-center"><i data-lucide="star" class="w-4 h-4 mr-2 text-gold-500"></i> Topik Prestasi Kelas Tertinggi</h4>
+                        </div>
+                        <div class="p-5"><div id="excellence-list-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
+                    </div>
+                </div>
+
+                <!-- TAB SENARAI PELAJAR -->
+                <div id="tab-students" class="hidden space-y-6 p-4 md:p-8 pt-4">
+                    <div class="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">Senarai Pelajar</h2>
+                            <p class="text-sm text-gray-500 mt-1">Klik pada nama pelajar untuk melihat laporan dan suntingan.</p>
+                        </div>
+                        <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                            <div class="relative w-full md:w-64">
+                                <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
+                                <input type="text" id="search-input" oninput="filterStudents()" placeholder="Cari nama atau IC..." class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-quran-500 focus:border-transparent text-sm">
+                            </div>
+                            <button onclick="downloadAllStudentsExcel()" class="w-full md:w-auto px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition flex items-center justify-center whitespace-nowrap shadow-sm">
+                                <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-2"></i> Eksport Excel
+                            </button>
+                            <button onclick="toggleSortOrder()" class="w-full md:w-auto px-4 py-2.5 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-lg text-sm font-medium transition flex items-center justify-center whitespace-nowrap shadow-sm">
+                                <i data-lucide="arrow-down" id="sort-icon" class="w-4 h-4 mr-2"></i> <span id="sort-text">Markah Tertinggi</span>
+                            </button>
+                            <button onclick="toggleAddStudentModal()" class="w-full md:w-auto px-4 py-2.5 bg-quran-700 hover:bg-quran-800 text-white rounded-lg text-sm font-medium transition flex items-center justify-center whitespace-nowrap shadow-sm">
+                                <i data-lucide="user-plus" class="w-4 h-4 mr-2"></i> Tambah Pelajar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="overflow-x-auto hide-scrollbar">
+                            <table class="w-full whitespace-nowrap">
+                                <thead class="bg-gray-50 border-b border-gray-100 text-left">
+                                    <tr>
+                                        <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Bil</th>
+                                        <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nama Pelajar</th>
+                                        <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">IC / Pengenalan</th>
+                                        <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Skor Purata</th>
+                                        <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Tindakan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="student-table-body" class="divide-y divide-gray-100"></tbody>
+                            </table>
+                        </div>
+                        <div id="no-student-msg" class="hidden p-8 text-center text-gray-500">Tiada pelajar dijumpai.</div>
+                    </div>
+                </div>
+
+                <!-- TAB AKAUN SAYA -->
+                <div id="tab-settings" class="hidden space-y-6 p-4 md:p-8 pt-4">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">Akaun Saya</h2>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 max-w-lg">
+                        <p class="text-sm text-gray-600 mb-6">Log masuk sebagai <b id="me-name"></b> <span id="me-role" class="ml-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-quran-50 text-quran-700 border border-quran-100"></span></p>
+                        <h3 class="text-lg font-bold text-gray-800 mb-1 flex items-center"><i data-lucide="key-round" class="w-5 h-5 mr-2 text-quran-600"></i> Tukar Kata Laluan</h3>
+                        <p class="text-xs text-gray-500 mb-6">Kata laluan disimpan secara hash di dalam Google Sheets.</p>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Kata Laluan Lama</label>
+                                <input type="password" id="setting-old-pwd" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-quran-500 focus:border-transparent text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Kata Laluan Baru</label>
+                                <input type="password" id="setting-new-pwd" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-quran-500 focus:border-transparent text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Sahkan Kata Laluan Baru</label>
+                                <input type="password" id="setting-confirm-pwd" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-quran-500 focus:border-transparent text-sm">
+                            </div>
+                            <div class="pt-4 mt-2 border-t border-gray-100 flex justify-end">
+                                <button onclick="updateAdminPassword(this)" class="px-6 py-2.5 bg-gray-800 hover:bg-gray-900 text-white rounded-lg font-medium shadow-sm transition flex justify-center items-center text-sm w-full md:w-auto">Simpan Kata Laluan</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB KONFIGURASI (SUPERADMIN) -->
+                <div id="tab-config" class="hidden space-y-6 p-4 md:p-8 pt-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">Konfigurasi Sistem</h2>
+                        <p class="text-sm text-gray-500 mt-1">Hanya Superadmin. Semua perubahan disimpan terus ke Google Sheets.</p>
+                    </div>
+
+                    <div class="flex overflow-x-auto hide-scrollbar bg-white p-1.5 rounded-xl border border-gray-200 shadow-sm w-full md:w-max gap-1" id="cfg-tabs">
+                        <button data-cfg="brand" onclick="switchConfigPanel('brand')" class="cfg-tab flex-none whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium"><i data-lucide="image" class="w-4 h-4 inline mr-1 mb-0.5"></i> Logo & Jenama</button>
+                        <button data-cfg="subjects" onclick="switchConfigPanel('subjects')" class="cfg-tab flex-none whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium"><i data-lucide="book-open" class="w-4 h-4 inline mr-1 mb-0.5"></i> Subjek & Aspek Bacaan</button>
+                        <button data-cfg="grades" onclick="switchConfigPanel('grades')" class="cfg-tab flex-none whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium"><i data-lucide="award" class="w-4 h-4 inline mr-1 mb-0.5"></i> Gred Markah</button>
+                        <button data-cfg="users" onclick="switchConfigPanel('users')" class="cfg-tab flex-none whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium"><i data-lucide="users-round" class="w-4 h-4 inline mr-1 mb-0.5"></i> Pengguna</button>
+                    </div>
+
+                    <!-- Panel: Logo & Jenama -->
+                    <div id="cfg-panel-brand" class="cfg-panel grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                            <h3 class="font-bold text-gray-800 mb-4 flex items-center"><i data-lucide="image" class="w-5 h-5 mr-2 text-quran-600"></i> Logo</h3>
+                            <div class="w-32 h-32 mx-auto rounded-full border-2 border-gold-500 bg-white overflow-hidden flex items-center justify-center shadow">
+                                <img id="cfg-logo-preview" src="" alt="Logo" class="w-full h-full object-contain p-2">
+                            </div>
+                            <p id="cfg-logo-status" class="text-center text-[11px] text-gray-400 mt-2 min-h-[1rem]"></p>
+                            <label class="block text-sm font-medium text-gray-700 mt-4 mb-1">Muat naik logo</label>
+                            <input type="file" id="cfg-logo-file" accept="image/*" onchange="onLogoFileChange(this)" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-quran-50 file:text-quran-700 bg-white">
+                            <p class="text-[11px] text-gray-400 mt-1">PNG berlatar lutsinar disyorkan. Logo dikecilkan automatik ke 320px.</p>
+                            <label class="block text-sm font-medium text-gray-700 mt-4 mb-1">atau guna pautan (URL) logo</label>
+                            <div class="flex gap-2">
+                                <input type="url" id="cfg-logo-url" placeholder="https://..." class="cfg-input flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg">
+                                <button onclick="useLogoUrl()" class="px-3 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium shrink-0">Guna</button>
+                            </div>
+                            <button onclick="removeLogo()" class="mt-4 text-xs text-red-600 hover:underline">Buang logo (guna inisial)</button>
+                        </div>
+
+                        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                            <h3 class="font-bold text-gray-800 mb-4 flex items-center"><i data-lucide="type" class="w-5 h-5 mr-2 text-quran-600"></i> Nama & Teks Paparan</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Pusat / Kelas <span class="text-red-500">*</span></label>
+                                    <input type="text" id="cfg-appName" class="cfg-input w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Pendek (ikon telefon)</label>
+                                    <input type="text" id="cfg-shortName" maxlength="20" class="cfg-input w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Slogan / Tagline</label>
+                                    <input type="text" id="cfg-tagline" class="cfg-input w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Teks di bawah logo (skrin log masuk)</label>
+                                    <input type="text" id="cfg-loginSubtitle" class="cfg-input w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Teks Footer (juga dalam PDF)</label>
+                                    <input type="text" id="cfg-footerText" class="cfg-input w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                </div>
+                                <label class="md:col-span-2 flex items-start gap-3 bg-gray-50 border border-gray-100 rounded-lg p-3 cursor-pointer">
+                                    <input type="checkbox" id="cfg-allowStudentPhoto" class="mt-1 w-4 h-4 accent-green-700">
+                                    <span class="text-sm text-gray-700">Benarkan pelajar / ibu bapa tukar gambar profil sendiri dari portal pelajar</span>
+                                </label>
+                            </div>
+                            <div class="pt-4 mt-6 border-t border-gray-100 flex justify-end">
+                                <button onclick="saveBrandSettings(this)" class="px-6 py-2.5 bg-quran-700 hover:bg-quran-800 text-white rounded-lg font-medium shadow-sm transition flex items-center text-sm"><i data-lucide="save" class="w-4 h-4 mr-2"></i> Simpan Jenama</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel: Subjek & Aspek -->
+                    <div id="cfg-panel-subjects" class="cfg-panel hidden grid grid-cols-1 lg:grid-cols-4 gap-6">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 h-max">
+                            <h3 class="font-bold text-gray-800 mb-3 text-sm uppercase tracking-wide">Subjek / Kelas</h3>
+                            <div id="cfg-subject-list" class="space-y-1.5"></div>
+                            <button onclick="editSubject(null)" class="mt-4 w-full px-3 py-2 border-2 border-dashed border-quran-200 text-quran-700 hover:bg-quran-50 rounded-lg text-sm font-semibold flex items-center justify-center"><i data-lucide="plus" class="w-4 h-4 mr-1"></i> Subjek Baharu</button>
+                        </div>
+
+                        <div class="lg:col-span-3 bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6" id="cfg-subject-editor">
+                            <h3 class="font-bold text-gray-800 mb-4 flex items-center" id="cfg-subject-title">Subjek</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+                                <div class="md:col-span-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Subjek / Kelas <span class="text-red-500">*</span></label>
+                                    <input type="text" id="cfg-sub-nama" placeholder="cth: Talaqqi Al-Quran" class="cfg-input w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Ikon</label>
+                                    <select id="cfg-sub-ikon" class="cfg-input w-full px-3 py-2 border border-gray-200 rounded-lg bg-white"></select>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Sasaran Skor (%)</label>
+                                    <input type="number" id="cfg-sub-sasaran" min="0" max="100" class="cfg-input w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                </div>
+                                <div class="md:col-span-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Label Garis Sasaran (carta)</label>
+                                    <input type="text" id="cfg-sub-label" placeholder="cth: Sasaran Khatam (100%)" class="cfg-input w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                </div>
+                                <div class="md:col-span-3">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Mesej jika <b>capai</b> sasaran</label>
+                                    <input type="text" id="cfg-sub-capai" placeholder="cth: Layak Menerima Sijil" class="cfg-input w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                </div>
+                                <div class="md:col-span-3">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Mesej jika <b>belum capai</b></label>
+                                    <input type="text" id="cfg-sub-belum" placeholder="cth: Sasaran Kelayakan Sijil: 90%" class="cfg-input w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                </div>
+                                <label class="md:col-span-6 flex items-center gap-3 text-sm text-gray-700 cursor-pointer">
+                                    <input type="checkbox" id="cfg-sub-aktif" class="w-4 h-4 accent-green-700"> Aktif (dipaparkan kepada guru & pelajar)
+                                </label>
+                            </div>
+
+                            <div class="mt-8 flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b pb-3 mb-3">
+                                <div>
+                                    <h4 class="font-bold text-gray-800 flex items-center"><i data-lucide="list-checks" class="w-5 h-5 mr-2 text-quran-600"></i> Aspek Bacaan & Markah Penuh</h4>
+                                    <p class="text-xs text-gray-500 mt-1">Bahagian = kumpulan pada carta radar (cth: HUKUM TAJWID). Susun guna anak panah.</p>
+                                </div>
+                                <span id="cfg-aspect-count" class="text-xs font-semibold text-gray-500"></span>
+                            </div>
+
+                            <div class="hidden md:grid grid-cols-12 gap-2 px-1 pb-1 text-[11px] font-semibold text-gray-500 uppercase">
+                                <div class="col-span-1">#</div>
+                                <div class="col-span-3">Bahagian</div>
+                                <div class="col-span-4">Aspek / Point Bacaan</div>
+                                <div class="col-span-2">Markah Penuh</div>
+                                <div class="col-span-2 text-right">Susun / Buang</div>
+                            </div>
+                            <div id="cfg-aspect-rows" class="space-y-2"></div>
+                            <datalist id="cfg-section-list"></datalist>
+
+                            <div class="flex flex-wrap gap-2 mt-3">
+                                <button onclick="addAspectRow()" class="px-3 py-2 bg-quran-50 text-quran-700 border border-quran-100 hover:bg-quran-100 rounded-lg text-sm font-semibold flex items-center"><i data-lucide="plus" class="w-4 h-4 mr-1"></i> Tambah Aspek</button>
+                                <button onclick="toggleBulkAspects()" class="px-3 py-2 bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 rounded-lg text-sm font-medium flex items-center"><i data-lucide="clipboard-paste" class="w-4 h-4 mr-1"></i> Tambah Pukal</button>
+                            </div>
+                            <div id="cfg-bulk-box" class="hidden mt-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                                <p class="text-xs text-gray-600 mb-2">Satu aspek setiap baris. Format: <code class="bg-white px-1 rounded border">BAHAGIAN | ASPEK | MARKAH PENUH</code> atau hanya nama aspek (guna bahagian & markah lalai di bawah).</p>
+                                <textarea id="cfg-bulk-text" rows="6" class="cfg-input w-full px-3 py-2 border border-gray-200 rounded-lg font-mono" placeholder="HUKUM TAJWID | MAD ASLI | 10&#10;HUKUM TAJWID | IDGHAM | 10&#10;FASIH"></textarea>
+                                <div class="flex flex-wrap gap-2 mt-2 items-center">
+                                    <input type="text" id="cfg-bulk-section" placeholder="Bahagian lalai" list="cfg-section-list" class="cfg-input px-3 py-1.5 border border-gray-200 rounded-lg w-44">
+                                    <input type="number" id="cfg-bulk-max" placeholder="Markah lalai" value="10" min="1" class="cfg-input px-3 py-1.5 border border-gray-200 rounded-lg w-32">
+                                    <button onclick="applyBulkAspects()" class="px-4 py-1.5 bg-gray-800 text-white rounded-lg text-sm font-medium">Masukkan</button>
+                                </div>
+                            </div>
+
+                            <p class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2.5 mt-4">Nota: Membuang aspek akan menyembunyikan markah aspek tersebut daripada laporan. Menukar markah penuh akan mengubah peratus semua pelajar untuk aspek itu.</p>
+
+                            <div class="pt-4 mt-6 border-t border-gray-100 flex flex-col-reverse sm:flex-row justify-between gap-3">
+                                <button id="cfg-sub-delete" onclick="deleteSubject(this)" class="px-5 py-2.5 text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 rounded-lg font-medium transition text-sm flex items-center justify-center"><i data-lucide="trash-2" class="w-4 h-4 mr-2"></i> Padam Subjek</button>
+                                <button onclick="saveSubject(this)" class="px-6 py-2.5 bg-quran-700 hover:bg-quran-800 text-white rounded-lg font-medium shadow-sm transition flex items-center justify-center text-sm"><i data-lucide="save" class="w-4 h-4 mr-2"></i> Simpan Subjek & Aspek</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel: Gred -->
+                    <div id="cfg-panel-grades" class="cfg-panel hidden">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 max-w-3xl">
+                            <h3 class="font-bold text-gray-800 mb-1 flex items-center"><i data-lucide="award" class="w-5 h-5 mr-2 text-quran-600"></i> Gred Pencapaian</h3>
+                            <p class="text-xs text-gray-500 mb-5">Peratus minimum untuk setiap gred. Gred paling rendah sentiasa bermula dari 0%.</p>
+                            <div class="hidden md:grid grid-cols-12 gap-2 px-1 pb-1 text-[11px] font-semibold text-gray-500 uppercase">
+                                <div class="col-span-5">Label Gred</div>
+                                <div class="col-span-3">Minimum (%)</div>
+                                <div class="col-span-3">Warna</div>
+                                <div class="col-span-1"></div>
+                            </div>
+                            <div id="cfg-grade-rows" class="space-y-2"></div>
+                            <button onclick="addGradeRow()" class="mt-3 px-3 py-2 bg-quran-50 text-quran-700 border border-quran-100 hover:bg-quran-100 rounded-lg text-sm font-semibold flex items-center"><i data-lucide="plus" class="w-4 h-4 mr-1"></i> Tambah Gred</button>
+                            <div id="cfg-grade-preview" class="mt-5 flex flex-wrap gap-2"></div>
+                            <div class="pt-4 mt-6 border-t border-gray-100 flex justify-end">
+                                <button onclick="saveGrades(this)" class="px-6 py-2.5 bg-quran-700 hover:bg-quran-800 text-white rounded-lg font-medium shadow-sm transition flex items-center text-sm"><i data-lucide="save" class="w-4 h-4 mr-2"></i> Simpan Gred</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel: Pengguna -->
+                    <div id="cfg-panel-users" class="cfg-panel hidden grid grid-cols-1 lg:grid-cols-5 gap-6">
+                        <div class="lg:col-span-3 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden h-max">
+                            <div class="px-5 py-4 border-b border-gray-100 bg-gray-50"><h3 class="font-bold text-gray-800 text-sm">Senarai Pengguna</h3></div>
+                            <div class="overflow-x-auto hide-scrollbar">
+                                <table class="w-full text-sm">
+                                    <thead class="text-left text-xs text-gray-500 uppercase"><tr>
+                                        <th class="px-5 py-3">Pengguna</th><th class="px-5 py-3">Peranan</th><th class="px-5 py-3 text-right">Tindakan</th>
+                                    </tr></thead>
+                                    <tbody id="cfg-user-rows" class="divide-y divide-gray-100"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-max">
+                            <h3 class="font-bold text-gray-800 mb-4 flex items-center" id="cfg-user-form-title"><i data-lucide="user-plus" class="w-5 h-5 mr-2 text-quran-600"></i> Tambah Pengguna</h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Pengguna (log masuk)</label>
+                                    <input type="text" id="cfg-user-username" autocapitalize="none" placeholder="cth: ustazah.aminah" class="cfg-input w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Paparan</label>
+                                    <input type="text" id="cfg-user-nama" class="cfg-input w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Peranan</label>
+                                    <select id="cfg-user-peranan" class="cfg-input w-full px-3 py-2 border border-gray-200 rounded-lg bg-white">
+                                        <option value="admin">Guru / Admin (urus pelajar & markah)</option>
+                                        <option value="superadmin">Superadmin (semua + konfigurasi)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Kata Laluan <span id="cfg-user-pwd-hint" class="text-xs text-gray-400"></span></label>
+                                    <input type="password" id="cfg-user-password" autocomplete="new-password" class="cfg-input w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                </div>
+                            </div>
+                            <div class="pt-4 mt-5 border-t border-gray-100 flex justify-end gap-2">
+                                <button onclick="resetUserForm()" class="px-4 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-sm font-medium">Kosongkan</button>
+                                <button onclick="saveUser(this)" class="px-6 py-2.5 bg-quran-700 hover:bg-quran-800 text-white rounded-lg font-medium shadow-sm transition flex items-center text-sm"><i data-lucide="save" class="w-4 h-4 mr-2"></i> Simpan</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB PORTAL PELAJAR -->
+                <div id="tab-student-portal" class="hidden w-full max-w-5xl mx-auto md:py-6 space-y-6 pb-12 relative">
+                    <div class="bg-white rounded-none md:rounded-2xl shadow-sm border-b md:border border-gray-100 overflow-hidden relative">
+                        <div class="h-28 md:h-40 islamic-pattern-bg relative">
+                            <div class="absolute top-4 left-4 md:left-6 flex items-center gap-2 max-w-[55%]">
+                                <div class="w-9 h-9 md:w-11 md:h-11 bg-white rounded-full border-2 border-gold-500 overflow-hidden shrink-0"><img src="" alt="Logo" class="brand-logo w-full h-full object-contain p-0.5"></div>
+                                <span class="brand-name text-gold-400 font-bold font-arabic leading-tight text-sm md:text-lg"></span>
+                            </div>
+                        </div>
+
+                        <div class="absolute top-4 right-4 flex gap-2 z-10 no-print flex-wrap justify-end">
+                            <button onclick="downloadPortalExcel()" class="bg-green-600/90 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center transition border border-green-500/50 shadow-sm"><i data-lucide="file-spreadsheet" class="w-4 h-4 md:mr-2"></i> <span class="hidden md:inline">Excel</span></button>
+                            <button onclick="downloadPortalPDF(this)" class="bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center transition border border-white/30 shadow-sm"><i data-lucide="file-text" class="w-4 h-4 md:mr-2"></i> <span class="hidden md:inline">PDF</span></button>
+                            <button onclick="downloadPortalImage(this)" class="bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center transition border border-white/30 shadow-sm"><i data-lucide="image-down" class="w-4 h-4 md:mr-2"></i> <span class="hidden md:inline">Gambar</span></button>
+                            <button onclick="logout()" class="bg-red-500/80 hover:bg-red-500 text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center transition border border-red-500/50 shadow-sm"><i data-lucide="log-out" class="w-4 h-4 md:mr-2"></i> <span class="hidden md:inline">Keluar</span></button>
+                        </div>
+
+                        <div class="px-6 md:px-10 pb-6 md:pb-8 relative">
+                            <div class="flex flex-col md:flex-row md:items-end mb-4 w-full">
+                                <div class="relative inline-block mx-auto md:mx-0 -mt-14 md:-mt-20 shrink-0">
+                                    <img id="portal-student-pic" src="" alt="Profil" class="w-28 h-28 md:w-40 md:h-40 rounded-full border-4 border-white object-cover bg-white shadow-xl">
+                                    <button id="portal-photo-btn" onclick="togglePortalEdit()" class="no-print absolute bottom-1 right-1 md:bottom-2 md:right-2 bg-gold-500 hover:bg-gold-600 text-white p-3 rounded-full shadow-lg transition border-2 border-white">
+                                        <i data-lucide="camera" class="w-4 h-4 md:w-5 md:h-5"></i>
+                                    </button>
+                                </div>
+                                <div class="mt-4 md:mt-0 md:ml-6 pb-2 text-center md:text-left min-w-0">
+                                    <h2 class="text-2xl md:text-4xl font-bold font-arabic text-gray-800 leading-tight break-words" id="portal-student-name"></h2>
+                                    <p class="text-sm md:text-base text-gray-500 font-medium flex items-center justify-center md:justify-start mt-1 md:mt-2">
+                                        <i data-lucide="credit-card" class="w-4 h-4 mr-1.5"></i> <span id="portal-student-ic"></span>
+                                    </p>
+                                    <span class="inline-block mt-3 px-4 py-1.5 bg-quran-50 text-quran-700 text-xs md:text-sm font-bold rounded-full border border-quran-100" id="portal-student-class"></span>
+                                    <div id="portal-class-selector" class="mt-3 flex flex-nowrap overflow-x-auto hide-scrollbar gap-2 hidden no-print pb-1"></div>
+                                </div>
+                            </div>
+
+                            <div id="portal-edit-section" class="hidden bg-gray-50 p-5 rounded-xl border border-gray-200 mt-6 md:mx-0 -mx-2 no-print">
+                                <h3 class="font-bold text-gray-800 mb-3 flex items-center text-sm"><i data-lucide="image" class="w-4 h-4 mr-2 text-quran-600"></i> Muat Naik Gambar Profil Baharu</h3>
+                                <div class="flex flex-col sm:flex-row items-end gap-3 sm:gap-4">
+                                    <div class="flex-1 w-full">
+                                        <input type="file" id="portal-edit-image" accept="image/*" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm file:mr-4 file:py-1.5 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-quran-50 file:text-quran-700 bg-white">
+                                    </div>
+                                    <div class="flex w-full sm:w-auto gap-2">
+                                        <button onclick="togglePortalEdit()" class="flex-1 sm:flex-none px-4 py-2.5 bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded-lg text-sm font-medium">Batal</button>
+                                        <button onclick="savePortalPicture(this)" class="flex-1 sm:flex-none px-6 py-2.5 bg-quran-700 hover:bg-quran-800 text-white rounded-lg text-sm font-medium shadow-sm whitespace-nowrap flex justify-center items-center">Simpan Gambar</button>
+                                    </div>
+                                </div>
+                                <p class="text-[10px] md:text-xs text-gray-400 mt-3 italic">* Gambar baharu mungkin ambil masa sedikit untuk dipaparkan kerana cache pelayan Google.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="px-4 md:px-0 space-y-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                                <h3 class="font-bold text-gray-800 mb-4 flex items-center text-lg"><i data-lucide="radar" class="w-5 h-5 mr-2 text-quran-600"></i> Profil Kompetensi</h3>
+                                <div class="relative h-[300px] md:h-[400px] w-full flex justify-center"><canvas id="portalRadarChart"></canvas></div>
+                                <div id="portal-radar-legend" class="mt-4 flex flex-wrap justify-center gap-4 text-[11px] font-medium text-gray-600"></div>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center flex flex-col justify-center min-h-[160px]">
+                                    <p class="text-sm text-gray-500 font-medium mb-1">Markah Keseluruhan</p>
+                                    <div class="text-5xl md:text-6xl font-bold tracking-tight" id="portal-overall-score">0%</div>
+                                    <div id="portal-overall-grade" class="text-base md:text-lg font-bold tracking-widest mt-2 uppercase"></div>
+                                    <div id="portal-target-badge" class="mt-4 w-full"></div>
+                                </div>
+                                <div id="portal-grade-lists" class="space-y-4"></div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                            <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+                                <h4 class="font-bold text-gray-800 text-sm">Pecahan Markah Terperinci</h4>
+                                <span class="text-xs font-medium text-gray-400">Rujukan Silibus Lengkap</span>
+                            </div>
+                            <div class="overflow-x-auto hide-scrollbar">
+                                <table class="w-full text-sm text-left">
+                                    <thead class="bg-gray-50 text-gray-500"><tr>
+                                        <th class="px-5 py-4 font-medium border-b border-gray-200">Aspek Penilaian</th>
+                                        <th class="px-5 py-4 font-medium text-center border-b border-gray-200">Markah Diperolehi</th>
+                                        <th class="px-5 py-4 font-medium text-center border-b border-gray-200">Markah Penuh</th>
+                                        <th class="px-5 py-4 font-medium text-center border-b border-gray-200">Peratusan (%)</th>
+                                        <th class="px-5 py-4 font-medium text-center border-b border-gray-200">Pencapaian</th>
+                                    </tr></thead>
+                                    <tbody id="portal-detail-table" class="divide-y divide-gray-100"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="text-center pb-8 pt-4"><p class="brand-footer text-xs text-gray-400"></p></div>
+                    </div>
+                </div>
+            </div>
+
+            <nav id="admin-bottom-nav" class="hidden">
+                <button onclick="switchTab('dashboard')" id="btn-mobile-dashboard" class="mobile-nav-btn flex-1 flex flex-col items-center py-2.5 border-t-4 border-transparent hover:text-white transition-all">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 mb-1"></i><span class="text-[10px] font-bold tracking-wider">UTAMA</span>
+                </button>
+                <button onclick="switchTab('students')" id="btn-mobile-students" class="mobile-nav-btn flex-1 flex flex-col items-center py-2.5 border-t-4 border-transparent hover:text-white transition-all">
+                    <i data-lucide="users" class="w-5 h-5 mb-1"></i><span class="text-[10px] font-bold tracking-wider">PELAJAR</span>
+                </button>
+                <button onclick="switchTab('settings')" id="btn-mobile-settings" class="mobile-nav-btn flex-1 flex flex-col items-center py-2.5 border-t-4 border-transparent hover:text-white transition-all">
+                    <i data-lucide="key-round" class="w-5 h-5 mb-1"></i><span class="text-[10px] font-bold tracking-wider">AKAUN</span>
+                </button>
+                <button onclick="switchTab('config')" id="btn-mobile-config" class="superadmin-only hidden mobile-nav-btn flex-1 flex flex-col items-center py-2.5 border-t-4 border-transparent hover:text-white transition-all">
+                    <i data-lucide="sliders-horizontal" class="w-5 h-5 mb-1"></i><span class="text-[10px] font-bold tracking-wider">KONFIG</span>
+                </button>
+            </nav>
+        </main>
+    </div>
+
+    <!-- ================= MODAL PELAJAR (ADMIN) ================= -->
+    <div id="student-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4">
+        <div id="admin-modal-content" class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col transform transition-all relative">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center islamic-pattern-bg text-white gap-3">
+                <div class="flex items-center min-w-0">
+                    <img id="modal-student-pic" src="" alt="Profil" class="w-12 h-12 md:w-14 md:h-14 rounded-full border-2 border-gold-400 object-cover mr-4 bg-white/20 shadow-sm shrink-0">
+                    <div class="min-w-0">
+                        <h3 class="text-lg md:text-xl font-bold font-arabic text-gold-400 break-words" id="modal-student-name"></h3>
+                        <p class="text-xs md:text-sm text-quran-100 mt-1 flex items-center"><i data-lucide="credit-card" class="w-3 h-3 md:w-4 md:h-4 mr-1"></i> <span id="modal-student-ic"></span></p>
+                    </div>
+                </div>
+                <div class="flex gap-2 items-center self-start no-print flex-wrap justify-end">
+                    <button onclick="downloadAdminStudentExcel()" class="text-white hover:text-gold-300 transition bg-white/10 px-3 py-1.5 rounded-lg flex items-center text-xs md:text-sm font-medium"><i data-lucide="file-spreadsheet" class="w-3 h-3 md:w-4 md:h-4 md:mr-1.5"></i> <span class="hidden md:inline">Excel</span></button>
+                    <button onclick="downloadAdminStudentPDF(this)" class="text-white hover:text-gold-300 transition bg-white/10 px-3 py-1.5 rounded-lg flex items-center text-xs md:text-sm font-medium"><i data-lucide="file-text" class="w-3 h-3 md:w-4 md:h-4 md:mr-1.5"></i> <span class="hidden md:inline">PDF</span></button>
+                    <button onclick="downloadAdminStudentImage(this)" class="text-white hover:text-gold-300 transition bg-white/10 px-3 py-1.5 rounded-lg flex items-center text-xs md:text-sm font-medium"><i data-lucide="image-down" class="w-3 h-3 md:w-4 md:h-4 md:mr-1.5"></i> <span class="hidden md:inline">Gambar</span></button>
+                    <button onclick="toggleEditMode()" id="btn-edit-mode" class="text-white hover:text-gold-300 transition bg-white/10 px-3 py-1.5 rounded-lg flex items-center text-xs md:text-sm font-medium"><i data-lucide="edit" class="w-4 h-4 mr-1.5"></i> Edit</button>
+                    <button onclick="closeModal()" class="text-white hover:text-red-300 transition bg-white/10 p-2 rounded-full"><i data-lucide="x" class="w-4 h-4 md:w-5 md:h-5"></i></button>
+                </div>
+            </div>
+
+            <div id="admin-modal-scroll-area" class="p-4 md:p-6 overflow-y-auto flex-1 bg-gray-50 relative custom-scrollbar">
+                <div id="modal-read-view">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
+                            <h4 class="font-bold text-gray-800 mb-4 flex items-center"><i data-lucide="radar" class="w-5 h-5 mr-2 text-quran-600"></i> Profil Bacaan (%)</h4>
+                            <div class="relative h-[300px] md:h-[350px] w-full flex justify-center"><canvas id="radarChart"></canvas></div>
+                            <div id="modal-radar-legend" class="mt-4 flex flex-wrap justify-center gap-4 text-[11px] font-medium text-gray-600"></div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm text-center flex flex-col justify-center">
+                                <p class="text-sm text-gray-500 mb-1">Skor Keseluruhan</p>
+                                <div class="text-4xl font-bold" id="modal-overall-score">0%</div>
+                                <div id="modal-overall-grade" class="text-sm font-bold tracking-widest mt-1 uppercase"></div>
+                                <div id="modal-target-badge" class="mt-3 w-full"></div>
+                            </div>
+                            <div id="modal-grade-lists" class="space-y-4"></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div class="px-5 py-3 border-b border-gray-100 bg-gray-50"><h4 class="font-bold text-gray-800 text-sm">Pecahan Markah Terperinci</h4></div>
+                        <div class="overflow-x-auto hide-scrollbar">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-gray-50 text-gray-500"><tr>
+                                    <th class="px-5 py-3 font-medium">Aspek Penilaian</th>
+                                    <th class="px-5 py-3 font-medium text-center">Markah Pelajar</th>
+                                    <th class="px-5 py-3 font-medium text-center">Markah Penuh</th>
+                                    <th class="px-5 py-3 font-medium text-center">Peratusan (%)</th>
+                                    <th class="px-5 py-3 font-medium text-center">Pencapaian</th>
+                                </tr></thead>
+                                <tbody id="modal-detail-table" class="divide-y divide-gray-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="modal-edit-view" class="hidden">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6 mb-6">
+                        <h4 class="font-bold text-gray-800 border-b pb-3 mb-4 flex items-center text-sm md:text-base"><i data-lucide="user-cog" class="w-4 h-4 md:w-5 md:h-5 mr-2 text-quran-600"></i> Kemaskini Maklumat Pelajar</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Nama Pelajar</label>
+                                <input type="text" id="edit-name" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-quran-500 focus:border-transparent text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1">Muat Naik Gambar Baru (Abaikan jika tiada)</label>
+                                <input type="file" id="edit-image" accept="image/*" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-quran-50 file:text-quran-700 bg-white">
+                            </div>
+                        </div>
+                        <h4 class="font-bold text-gray-800 border-b pb-3 mb-4 mt-6 md:mt-8 flex items-center text-sm md:text-base"><i data-lucide="file-check-2" class="w-4 h-4 md:w-5 md:h-5 mr-2 text-quran-600"></i> Kemaskini Markah Bacaan</h4>
+                        <div id="edit-marks-container" class="space-y-6"></div>
+                        <div class="mt-8 flex flex-col sm:flex-row justify-between gap-3 pt-4 border-t border-gray-100">
+                            <button onclick="confirmDeleteStudent()" class="px-5 py-2.5 text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 rounded-lg font-medium transition text-sm flex items-center justify-center"><i data-lucide="trash-2" class="w-4 h-4 mr-2"></i> Padam Pelajar</button>
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <button onclick="toggleEditMode()" class="px-5 py-2.5 text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg font-medium transition text-sm">Batal</button>
+                                <button onclick="saveStudentData(this)" class="px-6 py-2.5 bg-quran-700 hover:bg-quran-800 text-white rounded-lg font-medium shadow-sm transition flex justify-center items-center text-sm"><i data-lucide="save" class="w-4 h-4 mr-2"></i> Simpan Perubahan</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tambah Pelajar -->
+    <div id="add-student-modal" class="fixed inset-0 z-[70] hidden items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col transform transition-all">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center islamic-pattern-bg text-white">
+                <h3 class="text-lg font-bold font-arabic text-gold-400 flex items-center"><i data-lucide="user-plus" class="w-5 h-5 mr-2"></i> Tambah Pelajar Baharu</h3>
+                <button onclick="toggleAddStudentModal()" class="text-white hover:text-red-300 transition bg-white/10 p-2 rounded-full"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[80vh] custom-scrollbar">
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Subjek / Kelas <span class="text-red-500">*</span></label>
+                        <select id="add-student-class" onchange="resetAddStudentForm()" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-quran-500 focus:border-transparent text-sm font-medium bg-white"></select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">No. Kad Pengenalan (IC) <span class="text-red-500">*</span></label>
+                        <div class="flex gap-2">
+                            <input type="text" id="add-student-ic" inputmode="numeric" oninput="resetAddStudentForm()" placeholder="Cth: 121212-10-1234" maxlength="14" class="flex-1 min-w-0 px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-quran-500 focus:border-transparent text-sm tracking-wide">
+                            <button onclick="checkStudentIC(this)" class="px-5 py-2.5 bg-gray-800 hover:bg-gray-900 text-white rounded-lg font-medium transition text-sm flex items-center shadow-sm">Semak</button>
+                        </div>
+                        <div id="ic-check-msg" class="hidden mt-2"></div>
+                    </div>
+                </div>
+                <div class="space-y-5 mt-5 hidden" id="add-student-step-2">
+                    <div class="border-t border-gray-100 pt-5">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Penuh Pelajar <span class="text-red-500">*</span></label>
+                        <input type="text" id="add-student-name" placeholder="Cth: Ahmad bin Abu" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-quran-500 focus:border-transparent text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Gambar Profil (Pilihan)</label>
+                        <input type="file" id="add-student-image" accept="image/*" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-quran-50 file:text-quran-700 bg-white">
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end gap-3 pt-4 border-t border-gray-100 hidden" id="add-student-footer">
+                    <button onclick="toggleAddStudentModal()" class="px-5 py-2.5 text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg font-medium transition text-sm">Batal</button>
+                    <button onclick="submitNewStudent(this)" class="px-6 py-2.5 bg-quran-700 hover:bg-quran-800 text-white rounded-lg font-medium shadow-sm transition flex justify-center items-center text-sm"><i data-lucide="save" class="w-4 h-4 mr-2"></i> Simpan Pelajar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Padam Pelajar -->
+    <div id="delete-confirm-modal" class="fixed inset-0 z-[80] hidden items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col p-6 text-center">
+            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4"><i data-lucide="alert-triangle" class="w-8 h-8"></i></div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Pasti untuk hapus?</h3>
+            <p class="text-sm text-gray-500 mb-6">Rekod pelajar ini dalam subjek semasa akan dipadam secara <b>kekal</b> dari Google Sheet.</p>
+            <div class="flex gap-3 justify-center">
+                <button onclick="hideDeleteConfirm()" class="px-5 py-2.5 text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg font-medium transition text-sm">Batal</button>
+                <button onclick="proceedDeleteStudent(this)" class="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium shadow-sm transition flex items-center text-sm">Hapus Pelajar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================================
+        //  TETAPAN SAMBUNGAN — tampal URL Web App Apps Script di sini
+        // ==========================================================
+        const API_URL = 'PASTE_URL_WEB_APP_ANDA_DI_SINI';
+
+        // ==========================================================
+        //  STATE
+        // ==========================================================
+        const APP = { settings: {}, grades: [], subjects: [], aspects: [] };
+        let AUTH = { token: null, user: null };
+        let currentSubjectId = null;
+        let currentTab = 'dashboard';
+        let classCache = {};
+        let globalData = null;
+        let currentLoggedInStudent = null;
+        let currentPortalData = null;
+        let studentEnrolledClasses = [];
+        let currentEditingStudent = null;
+        let isSidebarExpanded = false;
+        let currentSortOrder = 'desc';
+        const charts = {};
+
+        const COLOR = {
+            emerald: { text: 'text-emerald-600', soft: 'bg-emerald-50 text-emerald-700 border-emerald-200', badge: 'bg-emerald-100 text-emerald-800', dot: 'bg-emerald-400', hex: '#059669', name: 'Hijau Zamrud' },
+            green:   { text: 'text-green-600',   soft: 'bg-green-50 text-green-700 border-green-200',       badge: 'bg-green-100 text-green-800',   dot: 'bg-green-400',   hex: '#16a34a', name: 'Hijau' },
+            lime:    { text: 'text-lime-600',    soft: 'bg-lime-50 text-lime-700 border-lime-200',          badge: 'bg-lime-100 text-lime-800',     dot: 'bg-lime-400',    hex: '#65a30d', name: 'Hijau Muda' },
+            blue:    { text: 'text-blue-600',    soft: 'bg-blue-50 text-blue-700 border-blue-200',          badge: 'bg-blue-100 text-blue-800',     dot: 'bg-blue-400',    hex: '#2563eb', name: 'Biru' },
+            amber:   { text: 'text-amber-600',   soft: 'bg-amber-50 text-amber-700 border-amber-200',       badge: 'bg-amber-100 text-amber-800',   dot: 'bg-amber-400',   hex: '#d97706', name: 'Kuning' },
+            orange:  { text: 'text-orange-500',  soft: 'bg-orange-50 text-orange-700 border-orange-200',    badge: 'bg-orange-100 text-orange-800', dot: 'bg-orange-400',  hex: '#ea580c', name: 'Oren' },
+            red:     { text: 'text-red-600',     soft: 'bg-red-50 text-red-700 border-red-200',             badge: 'bg-red-100 text-red-800',       dot: 'bg-red-400',     hex: '#dc2626', name: 'Merah' },
+            purple:  { text: 'text-purple-600',  soft: 'bg-purple-50 text-purple-700 border-purple-200',    badge: 'bg-purple-100 text-purple-800', dot: 'bg-purple-400',  hex: '#9333ea', name: 'Ungu' },
+            gray:    { text: 'text-gray-600',    soft: 'bg-gray-50 text-gray-700 border-gray-200',          badge: 'bg-gray-100 text-gray-800',     dot: 'bg-gray-400',    hex: '#4b5563', name: 'Kelabu' }
+        };
+        const SUBJECT_ICONS = { 'book': 'Buku', 'library': 'Perpustakaan', 'book-open': 'Buku Terbuka', 'graduation-cap': 'Graduasi', 'star': 'Bintang', 'mic': 'Mikrofon', 'pen-tool': 'Pena', 'scroll-text': 'Skrol', 'moon-star': 'Bulan Bintang', 'heart': 'Hati' };
+        const DEFAULT_GRADES = [
+            { label: 'Cemerlang', min: 90, color: 'emerald' },
+            { label: 'Baik', min: 70, color: 'green' },
+            { label: 'Sederhana', min: 41, color: 'orange' },
+            { label: 'Lemah', min: 0, color: 'red' }
+        ];
+
+        // ==========================================================
+        //  UTILITI
+        // ==========================================================
+        function esc(s) {
+            return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+        function digitsOnly(v) { return String(v || '').replace(/\D/g, ''); }
+        function fileSafe(s) { return String(s || 'laporan').replace(/[^\w\-]+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, ''); }
+        function todayStr() { return new Date().toLocaleDateString('en-GB'); }
+        function storageGet(store, k) { try { return window[store].getItem(k); } catch (e) { return null; } }
+        function storageSet(store, k, v) { try { v === null ? window[store].removeItem(k) : window[store].setItem(k, v); } catch (e) { } }
+
+        function generateAvatar(name) {
+            let initials = (name || '?').trim().split(/\s+/).map(n => n[0] || '').join('').substring(0, 2).toUpperCase() || '?';
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100"><rect width="100" height="100" fill="#15803d"/><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" fill="#ffffff" font-family="sans-serif" font-size="42" font-weight="bold">${esc(initials)}</text></svg>`;
+            return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
+        }
+
+        function formatIC(input) {
+            input.addEventListener('input', e => {
+                let val = e.target.value.replace(/\D/g, '').slice(0, 12);
+                let out = val;
+                if (val.length > 6) out = val.substring(0, 6) + '-' + val.substring(6);
+                if (val.length > 8) out = out.substring(0, 9) + '-' + out.substring(9);
+                e.target.value = out;
+            });
+        }
+
+        async function withBusy(btn, busyText, fn) {
+            if (!btn) return fn();
+            const original = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin ${busyText ? 'mr-2' : ''}"></i>${busyText ? `<span>${busyText}</span>` : ''}`;
+            lucide.createIcons();
+            try { return await fn(); }
+            finally { btn.innerHTML = original; btn.disabled = false; lucide.createIcons(); }
+        }
+
+        // ==========================================================
+        //  API
+        // ==========================================================
+        async function api(action, data = {}) {
+            if (!API_URL || API_URL.indexOf('script.google.com') === -1) {
+                throw new Error('API_URL belum ditetapkan dalam index.html. Sila tampal URL Web App Apps Script.');
+            }
+            const body = new URLSearchParams({ payload: JSON.stringify(Object.assign({ action, token: AUTH.token }, data)) });
+            let res;
+            try {
+                res = await fetch(API_URL, { method: 'POST', body });
+            } catch (e) {
+                throw new Error('Gagal menghubungi pelayan. Semak sambungan internet anda.');
+            }
+            let json;
+            try { json = await res.json(); } catch (e) { throw new Error('Respons pelayan tidak sah. Pastikan Web App di-deploy dengan akses "Anyone".'); }
+            if (json.status !== 'success') {
+                if (json.code === 'AUTH' && AUTH.token) {
+                    alert(json.message);
+                    logout();
+                }
+                const err = new Error(json.message || 'Ralat pelayan.');
+                err.code = json.code;
+                throw err;
+            }
+            return json.data;
+        }
+
+        // ==========================================================
+        //  KONFIGURASI & JENAMA
+        // ==========================================================
+        function applyConfig(cfg) {
+            APP.settings = cfg.settings || {};
+            APP.grades = (cfg.grades && cfg.grades.length) ? cfg.grades : DEFAULT_GRADES;
+            APP.subjects = cfg.subjects || [];
+            APP.aspects = cfg.aspects || [];
+            storageSet('localStorage', 'pm_config', JSON.stringify(cfg));
+            applyBranding();
+        }
+
+        function logoSrc() {
+            return APP.settings.logo || generateAvatar(APP.settings.shortName || APP.settings.appName || 'KM');
+        }
+
+        function applyBranding() {
+            const s = APP.settings;
+            const name = s.appName || 'Portal Kelas Mengaji';
+            document.title = name + ' - Portal';
+            document.querySelectorAll('.brand-logo').forEach(img => {
+                img.src = logoSrc();
+                img.onerror = function () { this.onerror = null; this.src = generateAvatar(s.shortName || name); };
+            });
+            document.querySelectorAll('.brand-name').forEach(el => el.textContent = name);
+            document.querySelectorAll('.brand-tagline').forEach(el => el.textContent = s.tagline || '');
+            document.querySelectorAll('.brand-login-subtitle').forEach(el => { el.textContent = s.loginSubtitle || ''; el.classList.toggle('hidden', !s.loginSubtitle); });
+            document.querySelectorAll('.brand-short').forEach(el => el.textContent = s.shortName || '');
+            document.querySelectorAll('.brand-footer').forEach(el => el.textContent = s.footerText || '');
+
+            const icon = logoSrc();
+            document.getElementById('meta-favicon').href = icon;
+            document.getElementById('meta-apple-icon').href = icon;
+            document.getElementById('meta-apple-title').content = s.shortName || name;
+            updateManifest(name, s.shortName || name, icon);
+        }
+
+        let manifestUrl = null;
+        function updateManifest(name, shortName, icon) {
+            const manifest = {
+                name, short_name: shortName, description: 'Sistem Pemantauan Prestasi Pelajar',
+                start_url: location.href.split('#')[0].split('?')[0], display: 'standalone',
+                background_color: '#052e16', theme_color: '#052e16',
+                icons: [{ src: icon, sizes: '192x192' }, { src: icon, sizes: '512x512' }]
+            };
+            if (manifestUrl) URL.revokeObjectURL(manifestUrl);
+            manifestUrl = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/json' }));
+            let link = document.querySelector('link[rel="manifest"]');
+            if (!link) { link = document.createElement('link'); link.rel = 'manifest'; document.head.appendChild(link); }
+            link.href = manifestUrl;
+        }
+
+        async function loadConfig() {
+            const cfg = await api('getConfig');
+            applyConfig(cfg);
+            return cfg;
+        }
+
+        function activeSubjects() { return APP.subjects.filter(s => s.aktif); }
+        function getSubject(id) { return APP.subjects.find(s => s.id === id); }
+        function aspectsFor(subjectId) { return APP.aspects.filter(a => a.subjectId === subjectId).sort((a, b) => a.susunan - b.susunan); }
+        function targetLabel(subject) { return subject.labelSasaran || `Sasaran (${subject.sasaranSkor}%)`; }
+
+        function gradeFor(pct) {
+            for (const g of APP.grades) if (pct >= g.min) return g;
+            return APP.grades[APP.grades.length - 1];
+        }
+        function colorOf(g) { return COLOR[g && g.color] || COLOR.gray; }
+        function gradeRange(i, ascii) {
+            const g = APP.grades[i];
+            const ge = ascii ? '>=' : '≥', le = ascii ? '<=' : '≤';
+            if (i === 0) return `${ge} ${g.min}%`;
+            const upper = APP.grades[i - 1].min - 1;
+            if (i === APP.grades.length - 1) return `${le} ${upper}%`;
+            return `${g.min} - ${upper}%`;
+        }
+
+        // ==========================================================
+        //  PENGIRAAN DATA
+        // ==========================================================
+        function computeStudent(raw, aspects, sections) {
+            const nama = String(raw.nama || '').trim();
+            const s = { ic: raw.ic, nama, picUrl: raw.picUrl || generateAvatar(nama), marks: {}, percentages: {}, sectionScores: {}, overallAvg: 0, updatedAt: raw.updatedAt };
+            const secSum = {}, secCount = {};
+            let total = 0;
+            aspects.forEach(a => {
+                const m = Number(raw.marks ? raw.marks[a.id] : 0);
+                const mark = isNaN(m) ? 0 : m;
+                let pct = a.maxMark > 0 ? (mark / a.maxMark) * 100 : 0;
+                if (pct > 100) pct = 100;
+                s.marks[a.id] = mark;
+                s.percentages[a.id] = pct;
+                total += pct;
+                secSum[a.section] = (secSum[a.section] || 0) + pct;
+                secCount[a.section] = (secCount[a.section] || 0) + 1;
+            });
+            sections.forEach(sec => s.sectionScores[sec] = secCount[sec] ? secSum[sec] / secCount[sec] : 0);
+            s.overallAvg = aspects.length ? total / aspects.length : 0;
+            return s;
+        }
+
+        function buildDataset(subjectId, rawStudents) {
+            const subject = getSubject(subjectId) || { id: subjectId, nama: subjectId, sasaranSkor: 100 };
+            const aspects = aspectsFor(subjectId);
+            const sections = [];
+            aspects.forEach(a => { if (!sections.includes(a.section)) sections.push(a.section); });
+            const students = (rawStudents || []).filter(r => r && String(r.nama || '').trim()).map(r => computeStudent(r, aspects, sections));
+
+            const ds = { subject, aspects, sections, students, classAverages: {}, classSectionAverages: {}, stats: { total: students.length, classAvg: 0, best: null, worst: null } };
+            if (students.length) {
+                sections.forEach(sec => ds.classSectionAverages[sec] = students.reduce((t, s) => t + s.sectionScores[sec], 0) / students.length);
+                let hi = -1, lo = 101, sum = 0;
+                aspects.forEach(a => {
+                    const avg = students.reduce((t, s) => t + s.percentages[a.id], 0) / students.length;
+                    ds.classAverages[a.id] = avg;
+                    sum += avg;
+                    if (avg > hi) { hi = avg; ds.stats.best = a; }
+                    if (avg < lo) { lo = avg; ds.stats.worst = a; }
+                });
+                ds.stats.classAvg = aspects.length ? sum / aspects.length : 0;
+            }
+            return ds;
+        }
+
+        // ==========================================================
+        //  CARTA
+        // ==========================================================
+        function radarConfig(labels, data, target, opts = {}) {
+            return {
+                type: 'radar',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: opts.label || 'Prestasi', data,
+                            backgroundColor: opts.fill || 'rgba(234, 179, 8, 0.2)', borderColor: opts.stroke || 'rgba(202, 138, 4, 1)',
+                            pointBackgroundColor: opts.point || 'rgba(21, 128, 61, 1)', pointBorderColor: '#fff', borderWidth: 2
+                        },
+                        { label: 'Sasaran', data: labels.map(() => target), backgroundColor: 'transparent', borderColor: 'rgba(239, 68, 68, 0.8)', borderDash: [5, 5], pointRadius: 0, borderWidth: 2 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { r: { angleLines: { color: 'rgba(0,0,0,0.06)' }, suggestedMin: 0, suggestedMax: 100, ticks: { stepSize: 20, backdropColor: 'transparent', font: { size: opts.tickSize || 10 } }, pointLabels: { font: { size: opts.labelSize || 11, weight: 'bold' }, color: '#15803d' } } },
+                    plugins: { legend: { display: false } }
+                }
+            };
+        }
+
+        const SECTION_COLORS = [
+            { bg: 'rgba(21, 128, 61, 0.7)', border: 'rgb(21, 128, 61)' },
+            { bg: 'rgba(234, 179, 8, 0.7)', border: 'rgb(202, 138, 4)' },
+            { bg: 'rgba(59, 130, 246, 0.7)', border: 'rgb(37, 99, 235)' },
+            { bg: 'rgba(239, 68, 68, 0.7)', border: 'rgb(220, 38, 38)' },
+            { bg: 'rgba(139, 92, 246, 0.7)', border: 'rgb(124, 58, 237)' },
+            { bg: 'rgba(20, 184, 166, 0.7)', border: 'rgb(13, 148, 136)' }
+        ];
+
+        function barConfig(ds, filter, opts = {}) {
+            const labels = [], data = [], bg = [], border = [];
+            ds.aspects.forEach(a => {
+                if (filter !== 'ALL' && filter !== a.section) return;
+                const c = SECTION_COLORS[ds.sections.indexOf(a.section) % SECTION_COLORS.length];
+                labels.push(a.name); data.push(ds.classAverages[a.id] || 0); bg.push(c.bg); border.push(c.border);
+            });
+            return {
+                type: 'bar',
+                data: { labels, datasets: [{ label: 'Purata Kelas (%)', data, backgroundColor: bg, borderColor: border, borderWidth: 1, borderRadius: 4 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, max: 100 }, x: { ticks: { maxRotation: 90, minRotation: 45, font: { size: opts.tickSize || 9 }, autoSkip: false } } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { afterLabel: ctx => 'Bahagian: ' + (ds.aspects.find(a => a.name === ctx.label) || {}).section } }
+                    }
+                }
+            };
+        }
+
+        function drawChart(key, canvasId, config) {
+            if (charts[key]) charts[key].destroy();
+            charts[key] = new Chart(document.getElementById(canvasId).getContext('2d'), config);
+        }
+
+        /** Lukis carta di luar skrin pada saiz tetap untuk dimasukkan ke dalam PDF. */
+        function chartToImage(config, w, h) {
+            const holder = document.createElement('div');
+            holder.style.cssText = `position:fixed;left:-20000px;top:0;width:${w}px;height:${h}px;`;
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+            holder.appendChild(canvas);
+            document.body.appendChild(holder);
+            config.options = Object.assign({}, config.options, { responsive: false, maintainAspectRatio: false, animation: false, devicePixelRatio: 1 });
+            const whiteBg = { id: 'whiteBg', beforeDraw: c => { const x = c.ctx; x.save(); x.fillStyle = '#ffffff'; x.fillRect(0, 0, c.width, c.height); x.restore(); } };
+            config.plugins = [whiteBg];
+            const chart = new Chart(canvas.getContext('2d'), config);
+            const url = canvas.toDataURL('image/png');
+            chart.destroy();
+            holder.remove();
+            return url;
+        }
+
+        // ==========================================================
+        //  STARTUP
+        // ==========================================================
+        document.addEventListener('DOMContentLoaded', async () => {
+            Chart.defaults.font.family = 'Inter, sans-serif';
+            formatIC(document.getElementById('login-ic'));
+            formatIC(document.getElementById('add-student-ic'));
+            document.getElementById('cfg-sub-ikon').innerHTML = Object.entries(SUBJECT_ICONS).map(([k, v]) => `<option value="${k}">${v} (${k})</option>`).join('');
+
+            const cached = storageGet('localStorage', 'pm_config');
+            if (cached) { try { applyConfig(JSON.parse(cached)); } catch (e) { } } else applyBranding();
+            lucide.createIcons();
+
+            try {
+                await loadConfig();
+                const savedAuth = storageGet('sessionStorage', 'pm_auth');
+                if (savedAuth) {
+                    AUTH = JSON.parse(savedAuth);
+                    enterAdminMode();
+                }
+            } catch (e) {
+                const banner = document.getElementById('config-error-banner');
+                banner.textContent = e.message;
+                banner.classList.remove('hidden');
+            }
+        });
+
+        // ==========================================================
+        //  LOGIN / LOGOUT
+        // ==========================================================
+        function toggleAdminLogin() {
+            document.getElementById('student-login-form').classList.toggle('hidden');
+            document.getElementById('admin-login-form').classList.toggle('hidden');
+        }
+
+        async function handleStudentLogin() {
+            const ic = digitsOnly(document.getElementById('login-ic').value);
+            if (ic.length < 6) { alert('Sila masukkan format No. Kad Pengenalan yang sah.'); return; }
+            await withBusy(document.getElementById('btn-login-student'), 'Menyemak Rekod...', async () => {
+                try {
+                    if (!APP.subjects.length) await loadConfig();
+                    const enrolled = await api('studentLogin', { ic });
+                    if (!enrolled.length) {
+                        alert('Harap maaf, tiada rekod dijumpai untuk nombor pengenalan ini.\nSila semak semula atau hubungi admin.');
+                        return;
+                    }
+                    setupStudentPortal(enrolled);
+                } catch (e) { alert(e.message); }
+            });
+        }
+
+        async function handleAdminLogin() {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+            if (!username || !password) { alert('Sila isi nama pengguna dan kata laluan.'); return; }
+            await withBusy(document.getElementById('btn-login-admin'), 'Mengesahkan...', async () => {
+                try {
+                    const res = await api('login', { username, password });
+                    AUTH = { token: res.token, user: res.user };
+                    storageSet('sessionStorage', 'pm_auth', JSON.stringify(AUTH));
+                    document.getElementById('login-password').value = '';
+                    await loadConfig();
+                    enterAdminMode();
+                } catch (e) { alert(e.message); }
+            });
+        }
+
+        function enterAdminMode() {
+            const isSuper = AUTH.user && AUTH.user.role === 'superadmin';
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app-wrapper').classList.remove('hidden');
+            document.getElementById('admin-sidebar').className = 'admin-sidebar-slim islamic-pattern-bg text-white hidden md:flex flex-col shadow-xl z-20 shrink-0 relative transition-[width] duration-300';
+            document.getElementById('admin-mobile-header').className = 'flex md:hidden islamic-pattern-bg text-white p-3.5 justify-between items-center shadow-md z-20 shrink-0';
+            document.getElementById('admin-bottom-nav').className = 'flex md:hidden fixed bottom-0 left-0 w-full bg-gray-900 text-gray-400 z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.3)] justify-around items-center';
+            document.querySelectorAll('.superadmin-only').forEach(el => el.classList.toggle('hidden', !isSuper));
+            document.getElementById('me-name').textContent = AUTH.user.name;
+            document.getElementById('me-role').textContent = isSuper ? 'SUPERADMIN' : 'GURU / ADMIN';
+
+            renderClassSelector();
+            const subs = activeSubjects();
+            if (!subs.find(s => s.id === currentSubjectId)) currentSubjectId = subs.length ? subs[0].id : null;
+            currentTab = 'dashboard';
+            lucide.createIcons();
+            if (currentSubjectId) setClass(currentSubjectId);
+            else showEmptySubjects();
+            if (isSuper) initConfigPanels();
+        }
+
+        function logout() {
+            if (AUTH.token) api('logout').catch(() => { });
+            AUTH = { token: null, user: null };
+            storageSet('sessionStorage', 'pm_auth', null);
+            currentLoggedInStudent = null;
+            classCache = {};
+            document.getElementById('login-ic').value = '';
+            document.getElementById('login-password').value = '';
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('app-wrapper').classList.add('hidden');
+            closeModal(true);
+            isSidebarExpanded = false;
+            document.getElementById('sidebar-toggle-icon').setAttribute('data-lucide', 'chevron-right');
+            ['admin-sidebar', 'admin-mobile-header', 'class-selector-container', 'admin-bottom-nav'].forEach(id => document.getElementById(id).className = 'hidden');
+            hideAllTabs();
+            document.getElementById('tab-student-portal').classList.add('hidden');
+            document.getElementById('student-login-form').classList.remove('hidden');
+            document.getElementById('admin-login-form').classList.add('hidden');
+            lucide.createIcons();
+        }
+
+        function toggleSidebar() {
+            isSidebarExpanded = !isSidebarExpanded;
+            const sidebar = document.getElementById('admin-sidebar');
+            sidebar.classList.toggle('admin-sidebar-slim', !isSidebarExpanded);
+            sidebar.classList.toggle('admin-sidebar-expanded', isSidebarExpanded);
+            document.getElementById('sidebar-toggle-icon').setAttribute('data-lucide', isSidebarExpanded ? 'chevron-left' : 'chevron-right');
+            lucide.createIcons();
+        }
+
+        async function updateAdminPassword(btn) {
+            const oldPassword = document.getElementById('setting-old-pwd').value;
+            const newPassword = document.getElementById('setting-new-pwd').value;
+            const confirmPwd = document.getElementById('setting-confirm-pwd').value;
+            if (!oldPassword || !newPassword || !confirmPwd) { alert('Sila isi semua ruangan.'); return; }
+            if (newPassword.length < 6) { alert('Kata laluan baharu mestilah sekurang-kurangnya 6 aksara.'); return; }
+            if (newPassword !== confirmPwd) { alert('Pengesahan kata laluan baru tidak sepadan.'); return; }
+            await withBusy(btn, 'Menyimpan...', async () => {
+                try {
+                    await api('changePassword', { oldPassword, newPassword });
+                    alert('Kata laluan berjaya dikemas kini.');
+                    ['setting-old-pwd', 'setting-new-pwd', 'setting-confirm-pwd'].forEach(id => document.getElementById(id).value = '');
+                } catch (e) { alert(e.message); }
+            });
+        }
+
+        // ==========================================================
+        //  NAVIGASI ADMIN
+        // ==========================================================
+        const ADMIN_TABS = ['dashboard', 'students', 'settings', 'config'];
+
+        function hideAllTabs() {
+            ADMIN_TABS.forEach(t => document.getElementById('tab-' + t).classList.add('hidden'));
+            ['loading-state', 'error-state', 'empty-subject-state'].forEach(id => { const el = document.getElementById(id); el.classList.add('hidden'); el.classList.remove('flex'); });
+        }
+
+        function switchTab(tabId) {
+            currentTab = tabId;
+            hideAllTabs();
+            ADMIN_TABS.forEach(t => {
+                const b = document.getElementById('btn-' + t);
+                if (b) {
+                    const active = t === tabId;
+                    b.classList.toggle('bg-quran-800', active); b.classList.toggle('border-gold-500', active); b.classList.toggle('text-white', active);
+                    b.classList.toggle('border-transparent', !active); b.classList.toggle('text-quran-100', !active); b.classList.toggle('hover:bg-quran-800/50', !active);
+                }
+                const m = document.getElementById('btn-mobile-' + t);
+                if (m) { m.classList.toggle('mobile-nav-active', t === tabId); m.classList.toggle('border-transparent', t !== tabId); }
+            });
+
+            const needsSubject = tabId === 'dashboard' || tabId === 'students';
+            document.getElementById('class-selector-container').className = needsSubject && activeSubjects().length ? 'flex p-4 md:p-8 pb-0 flex-wrap bg-gray-50 z-10 sticky top-0 border-b border-gray-100' : 'hidden';
+            if (needsSubject && !currentSubjectId) { showEmptySubjects(); return; }
+            if (needsSubject && !globalData) { fetchData(); return; }
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            if (tabId === 'config') renderConfigPanels();
+            document.getElementById('main-scroll-area').scrollTop = 0;
+        }
+
+        function showEmptySubjects() {
+            hideAllTabs();
+            const el = document.getElementById('empty-subject-state');
+            el.classList.remove('hidden'); el.classList.add('flex');
+        }
+
+        function renderClassSelector() {
+            const wrap = document.getElementById('class-selector');
+            wrap.innerHTML = activeSubjects().map(s => `
+                <button onclick="setClass('${esc(s.id)}')" data-subject="${esc(s.id)}" class="class-btn flex-none whitespace-nowrap px-5 py-2.5 rounded-lg font-medium text-sm transition-all">
+                    <i data-lucide="${esc(s.ikon || 'book')}" class="w-4 h-4 inline-block mr-1 mb-0.5"></i> ${esc(s.nama)}
+                </button>`).join('');
+            highlightClassButton();
+            lucide.createIcons();
+        }
+
+        function highlightClassButton() {
+            document.querySelectorAll('#class-selector .class-btn').forEach(b => {
+                const active = b.dataset.subject === currentSubjectId;
+                b.classList.toggle('bg-quran-700', active); b.classList.toggle('text-white', active); b.classList.toggle('shadow-sm', active);
+                b.classList.toggle('text-gray-500', !active); b.classList.toggle('hover:text-quran-700', !active);
+            });
+        }
+
+        function setClass(subjectId) {
+            currentSubjectId = subjectId;
+            globalData = classCache[subjectId] || null;
+            highlightClassButton();
+            if (currentTab !== 'dashboard' && currentTab !== 'students') currentTab = 'dashboard';
+            fetchData();
+        }
+
+        async function fetchData(forceRefresh = false) {
+            if (!currentSubjectId) { showEmptySubjects(); return; }
+            if (forceRefresh) classCache[currentSubjectId] = null;
+            if (classCache[currentSubjectId]) {
+                globalData = classCache[currentSubjectId];
+                renderDashboard(); renderStudentList(); switchTab(currentTab);
+                return;
+            }
+            hideAllTabs();
+            document.getElementById('loading-state').classList.remove('hidden');
+            document.getElementById('loading-state').classList.add('flex');
+            const subjectId = currentSubjectId;
+            try {
+                const students = await api('getStudents', { subjectId });
+                classCache[subjectId] = buildDataset(subjectId, students);
+                if (subjectId !== currentSubjectId) return;
+                globalData = classCache[subjectId];
+                renderDashboard(); renderStudentList(); switchTab(currentTab);
+            } catch (e) {
+                console.error(e);
+                hideAllTabs();
+                document.getElementById('error-msg').textContent = e.message;
+                const el = document.getElementById('error-state');
+                el.classList.remove('hidden'); el.classList.add('flex');
+            }
+        }
+
+        async function refreshAll() {
+            try { await loadConfig(); renderClassSelector(); } catch (e) { alert(e.message); }
+            classCache = {};
+            fetchData(true);
+        }
+
+        // ==========================================================
+        //  DASHBOARD
+        // ==========================================================
+        function renderDashboard() {
+            const ds = globalData;
+            const isMobile = window.innerWidth < 768;
+            document.getElementById('display-class-title').textContent = ds.subject.nama;
+            document.getElementById('stat-total-students').textContent = ds.stats.total;
+            document.getElementById('stat-avg-class').textContent = ds.stats.classAvg.toFixed(1) + '%';
+            document.getElementById('stat-best-category').textContent = ds.stats.best ? ds.stats.best.name : '-';
+            document.getElementById('stat-worst-category').textContent = ds.stats.worst ? ds.stats.worst.name : '-';
+
+            const filter = document.getElementById('chart-section-filter');
+            filter.innerHTML = '<option value="ALL">Semua Bahagian</option>' + ds.sections.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+
+            const ranked = ds.aspects.map(a => ({ a, avg: ds.classAverages[a.id] || 0 })).sort((x, y) => y.avg - x.avg);
+            const passMin = APP.grades.length > 1 ? APP.grades[Math.min(1, APP.grades.length - 1)].min : 0;
+            let top = ranked.filter(t => t.avg >= passMin);
+            if (!top.length) top = ranked.slice(0, 3);
+            document.getElementById('excellence-list-container').innerHTML = ds.students.length ? top.map(t => {
+                const c = colorOf(gradeFor(t.avg));
+                return `<div class="flex items-center p-3 border rounded-xl ${c.soft}">
+                    <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center mr-3 shrink-0 shadow-sm border"><i data-lucide="award" class="w-5 h-5 ${c.text}"></i></div>
+                    <div class="flex-1 min-w-0 pr-2">
+                        <p class="text-[10px] uppercase font-bold opacity-70 truncate">${esc(t.a.section)}</p>
+                        <h4 class="text-sm font-bold leading-snug break-words">${esc(t.a.name)}</h4>
+                    </div>
+                    <div class="text-lg font-black ml-auto shrink-0">${t.avg.toFixed(1)}%</div>
+                </div>`;
+            }).join('') : '<p class="text-sm text-gray-400 italic">Tiada data pelajar lagi.</p>';
+
+            updateMainChart();
+            document.getElementById('dashboard-radar-legend').innerHTML = legendHtml('Purata Kelas', 'bg-[rgba(21,128,61,0.4)] border-[rgba(21,128,61,1)]', targetLabel(ds.subject));
+            drawChart('section', 'sectionChart', radarConfig(ds.sections, ds.sections.map(s => ds.classSectionAverages[s] || 0), ds.subject.sasaranSkor,
+                { label: 'Purata Kelas (%)', fill: 'rgba(21, 128, 61, 0.2)', stroke: 'rgba(21, 128, 61, 1)', point: 'rgb(234, 179, 8)', labelSize: isMobile ? 8 : 10 }));
+            lucide.createIcons();
+        }
+
+        function updateMainChart() {
+            const isMobile = window.innerWidth < 768;
+            drawChart('main', 'mainChart', barConfig(globalData, document.getElementById('chart-section-filter').value || 'ALL', { tickSize: isMobile ? 8 : 9 }));
+        }
+
+        function legendHtml(label, swatch, target) {
+            return `<div class="flex items-center"><span class="w-3 h-3 rounded border ${swatch} mr-1.5"></span> ${esc(label)}</div>
+                    <div class="flex items-center"><span class="w-4 h-0 border-t-2 border-dashed border-red-500 mr-1.5"></span> ${esc(target)}</div>`;
+        }
+
+        // ==========================================================
+        //  SENARAI PELAJAR
+        // ==========================================================
+        function sortedStudents() {
+            return [...globalData.students].sort((a, b) => currentSortOrder === 'desc' ? b.overallAvg - a.overallAvg : a.overallAvg - b.overallAvg);
+        }
+
+        function toggleSortOrder() {
+            currentSortOrder = currentSortOrder === 'desc' ? 'asc' : 'desc';
+            document.getElementById('sort-text').textContent = currentSortOrder === 'desc' ? 'Markah Tertinggi' : 'Markah Terendah';
+            document.getElementById('sort-icon').setAttribute('data-lucide', currentSortOrder === 'desc' ? 'arrow-down' : 'arrow-up');
+            renderStudentList();
+            filterStudents();
+        }
+
+        function renderStudentList() {
+            const tbody = document.getElementById('student-table-body');
+            tbody.innerHTML = '';
+            document.getElementById('no-student-msg').classList.toggle('hidden', globalData.students.length > 0);
+            sortedStudents().forEach((student, index) => {
+                const c = colorOf(gradeFor(student.overallAvg));
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 transition cursor-pointer';
+                tr.onclick = () => showStudentDetail(student);
+                tr.innerHTML = `
+                    <td class="px-6 py-4 text-sm font-bold text-gray-400">#${index + 1}</td>
+                    <td class="px-6 py-4 whitespace-nowrap"><div class="flex items-center">
+                        <img class="student-avatar h-8 w-8 rounded-full object-cover border border-gray-200 bg-white shrink-0" src="${esc(student.picUrl)}" alt="">
+                        <div class="ml-3 text-sm font-medium text-gray-900">${esc(student.nama)}</div>
+                    </div></td>
+                    <td class="px-6 py-4 text-sm text-gray-500">${esc(student.ic || '-')}</td>
+                    <td class="px-6 py-4 text-center"><span class="px-3 py-1.5 rounded-full text-xs font-bold ${c.badge} inline-flex items-center">${student.overallAvg.toFixed(1)}%</span></td>
+                    <td class="px-6 py-4 text-right text-sm font-medium"><span class="text-quran-600 hover:text-quran-800 inline-flex items-center">Lihat <i data-lucide="chevron-right" class="w-4 h-4 ml-1"></i></span></td>`;
+                tr.querySelector('img').onerror = function () { this.onerror = null; this.src = generateAvatar(student.nama); };
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+
+        function filterStudents() {
+            const q = document.getElementById('search-input').value.toLowerCase().replace(/-/g, '');
+            let visible = 0;
+            document.querySelectorAll('#student-table-body tr').forEach(row => {
+                const show = row.cells[1].textContent.toLowerCase().includes(q) || row.cells[2].textContent.toLowerCase().replace(/-/g, '').includes(q);
+                row.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+            document.getElementById('no-student-msg').classList.toggle('hidden', visible > 0);
+        }
+
+        // ==========================================================
+        //  LAPORAN PELAJAR (dikongsi oleh modal admin & portal pelajar)
+        // ==========================================================
+        function targetBadgeHtml(subject, avg, large) {
+            const pad = large ? 'py-2.5 rounded-xl text-xs md:text-sm' : 'py-2 rounded-lg text-xs';
+            const achieved = avg >= subject.sasaranSkor;
+            if (achieved && subject.teksCapai) {
+                return `<div class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 ${pad} font-semibold flex items-center justify-center text-center"><i data-lucide="award" class="w-4 h-4 mr-2 shrink-0"></i> ${esc(subject.teksCapai)}</div>`;
+            }
+            if (subject.teksBelumCapai) {
+                const tone = subject.teksCapai ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-blue-50 text-blue-700 border-blue-200';
+                const icon = subject.teksCapai ? 'target' : 'book-open';
+                return `<div class="${tone} border px-3 ${pad} font-semibold flex items-center justify-center text-center"><i data-lucide="${icon}" class="w-4 h-4 mr-2 shrink-0"></i> ${esc(subject.teksBelumCapai)}</div>`;
+            }
+            return '';
+        }
+
+        function renderReport(prefix, canvasId, chartKey, student, ds) {
+            const isMobile = window.innerWidth < 768;
+            const g = gradeFor(student.overallAvg);
+            const c = colorOf(g);
+            const scoreEl = document.getElementById(prefix + '-overall-score');
+            scoreEl.textContent = student.overallAvg.toFixed(1) + '%';
+            scoreEl.className = (prefix === 'portal' ? 'text-5xl md:text-6xl tracking-tight' : 'text-4xl') + ' font-bold ' + c.text;
+            const gradeEl = document.getElementById(prefix + '-overall-grade');
+            gradeEl.textContent = g.label;
+            gradeEl.className = (prefix === 'portal' ? 'text-base md:text-lg mt-2' : 'text-sm mt-1') + ' font-bold tracking-widest uppercase ' + c.text;
+            document.getElementById(prefix + '-target-badge').innerHTML = targetBadgeHtml(ds.subject, student.overallAvg, prefix === 'portal');
+
+            // Senarai mengikut gred
+            const buckets = APP.grades.map(() => []);
+            ds.aspects.forEach(a => {
+                const pct = student.percentages[a.id];
+                buckets[APP.grades.indexOf(gradeFor(pct))].push({ a, pct });
+            });
+            document.getElementById(prefix + '-grade-lists').innerHTML = APP.grades.map((gr, i) => {
+                const gc = colorOf(gr);
+                const items = buckets[i].length
+                    ? buckets[i].map(it => `<li class="flex justify-between gap-2 border-b border-gray-50 py-1.5 last:border-0"><span class="text-xs md:text-sm text-gray-700 leading-snug">${esc(it.a.name)}</span><strong class="text-xs md:text-sm ${gc.text} shrink-0">${it.pct.toFixed(0)}%</strong></li>`).join('')
+                    : `<li class="text-gray-400 italic text-xs py-1">Tiada rekod.</li>`;
+                return `<div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                    <h4 class="font-bold text-gray-800 mb-2 flex items-center text-sm border-b border-gray-50 pb-2"><span class="w-2.5 h-2.5 rounded-full ${gc.dot} mr-2"></span> ${esc(gr.label)} (${gradeRange(i)})</h4>
+                    <ul class="overflow-y-auto custom-scrollbar" style="max-height: 120px;">${items}</ul></div>`;
+            }).join('');
+
+            // Jadual terperinci
+            document.getElementById(prefix + '-detail-table').innerHTML = ds.sections.map(sec => {
+                let html = `<tr class="bg-quran-50/80 border-b border-quran-100"><td colspan="5" class="px-4 py-2.5 text-[11px] md:text-xs font-bold text-quran-800 uppercase tracking-wider">
+                    <div class="flex items-center justify-between gap-2"><span class="flex items-center"><i data-lucide="layers" class="w-3.5 h-3.5 mr-2 text-quran-600"></i> ${esc(sec)}</span>
+                    <span class="bg-white px-2 py-0.5 rounded text-quran-700 border border-quran-100 whitespace-nowrap">Purata: ${(student.sectionScores[sec] || 0).toFixed(1)}%</span></div></td></tr>`;
+                ds.aspects.filter(a => a.section === sec).forEach(a => {
+                    const pct = student.percentages[a.id];
+                    const ac = colorOf(gradeFor(pct));
+                    html += `<tr class="hover:bg-gray-50 transition">
+                        <td class="px-4 py-2.5 border-b border-gray-50 pl-7 relative text-xs md:text-sm text-gray-700"><span class="absolute left-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full ${ac.dot}"></span>${esc(a.name)}</td>
+                        <td class="px-4 py-2.5 border-b border-gray-50 text-center font-bold text-xs md:text-sm">${student.marks[a.id]}</td>
+                        <td class="px-4 py-2.5 border-b border-gray-50 text-center text-gray-400 text-xs md:text-sm">${a.maxMark}</td>
+                        <td class="px-4 py-2.5 border-b border-gray-50 text-center text-xs md:text-sm"><span class="${ac.soft} border px-2 py-0.5 rounded font-bold">${pct.toFixed(1)}%</span></td>
+                        <td class="px-4 py-2.5 border-b border-gray-50 text-center text-xs md:text-sm font-bold ${ac.text}">${esc(gradeFor(pct).label)}</td></tr>`;
+                });
+                return html;
+            }).join('') || '<tr><td colspan="5" class="p-6 text-center text-gray-400 text-sm">Tiada aspek ditetapkan untuk subjek ini.</td></tr>';
+
+            document.getElementById(prefix + '-radar-legend').innerHTML = legendHtml('Prestasi Semasa', 'bg-[rgba(234,179,8,0.4)] border-[rgba(202,138,4,1)]', targetLabel(ds.subject));
+            drawChart(chartKey, canvasId, radarConfig(ds.sections, ds.sections.map(s => student.sectionScores[s] || 0), ds.subject.sasaranSkor,
+                { label: 'Penguasaan', labelSize: isMobile ? 9 : 11 }));
+            lucide.createIcons();
+        }
+
+        // ---------- Modal admin ----------
+        function showStudentDetail(student) {
+            currentEditingStudent = student;
+            document.getElementById('modal-read-view').classList.remove('hidden');
+            document.getElementById('modal-edit-view').classList.add('hidden');
+            document.getElementById('btn-edit-mode').innerHTML = '<i data-lucide="edit" class="w-4 h-4 mr-1.5"></i> Edit';
+            document.getElementById('modal-student-name').textContent = student.nama;
+            document.getElementById('modal-student-ic').textContent = student.ic || 'Tiada Rekod IC';
+            const pic = document.getElementById('modal-student-pic');
+            pic.onerror = function () { this.onerror = null; this.src = generateAvatar(student.nama); };
+            pic.src = student.picUrl;
+
+            const modal = document.getElementById('student-modal');
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+            document.getElementById('admin-modal-scroll-area').scrollTop = 0;
+            renderReport('modal', 'radarChart', 'radar', student, globalData);
+            setTimeout(() => modal.children[0].classList.add('modal-enter-active'), 10);
+        }
+
+        function closeModal(immediate) {
+            const modal = document.getElementById('student-modal');
+            modal.children[0].classList.remove('modal-enter-active');
+            const hide = () => { modal.classList.add('hidden'); modal.classList.remove('flex'); };
+            immediate === true ? hide() : setTimeout(hide, 200);
+        }
+
+        function toggleEditMode() {
+            const readView = document.getElementById('modal-read-view');
+            const editing = !readView.classList.contains('hidden');
+            readView.classList.toggle('hidden', editing);
+            document.getElementById('modal-edit-view').classList.toggle('hidden', !editing);
+            document.getElementById('btn-edit-mode').innerHTML = editing ? '<i data-lucide="eye" class="w-4 h-4 mr-1.5"></i> Batal Edit' : '<i data-lucide="edit" class="w-4 h-4 mr-1.5"></i> Edit';
+            if (editing) renderEditForm();
+            lucide.createIcons();
+        }
+
+        function markInputHtml(a, current) {
+            const isInt = Number.isInteger(a.maxMark);
+            if (isInt && a.maxMark <= 20) {
+                let opts = '';
+                for (let i = 0; i <= a.maxMark; i++) opts += `<option value="${i}" ${i === current ? 'selected' : ''}>${i}</option>`;
+                if (!Number.isInteger(current)) opts += `<option value="${current}" selected>${current}</option>`;
+                return `<select id="edit-mark-${a.id}" class="w-full mt-1.5 px-2 py-1.5 bg-white border border-gray-200 rounded-md text-sm font-medium">${opts}</select>`;
+            }
+            return `<input type="number" id="edit-mark-${a.id}" min="0" max="${a.maxMark}" step="any" value="${current}" class="w-full mt-1.5 px-2 py-1.5 bg-white border border-gray-200 rounded-md text-sm font-medium">`;
+        }
+
+        function renderEditForm() {
+            const student = currentEditingStudent;
+            document.getElementById('edit-name').value = student.nama;
+            document.getElementById('edit-image').value = '';
+            document.getElementById('edit-marks-container').innerHTML = globalData.sections.map(sec => `
+                <div>
+                    <h5 class="text-xs font-bold text-quran-800 uppercase tracking-wider mb-2 flex items-center"><i data-lucide="layers" class="w-3.5 h-3.5 mr-1.5 text-quran-600"></i> ${esc(sec)}</h5>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        ${globalData.aspects.filter(a => a.section === sec).map(a => `
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                            <label for="edit-mark-${a.id}" class="block text-[11px] md:text-xs font-semibold text-gray-600 leading-snug">${esc(a.name)}</label>
+                            <div class="text-[10px] text-gray-400 mt-0.5">Maksimum: ${a.maxMark}</div>
+                            ${markInputHtml(a, student.marks[a.id])}
+                        </div>`).join('')}
+                    </div>
+                </div>`).join('');
+            lucide.createIcons();
+        }
+
+        async function saveStudentData(btn) {
+            const student = currentEditingStudent;
+            const marks = {};
+            for (const a of globalData.aspects) {
+                const el = document.getElementById('edit-mark-' + a.id);
+                if (!el) continue;
+                const v = parseFloat(el.value);
+                if (isNaN(v) || v < 0 || v > a.maxMark) { alert(`Markah "${a.name}" mesti antara 0 dan ${a.maxMark}.`); el.focus(); return; }
+                marks[a.id] = v;
+            }
+            await withBusy(btn, 'Menyimpan...', async () => {
+                try {
+                    const payload = { subjectId: currentSubjectId, ic: student.ic, name: document.getElementById('edit-name').value.trim(), marks };
+                    const file = document.getElementById('edit-image').files[0];
+                    if (file) Object.assign(payload, await prepareImage(file, 600));
+                    await api('updateStudent', payload);
+                    alert('Maklumat berjaya dikemas kini!');
+                    closeModal();
+                    fetchData(true);
+                } catch (e) { alert(e.message); }
+            });
+        }
+
+        function confirmDeleteStudent() {
+            const m = document.getElementById('delete-confirm-modal');
+            m.classList.remove('hidden'); m.classList.add('flex');
+            lucide.createIcons();
+        }
+        function hideDeleteConfirm() {
+            const m = document.getElementById('delete-confirm-modal');
+            m.classList.add('hidden'); m.classList.remove('flex');
+        }
+        async function proceedDeleteStudent(btn) {
+            await withBusy(btn, 'Memadam...', async () => {
+                try {
+                    await api('deleteStudent', { subjectId: currentSubjectId, ic: currentEditingStudent.ic });
+                    hideDeleteConfirm();
+                    closeModal();
+                    alert('Pelajar berjaya dihapuskan.');
+                    fetchData(true);
+                } catch (e) { alert(e.message); }
+            });
+        }
+
+        // ---------- Tambah pelajar ----------
+        function resetAddStudentForm() {
+            document.getElementById('add-student-step-2').classList.add('hidden');
+            document.getElementById('add-student-footer').classList.add('hidden');
+            const msg = document.getElementById('ic-check-msg');
+            msg.classList.add('hidden'); msg.innerHTML = '';
+        }
+
+        function toggleAddStudentModal() {
+            const modal = document.getElementById('add-student-modal');
+            if (modal.classList.contains('hidden')) {
+                const sel = document.getElementById('add-student-class');
+                sel.innerHTML = activeSubjects().map(s => `<option value="${esc(s.id)}">${esc(s.nama)}</option>`).join('');
+                sel.value = currentSubjectId;
+                ['add-student-name', 'add-student-ic', 'add-student-image'].forEach(id => document.getElementById(id).value = '');
+                resetAddStudentForm();
+                modal.classList.remove('hidden'); modal.classList.add('flex');
+                setTimeout(() => modal.children[0].classList.add('modal-enter-active'), 10);
+            } else {
+                modal.children[0].classList.remove('modal-enter-active');
+                setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 200);
+            }
+        }
+
+        async function getClassData(subjectId) {
+            if (!classCache[subjectId]) classCache[subjectId] = buildDataset(subjectId, await api('getStudents', { subjectId }));
+            return classCache[subjectId];
+        }
+
+        async function checkStudentIC(btn) {
+            const ic = digitsOnly(document.getElementById('add-student-ic').value);
+            const subjectId = document.getElementById('add-student-class').value;
+            const msg = document.getElementById('ic-check-msg');
+            const showMsg = (html, cls) => { msg.innerHTML = html; msg.className = cls; lucide.createIcons(); };
+            if (ic.length < 6) { showMsg('Sila masukkan no IC sekurang-kurangnya 6 digit.', 'text-[13px] font-medium text-red-500 block mt-2'); return; }
+            await withBusy(btn, '', async () => {
+                try {
+                    const ds = await getClassData(subjectId);
+                    const exists = ds.students.some(s => digitsOnly(s.ic) === ic);
+                    if (exists) {
+                        showMsg('<i data-lucide="x-circle" class="w-4 h-4 inline mr-1"></i> Pelajar telah berdaftar dalam subjek ini.', 'text-xs font-semibold text-red-700 bg-red-50 p-2.5 rounded-lg border border-red-200 mt-3 flex items-center');
+                    } else {
+                        showMsg('<i data-lucide="check-circle-2" class="w-4 h-4 inline mr-1"></i> IC sah. Sila lengkapkan butiran.', 'text-xs font-semibold text-emerald-700 bg-emerald-50 p-2.5 rounded-lg border border-emerald-200 mt-3 flex items-center');
+                        document.getElementById('add-student-step-2').classList.remove('hidden');
+                        document.getElementById('add-student-footer').classList.remove('hidden');
+                        setTimeout(() => document.getElementById('add-student-name').focus(), 100);
+                    }
+                } catch (e) { showMsg(esc(e.message), 'text-xs font-medium text-red-500 block mt-2'); }
+            });
+        }
+
+        async function submitNewStudent(btn) {
+            const subjectId = document.getElementById('add-student-class').value;
+            const name = document.getElementById('add-student-name').value.trim();
+            const ic = document.getElementById('add-student-ic').value.trim();
+            if (!name) { alert('Sila lengkapkan Nama Penuh Pelajar.'); return; }
+            await withBusy(btn, 'Menyimpan...', async () => {
+                try {
+                    const payload = { subjectId, name, ic };
+                    const file = document.getElementById('add-student-image').files[0];
+                    if (file) Object.assign(payload, await prepareImage(file, 600));
+                    await api('addStudent', payload);
+                    alert('Pelajar baharu berjaya ditambah!');
+                    toggleAddStudentModal();
+                    classCache[subjectId] = null;
+                    if (subjectId === currentSubjectId) fetchData(true);
+                } catch (e) { alert(e.message); }
+            });
+        }
+
+        // ==========================================================
+        //  PORTAL PELAJAR
+        // ==========================================================
+        function setupStudentPortal(enrolled) {
+            studentEnrolledClasses = enrolled.map(e => {
+                const ds = buildDataset(e.subjectId, [e.student]);
+                return { subjectId: e.subjectId, ds, student: ds.students[0] };
+            });
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app-wrapper').classList.remove('hidden');
+            ['admin-sidebar', 'admin-mobile-header', 'class-selector-container', 'admin-bottom-nav'].forEach(id => document.getElementById(id).className = 'hidden');
+            hideAllTabs();
+            document.getElementById('tab-student-portal').classList.remove('hidden');
+            document.getElementById('portal-photo-btn').classList.toggle('hidden', APP.settings.allowStudentPhoto === false);
+            document.getElementById('portal-edit-section').classList.add('hidden');
+
+            const selector = document.getElementById('portal-class-selector');
+            const badge = document.getElementById('portal-student-class');
+            if (studentEnrolledClasses.length > 1) {
+                selector.classList.remove('hidden'); badge.classList.add('hidden');
+                selector.innerHTML = studentEnrolledClasses.map((enc, i) => `<button onclick="switchPortalClass(${i})" class="portal-class-btn flex-none whitespace-nowrap px-4 py-2 text-sm font-bold rounded-full border transition-all"><i data-lucide="${esc(enc.ds.subject.ikon || 'book')}" class="w-3.5 h-3.5 inline mr-1"></i> ${esc(enc.ds.subject.nama)}</button>`).join('');
+            } else {
+                selector.classList.add('hidden'); badge.classList.remove('hidden');
+            }
+            switchPortalClass(0);
+        }
+
+        function switchPortalClass(index) {
+            const enc = studentEnrolledClasses[index];
+            currentLoggedInStudent = enc.student;
+            currentPortalData = enc.ds;
+            document.querySelectorAll('#portal-class-selector .portal-class-btn').forEach((b, i) => {
+                const active = i === index;
+                b.classList.toggle('bg-quran-700', active); b.classList.toggle('text-white', active); b.classList.toggle('border-quran-700', active);
+                b.classList.toggle('bg-white', !active); b.classList.toggle('text-quran-700', !active); b.classList.toggle('border-quran-200', !active);
+            });
+            const student = enc.student;
+            document.getElementById('portal-student-name').textContent = student.nama;
+            document.getElementById('portal-student-ic').textContent = student.ic || '-';
+            document.getElementById('portal-student-class').textContent = enc.ds.subject.nama;
+            const pic = document.getElementById('portal-student-pic');
+            pic.onerror = function () { this.onerror = null; this.src = generateAvatar(student.nama); };
+            pic.src = student.picUrl;
+            renderReport('portal', 'portalRadarChart', 'portalRadar', student, enc.ds);
+        }
+
+        function togglePortalEdit() {
+            const sec = document.getElementById('portal-edit-section');
+            sec.classList.toggle('hidden');
+            document.getElementById('portal-edit-image').value = '';
+        }
+
+        async function savePortalPicture(btn) {
+            const file = document.getElementById('portal-edit-image').files[0];
+            if (!file) { alert('Sila pilih gambar terlebih dahulu.'); return; }
+            await withBusy(btn, 'Memuat Naik...', async () => {
+                try {
+                    const img = await prepareImage(file, 600);
+                    await api('updateOwnPhoto', Object.assign({ ic: currentLoggedInStudent.ic }, img));
+                    studentEnrolledClasses.forEach(e => e.student.picUrl = img.image);
+                    document.getElementById('portal-student-pic').src = img.image;
+                    alert('Gambar berjaya dikemas kini!');
+                    togglePortalEdit();
+                } catch (e) { alert(e.message); }
+            });
+        }
+
+        // ==========================================================
+        //  GAMBAR (UPLOAD)
+        // ==========================================================
+        function readFileAsDataURL(file) {
+            return new Promise((resolve, reject) => {
+                const r = new FileReader();
+                r.onload = () => resolve(r.result);
+                r.onerror = reject;
+                r.readAsDataURL(file);
+            });
+        }
+
+        function loadImage(src, crossOrigin) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                if (crossOrigin) img.crossOrigin = 'anonymous';
+                img.onload = () => resolve(img);
+                img.onerror = () => reject(new Error('Gambar tidak dapat dibaca.'));
+                img.src = src;
+            });
+        }
+
+        /** Kecilkan gambar sebelum hantar (jimat masa upload & ruang Drive). */
+        async function prepareImage(file, maxSize, keepPng) {
+            if (!file.type.startsWith('image/')) throw new Error('Sila pilih fail gambar sahaja.');
+            const dataUrl = await readFileAsDataURL(file);
+            try {
+                const img = await loadImage(dataUrl);
+                const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.max(1, Math.round(img.width * scale));
+                canvas.height = Math.max(1, Math.round(img.height * scale));
+                const ctx = canvas.getContext('2d');
+                if (!keepPng) { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                const mimeType = keepPng ? 'image/png' : 'image/jpeg';
+                return { image: canvas.toDataURL(mimeType, 0.88), mimeType };
+            } catch (e) {
+                return { image: dataUrl, mimeType: file.type };
+            }
+        }
+
+        // ==========================================================
+        //  KONFIGURASI (SUPERADMIN)
+        // ==========================================================
+        let cfgPanel = 'brand';
+        let pendingLogo = null;
+        let cfgGrades = [];
+        let cfgEditSubjectId = null;
+        let cfgAspects = [];
+        let cfgUsers = [];
+
+        function initConfigPanels() {
+            pendingLogo = null;
+            cfgEditSubjectId = (APP.subjects[0] || {}).id || null;
+            loadSubjectIntoEditor(cfgEditSubjectId);
+            cfgGrades = APP.grades.map(g => Object.assign({}, g));
+            fillBrandForm();
+        }
+
+        function renderConfigPanels() {
+            switchConfigPanel(cfgPanel);
+        }
+
+        function switchConfigPanel(name) {
+            cfgPanel = name;
+            document.querySelectorAll('.cfg-panel').forEach(p => p.classList.add('hidden'));
+            document.getElementById('cfg-panel-' + name).classList.remove('hidden');
+            document.querySelectorAll('.cfg-tab').forEach(b => {
+                const active = b.dataset.cfg === name;
+                b.classList.toggle('bg-quran-700', active); b.classList.toggle('text-white', active); b.classList.toggle('shadow-sm', active);
+                b.classList.toggle('text-gray-500', !active);
+            });
+            if (name === 'brand') renderBrandPreview();
+            if (name === 'grades') renderGradeRows();
+            if (name === 'subjects') { renderSubjectList(); renderAspectRows(); }
+            if (name === 'users') loadUsers();
+            lucide.createIcons();
+        }
+
+        // ---------- Jenama ----------
+        function fillBrandForm() {
+            const s = APP.settings;
+            ['appName', 'shortName', 'tagline', 'loginSubtitle', 'footerText'].forEach(k => document.getElementById('cfg-' + k).value = s[k] || '');
+            document.getElementById('cfg-allowStudentPhoto').checked = s.allowStudentPhoto !== false;
+            document.getElementById('cfg-logo-url').value = s.logo && !s.logo.startsWith('data:') ? s.logo : '';
+            document.getElementById('cfg-logo-file').value = '';
+            renderBrandPreview();
+        }
+
+        function renderBrandPreview() {
+            const img = document.getElementById('cfg-logo-preview');
+            const status = document.getElementById('cfg-logo-status');
+            if (pendingLogo && pendingLogo.image) { img.src = pendingLogo.image; status.textContent = 'Logo baharu belum disimpan'; }
+            else if (pendingLogo && pendingLogo.url) { img.src = pendingLogo.url; status.textContent = 'Pautan logo belum disimpan'; }
+            else if (pendingLogo && pendingLogo.remove) { img.src = generateAvatar(document.getElementById('cfg-shortName').value || 'KM'); status.textContent = 'Logo akan dibuang'; }
+            else { img.src = logoSrc(); status.textContent = ''; }
+        }
+
+        async function onLogoFileChange(input) {
+            const file = input.files[0];
+            if (!file) return;
+            try {
+                pendingLogo = await prepareImage(file, 320, true);
+                renderBrandPreview();
+            } catch (e) { alert(e.message); input.value = ''; }
+        }
+
+        function useLogoUrl() {
+            const url = document.getElementById('cfg-logo-url').value.trim();
+            if (!/^https?:\/\//i.test(url)) { alert('Sila masukkan pautan bermula dengan https://'); return; }
+            pendingLogo = { url };
+            renderBrandPreview();
+        }
+
+        function removeLogo() {
+            pendingLogo = { remove: true };
+            document.getElementById('cfg-logo-file').value = '';
+            renderBrandPreview();
+        }
+
+        async function saveBrandSettings(btn) {
+            const settings = {};
+            ['appName', 'shortName', 'tagline', 'loginSubtitle', 'footerText'].forEach(k => settings[k] = document.getElementById('cfg-' + k).value.trim());
+            settings.allowStudentPhoto = document.getElementById('cfg-allowStudentPhoto').checked;
+            if (!settings.appName) { alert('Nama Pusat / Kelas diperlukan.'); return; }
+            await withBusy(btn, 'Menyimpan...', async () => {
+                try {
+                    const cfg = await api('saveSettings', { settings, logo: pendingLogo || undefined });
+                    applyConfig(cfg);
+                    pendingLogo = null;
+                    fillBrandForm();
+                    alert('Tetapan jenama berjaya disimpan.');
+                } catch (e) { alert(e.message); }
+            });
+        }
+
+        // ---------- Gred ----------
+        function renderGradeRows() {
+            const colorOpts = sel => Object.entries(COLOR).map(([k, v]) => `<option value="${k}" ${k === sel ? 'selected' : ''}>${v.name}</option>`).join('');
+            document.getElementById('cfg-grade-rows').innerHTML = cfgGrades.map((g, i) => `
+                <div class="grid grid-cols-12 gap-2 items-center bg-gray-50 md:bg-transparent p-2 md:p-0 rounded-lg">
+                    <input type="text" value="${esc(g.label)}" oninput="cfgGrades[${i}].label=this.value; renderGradePreview()" placeholder="Label" class="cfg-input col-span-12 md:col-span-5 px-3 py-2 border border-gray-200 rounded-lg">
+                    <input type="number" min="0" max="100" value="${g.min}" ${i === cfgGrades.length - 1 ? 'disabled title="Gred terakhir sentiasa 0"' : ''} oninput="cfgGrades[${i}].min=Number(this.value); renderGradePreview()" class="cfg-input col-span-4 md:col-span-3 px-3 py-2 border border-gray-200 rounded-lg disabled:bg-gray-100">
+                    <select onchange="cfgGrades[${i}].color=this.value; renderGradePreview()" class="cfg-input col-span-6 md:col-span-3 px-3 py-2 border border-gray-200 rounded-lg bg-white">${colorOpts(g.color)}</select>
+                    <button onclick="removeGradeRow(${i})" class="col-span-2 md:col-span-1 p-2 text-red-500 hover:bg-red-50 rounded-lg flex justify-center" title="Buang"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                </div>`).join('');
+            renderGradePreview();
+            lucide.createIcons();
+        }
+
+        function renderGradePreview() {
+            const sorted = [...cfgGrades].sort((a, b) => b.min - a.min);
+            document.getElementById('cfg-grade-preview').innerHTML = sorted.map((g, i) => {
+                const c = COLOR[g.color] || COLOR.gray;
+                const upper = i === 0 ? 100 : sorted[i - 1].min - 1;
+                const lo = i === sorted.length - 1 ? 0 : g.min;
+                return `<span class="px-3 py-1.5 rounded-full text-xs font-bold border ${c.soft}">${esc(g.label || '?')}: ${lo} - ${upper}%</span>`;
+            }).join('');
+        }
+
+        function addGradeRow() {
+            cfgGrades.splice(Math.max(0, cfgGrades.length - 1), 0, { label: 'Gred Baharu', min: 50, color: 'blue' });
+            renderGradeRows();
+        }
+        function removeGradeRow(i) {
+            if (cfgGrades.length <= 1) { alert('Sekurang-kurangnya satu gred diperlukan.'); return; }
+            cfgGrades.splice(i, 1);
+            renderGradeRows();
+        }
+
+        async function saveGrades(btn) {
+            if (cfgGrades.some(g => !String(g.label).trim())) { alert('Label gred tidak boleh kosong.'); return; }
+            await withBusy(btn, 'Menyimpan...', async () => {
+                try {
+                    const cfg = await api('saveSettings', { grades: cfgGrades });
+                    applyConfig(cfg);
+                    cfgGrades = APP.grades.map(g => Object.assign({}, g));
+                    renderGradeRows();
+                    classCache = {}; globalData = null;
+                    alert('Gred berjaya disimpan.');
+                } catch (e) { alert(e.message); }
+            });
+        }
+
+        // ---------- Subjek & Aspek ----------
+        function renderSubjectList() {
+            document.getElementById('cfg-subject-list').innerHTML = APP.subjects.map(s => {
+                const count = APP.aspects.filter(a => a.subjectId === s.id).length;
+                const active = s.id === cfgEditSubjectId;
+                return `<button onclick="editSubject('${esc(s.id)}')" class="w-full text-left px-3 py-2.5 rounded-lg border text-sm transition ${active ? 'bg-quran-700 text-white border-quran-700' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}">
+                    <div class="font-semibold flex items-center"><i data-lucide="${esc(s.ikon || 'book')}" class="w-4 h-4 mr-2 shrink-0"></i><span class="break-words">${esc(s.nama)}</span></div>
+                    <div class="text-[11px] mt-0.5 ${active ? 'text-quran-100' : 'text-gray-400'}">${count} aspek${s.aktif ? '' : ' · Tidak aktif'}</div>
+                </button>`;
+            }).join('') || '<p class="text-xs text-gray-400 italic">Belum ada subjek.</p>';
+            lucide.createIcons();
+        }
+
+        function loadSubjectIntoEditor(id) {
+            cfgEditSubjectId = id;
+            const s = id ? getSubject(id) : null;
+            document.getElementById('cfg-subject-title').textContent = s ? 'Edit: ' + s.nama : 'Subjek / Kelas Baharu';
+            document.getElementById('cfg-sub-nama').value = s ? s.nama : '';
+            document.getElementById('cfg-sub-ikon').value = s ? (s.ikon || 'book') : 'book';
+            document.getElementById('cfg-sub-sasaran').value = s ? s.sasaranSkor : 100;
+            document.getElementById('cfg-sub-label').value = s ? s.labelSasaran : '';
+            document.getElementById('cfg-sub-capai').value = s ? s.teksCapai : '';
+            document.getElementById('cfg-sub-belum').value = s ? s.teksBelumCapai : '';
+            document.getElementById('cfg-sub-aktif').checked = s ? s.aktif : true;
+            document.getElementById('cfg-sub-delete').classList.toggle('hidden', !s);
+            cfgAspects = s ? aspectsFor(id).map(a => ({ id: a.id, bahagian: a.section, nama: a.name, markahPenuh: a.maxMark })) : [];
+        }
+
+        function editSubject(id) {
+            loadSubjectIntoEditor(id);
+            renderSubjectList();
+            renderAspectRows();
+            if (window.innerWidth < 1024) document.getElementById('cfg-subject-editor').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderAspectRows() {
+            const sections = [...new Set(cfgAspects.map(a => a.bahagian).filter(Boolean))];
+            document.getElementById('cfg-section-list').innerHTML = sections.map(s => `<option value="${esc(s)}">`).join('');
+            document.getElementById('cfg-aspect-count').textContent = `${cfgAspects.length} aspek · ${sections.length} bahagian`;
+            document.getElementById('cfg-aspect-rows').innerHTML = cfgAspects.map((a, i) => `
+                <div class="grid grid-cols-12 gap-2 items-center bg-gray-50 md:bg-transparent p-2 md:p-0 rounded-lg border md:border-0 border-gray-100">
+                    <div class="col-span-1 text-xs font-bold text-gray-400 text-center md:text-left">${i + 1}</div>
+                    <input type="text" list="cfg-section-list" value="${esc(a.bahagian)}" oninput="cfgAspects[${i}].bahagian=this.value" onchange="renderAspectRows()" placeholder="Bahagian" class="cfg-input col-span-11 md:col-span-3 px-2.5 py-2 border border-gray-200 rounded-lg uppercase">
+                    <input type="text" value="${esc(a.nama)}" oninput="cfgAspects[${i}].nama=this.value" placeholder="Nama aspek / point bacaan" class="cfg-input col-span-12 md:col-span-4 px-2.5 py-2 border border-gray-200 rounded-lg">
+                    <input type="number" min="0.5" step="any" value="${a.markahPenuh}" oninput="cfgAspects[${i}].markahPenuh=Number(this.value)" class="cfg-input col-span-5 md:col-span-2 px-2.5 py-2 border border-gray-200 rounded-lg">
+                    <div class="col-span-7 md:col-span-2 flex justify-end gap-1">
+                        <button onclick="moveAspect(${i},-1)" class="p-2 text-gray-500 hover:bg-gray-100 rounded-lg" title="Naik"><i data-lucide="arrow-up" class="w-4 h-4"></i></button>
+                        <button onclick="moveAspect(${i},1)" class="p-2 text-gray-500 hover:bg-gray-100 rounded-lg" title="Turun"><i data-lucide="arrow-down" class="w-4 h-4"></i></button>
+                        <button onclick="removeAspect(${i})" class="p-2 text-red-500 hover:bg-red-50 rounded-lg" title="Buang"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                </div>`).join('') || '<p class="text-sm text-gray-400 italic py-4 text-center">Belum ada aspek. Klik "Tambah Aspek" atau "Tambah Pukal".</p>';
+            lucide.createIcons();
+        }
+
+        function addAspectRow() {
+            const last = cfgAspects[cfgAspects.length - 1];
+            cfgAspects.push({ id: '', bahagian: last ? last.bahagian : '', nama: '', markahPenuh: last ? last.markahPenuh : 10 });
+            renderAspectRows();
+            const inputs = document.querySelectorAll('#cfg-aspect-rows input[placeholder="Nama aspek / point bacaan"]');
+            if (inputs.length) inputs[inputs.length - 1].focus();
+        }
+
+        function moveAspect(i, dir) {
+            const j = i + dir;
+            if (j < 0 || j >= cfgAspects.length) return;
+            [cfgAspects[i], cfgAspects[j]] = [cfgAspects[j], cfgAspects[i]];
+            renderAspectRows();
+        }
+
+        function removeAspect(i) {
+            const a = cfgAspects[i];
+            if (a.id && !confirm(`Buang aspek "${a.nama}"? Markah pelajar untuk aspek ini tidak akan dipaparkan lagi.`)) return;
+            cfgAspects.splice(i, 1);
+            renderAspectRows();
+        }
+
+        function toggleBulkAspects() { document.getElementById('cfg-bulk-box').classList.toggle('hidden'); }
+
+        function applyBulkAspects() {
+            const defSec = document.getElementById('cfg-bulk-section').value.trim().toUpperCase();
+            const defMax = Number(document.getElementById('cfg-bulk-max').value) || 10;
+            const lines = document.getElementById('cfg-bulk-text').value.split('\n').map(l => l.trim()).filter(Boolean);
+            let added = 0;
+            lines.forEach(line => {
+                const parts = line.split('|').map(p => p.trim());
+                let sec = defSec, name = parts[0], max = defMax;
+                if (parts.length >= 3) { sec = parts[0].toUpperCase(); name = parts[1]; max = Number(parts[2]) || defMax; }
+                else if (parts.length === 2) {
+                    if (!isNaN(Number(parts[1])) && parts[1] !== '') { name = parts[0]; max = Number(parts[1]); }
+                    else { sec = parts[0].toUpperCase(); name = parts[1]; }
+                }
+                if (!name) return;
+                cfgAspects.push({ id: '', bahagian: sec, nama: name, markahPenuh: max });
+                added++;
+            });
+            document.getElementById('cfg-bulk-text').value = '';
+            renderAspectRows();
+            alert(added + ' aspek dimasukkan. Klik "Simpan Subjek & Aspek" untuk simpan.');
+        }
+
+        async function saveSubject(btn) {
+            const subject = {
+                id: cfgEditSubjectId || '',
+                nama: document.getElementById('cfg-sub-nama').value.trim(),
+                ikon: document.getElementById('cfg-sub-ikon').value,
+                sasaranSkor: Number(document.getElementById('cfg-sub-sasaran').value),
+                labelSasaran: document.getElementById('cfg-sub-label').value.trim(),
+                teksCapai: document.getElementById('cfg-sub-capai').value.trim(),
+                teksBelumCapai: document.getElementById('cfg-sub-belum').value.trim(),
+                aktif: document.getElementById('cfg-sub-aktif').checked
+            };
+            if (!subject.nama) { alert('Nama subjek diperlukan.'); return; }
+            const aspects = cfgAspects.filter(a => String(a.nama).trim());
+            const names = new Set();
+            for (const a of aspects) {
+                const key = a.nama.trim().toUpperCase();
+                if (names.has(key)) { alert(`Aspek "${a.nama}" berulang.`); return; }
+                names.add(key);
+                if (!(Number(a.markahPenuh) > 0)) { alert(`Markah penuh untuk "${a.nama}" mesti lebih dari 0.`); return; }
+            }
+            await withBusy(btn, 'Menyimpan...', async () => {
+                try {
+                    const res = await api('saveSubject', { subject, aspects });
+                    applyConfig(res.config);
+                    classCache = {}; globalData = null;
+                    if (!activeSubjects().find(s => s.id === currentSubjectId)) currentSubjectId = (activeSubjects()[0] || {}).id || null;
+                    loadSubjectIntoEditor(res.subjectId);
+                    renderSubjectList(); renderAspectRows(); renderClassSelector();
+                    alert('Subjek & aspek berjaya disimpan.');
+                } catch (e) { alert(e.message); }
+            });
+        }
+
+        async function deleteSubject(btn) {
+            const s = getSubject(cfgEditSubjectId);
+            if (!s || !confirm(`Padam subjek "${s.nama}" berserta semua aspeknya? Tindakan ini kekal.`)) return;
+            await withBusy(btn, 'Memadam...', async () => {
+                try {
+                    const cfg = await api('deleteSubject', { subjectId: s.id });
+                    applyConfig(cfg);
+                    classCache = {}; globalData = null;
+                    if (currentSubjectId === s.id) currentSubjectId = (activeSubjects()[0] || {}).id || null;
+                    loadSubjectIntoEditor((APP.subjects[0] || {}).id || null);
+                    renderSubjectList(); renderAspectRows(); renderClassSelector();
+                    alert('Subjek dipadam.');
+                } catch (e) { alert(e.message); }
+            });
+        }
+
+        // ---------- Pengguna ----------
+        async function loadUsers() {
+            const tbody = document.getElementById('cfg-user-rows');
+            tbody.innerHTML = '<tr><td colspan="3" class="px-5 py-6 text-center text-gray-400"><i data-lucide="loader-2" class="w-5 h-5 animate-spin inline"></i></td></tr>';
+            lucide.createIcons();
+            try {
+                cfgUsers = await api('listUsers');
+                renderUsers();
+            } catch (e) { tbody.innerHTML = `<tr><td colspan="3" class="px-5 py-6 text-center text-red-500 text-sm">${esc(e.message)}</td></tr>`; }
+        }
+
+        function renderUsers() {
+            const me = (AUTH.user.username || '').toLowerCase();
+            document.getElementById('cfg-user-rows').innerHTML = cfgUsers.map((u, i) => `
+                <tr>
+                    <td class="px-5 py-3"><div class="font-semibold text-gray-800">${esc(u.nama)}</div><div class="text-xs text-gray-400">${esc(u.username)}</div></td>
+                    <td class="px-5 py-3"><span class="px-2 py-0.5 rounded-full text-[11px] font-bold ${u.peranan === 'superadmin' ? 'bg-gold-50 text-gold-600 border border-gold-300' : 'bg-quran-50 text-quran-700 border border-quran-100'}">${u.peranan === 'superadmin' ? 'SUPERADMIN' : 'GURU / ADMIN'}</span></td>
+                    <td class="px-5 py-3 text-right whitespace-nowrap">
+                        <button onclick="editUser(${i})" class="p-2 text-gray-500 hover:bg-gray-100 rounded-lg" title="Edit"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                        ${u.username.toLowerCase() === me ? '' : `<button onclick="deleteUser(${i})" class="p-2 text-red-500 hover:bg-red-50 rounded-lg" title="Padam"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`}
+                    </td>
+                </tr>`).join('');
+            lucide.createIcons();
+        }
+
+        function resetUserForm() {
+            ['username', 'nama', 'password'].forEach(k => document.getElementById('cfg-user-' + k).value = '');
+            document.getElementById('cfg-user-username').disabled = false;
+            document.getElementById('cfg-user-peranan').value = 'admin';
+            document.getElementById('cfg-user-pwd-hint').textContent = '(min. 6 aksara)';
+            document.getElementById('cfg-user-form-title').innerHTML = '<i data-lucide="user-plus" class="w-5 h-5 mr-2 text-quran-600"></i> Tambah Pengguna';
+            lucide.createIcons();
+        }
+
+        function editUser(i) {
+            const u = cfgUsers[i];
+            document.getElementById('cfg-user-username').value = u.username;
+            document.getElementById('cfg-user-username').disabled = true;
+            document.getElementById('cfg-user-nama').value = u.nama;
+            document.getElementById('cfg-user-peranan').value = u.peranan;
+            document.getElementById('cfg-user-password').value = '';
+            document.getElementById('cfg-user-pwd-hint').textContent = '(kosongkan jika tidak mahu tukar)';
+            document.getElementById('cfg-user-form-title').innerHTML = '<i data-lucide="user-cog" class="w-5 h-5 mr-2 text-quran-600"></i> Edit Pengguna';
+            lucide.createIcons();
+        }
+
+        async function saveUser(btn) {
+            const user = {
+                username: document.getElementById('cfg-user-username').value.trim().toLowerCase(),
+                nama: document.getElementById('cfg-user-nama').value.trim(),
+                peranan: document.getElementById('cfg-user-peranan').value,
+                password: document.getElementById('cfg-user-password').value
+            };
+            if (!user.username) { alert('Nama pengguna diperlukan.'); return; }
+            await withBusy(btn, 'Menyimpan...', async () => {
+                try {
+                    cfgUsers = await api('saveUser', { user });
+                    renderUsers();
+                    resetUserForm();
+                    alert('Pengguna berjaya disimpan.');
+                } catch (e) { alert(e.message); }
+            });
+        }
+
+        async function deleteUser(i) {
+            const u = cfgUsers[i];
+            if (!confirm(`Padam pengguna "${u.username}"?`)) return;
+            try {
+                cfgUsers = await api('deleteUser', { username: u.username });
+                renderUsers();
+            } catch (e) { alert(e.message); }
+        }
+
+        // ==========================================================
+        //  PDF (jsPDF + AutoTable)
+        //  Teks ditulis sebagai teks sebenar (bukan screenshot), jadi
+        //  tiada perkataan terpotong & jadual pecah ke muka surat baru
+        //  dengan kemas.
+        // ==========================================================
+        const PDF = { W: 210, H: 297, M: 14 };
+        const PDF_GREEN = [5, 46, 22], PDF_GOLD = [250, 204, 21], PDF_GRAY = [107, 114, 128], PDF_DARK = [17, 24, 39];
+
+        function pdfText(s) {
+            return String(s === null || s === undefined ? '' : s)
+                .replace(/≥/g, '>=').replace(/≤/g, '<=').replace(/[–—]/g, '-')
+                .replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/·/g, '-');
+        }
+        function hexToRgb(hex) {
+            const h = hex.replace('#', '');
+            return [parseInt(h.substr(0, 2), 16), parseInt(h.substr(2, 2), 16), parseInt(h.substr(4, 2), 16)];
+        }
+        function lineH(fontSize) { return fontSize * 1.2 * 0.3528; }
+
+        async function getLogoPng() {
+            const src = logoSrc();
+            try {
+                const img = await loadImage(src, !src.startsWith('data:'));
+                const size = 256;
+                const canvas = document.createElement('canvas');
+                canvas.width = size; canvas.height = size;
+                const ctx = canvas.getContext('2d');
+                const scale = Math.min(size / img.width, size / img.height);
+                const w = img.width * scale, h = img.height * scale;
+                ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+                return canvas.toDataURL('image/png');
+            } catch (e) {
+                return null; // logo luar tanpa CORS — PDF diteruskan tanpa logo
+            }
+        }
+
+        function newPdf() {
+            if (!window.jspdf || !window.jspdf.jsPDF) throw new Error('Pustaka PDF gagal dimuatkan. Semak sambungan internet.');
+            const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', compress: true });
+            if (typeof doc.autoTable !== 'function') throw new Error('Pustaka jadual PDF gagal dimuatkan.');
+            return doc;
+        }
+
+        function pdfHeader(doc, logo, title, subtitle) {
+            const h = 30;
+            doc.setFillColor(...PDF_GREEN);
+            doc.rect(0, 0, PDF.W, h, 'F');
+            doc.setFillColor(...PDF_GOLD);
+            doc.rect(0, h, PDF.W, 0.8, 'F');
+            let x = PDF.M;
+            if (logo) {
+                doc.setFillColor(255, 255, 255);
+                doc.circle(x + 10, h / 2, 10, 'F');
+                doc.addImage(logo, 'PNG', x + 2.5, h / 2 - 7.5, 15, 15);
+                x += 24;
+            }
+            const rightW = 62;
+            const leftW = PDF.W - PDF.M - rightW - x - 4;
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(...PDF_GOLD);
+            const nameLines = doc.splitTextToSize(pdfText(APP.settings.appName || 'Portal Kelas Mengaji'), leftW).slice(0, 2);
+            const tag = pdfText(APP.settings.tagline || '');
+            const blockH = nameLines.length * lineH(14) + (tag ? lineH(8.5) : 0);
+            let ty = h / 2 - blockH / 2 + lineH(14) * 0.8;
+            doc.text(nameLines, x, ty);
+            if (tag) {
+                doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(220, 252, 231);
+                doc.text(doc.splitTextToSize(tag, leftW)[0], x, ty + nameLines.length * lineH(14) - 0.6);
+            }
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(255, 255, 255);
+            const titleLines = doc.splitTextToSize(pdfText(title), rightW);
+            doc.text(titleLines, PDF.W - PDF.M, 12, { align: 'right' });
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(220, 252, 231);
+            let sy = 12 + titleLines.length * lineH(11);
+            if (subtitle) { doc.text(doc.splitTextToSize(pdfText(subtitle), rightW)[0], PDF.W - PDF.M, sy, { align: 'right' }); sy += lineH(8.5); }
+            doc.text('Tarikh: ' + todayStr(), PDF.W - PDF.M, sy, { align: 'right' });
+            return h + 8;
+        }
+
+        function pdfFinalize(doc) {
+            const n = doc.getNumberOfPages();
+            const footer = pdfText(APP.settings.footerText || APP.settings.appName || '');
+            for (let i = 1; i <= n; i++) {
+                doc.setPage(i);
+                doc.setDrawColor(229, 231, 235); doc.setLineWidth(0.3);
+                doc.line(PDF.M, PDF.H - 12, PDF.W - PDF.M, PDF.H - 12);
+                doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...PDF_GRAY);
+                doc.text(doc.splitTextToSize(footer, 130)[0] || '', PDF.M, PDF.H - 7.5);
+                doc.text(`Halaman ${i} / ${n}`, PDF.W - PDF.M, PDF.H - 7.5, { align: 'right' });
+            }
+        }
+
+        function ensureSpace(doc, y, needed) {
+            if (y + needed > PDF.H - 18) { doc.addPage(); return PDF.M + 2; }
+            return y;
+        }
+
+        function pdfSectionTitle(doc, y, text) {
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(...PDF_GREEN);
+            doc.text(pdfText(text), PDF.M, y);
+            doc.setDrawColor(...PDF_GOLD); doc.setLineWidth(0.6);
+            doc.line(PDF.M, y + 1.6, PDF.M + 18, y + 1.6);
+            return y + 6;
+        }
+
+        const AT_BASE = {
+            theme: 'grid',
+            styles: { font: 'helvetica', fontSize: 8.5, cellPadding: 1.8, overflow: 'linebreak', valign: 'middle', lineColor: [229, 231, 235], lineWidth: 0.1, textColor: PDF_DARK },
+            headStyles: { fillColor: PDF_GREEN, textColor: PDF_GOLD, fontStyle: 'bold', halign: 'center' },
+            margin: { left: PDF.M, right: PDF.M, top: PDF.M, bottom: 18 },
+            rowPageBreak: 'avoid'
+        };
+
+        function gradeCellHook(colorMap, cols) {
+            return data => {
+                if (data.section !== 'body') return;
+                const key = colorMap[data.row.index];
+                if (key && cols.includes(data.column.index)) { data.cell.styles.textColor = hexToRgb(COLOR[key].hex); data.cell.styles.fontStyle = 'bold'; }
+            };
+        }
+
+        async function buildStudentPdf(student, ds) {
+            const doc = newPdf();
+            const logo = await getLogoPng();
+            let y = pdfHeader(doc, logo, 'Laporan Prestasi Pelajar', ds.subject.nama);
+
+            // Kotak skor
+            const g = gradeFor(student.overallAvg);
+            const gc = hexToRgb(colorOf(g).hex);
+            const boxW = 50, boxH = 30, boxX = PDF.W - PDF.M - boxW;
+            doc.setDrawColor(...gc); doc.setLineWidth(0.7);
+            doc.roundedRect(boxX, y, boxW, boxH, 3, 3, 'S');
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...PDF_GRAY);
+            doc.text('MARKAH KESELURUHAN', boxX + boxW / 2, y + 6, { align: 'center' });
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(22); doc.setTextColor(...gc);
+            doc.text(student.overallAvg.toFixed(1) + '%', boxX + boxW / 2, y + 17, { align: 'center' });
+            doc.setFontSize(10);
+            doc.text(doc.splitTextToSize(pdfText(g.label.toUpperCase()), boxW - 4)[0], boxX + boxW / 2, y + 25, { align: 'center' });
+
+            // Maklumat pelajar
+            const infoW = boxX - PDF.M - 6;
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(...PDF_DARK);
+            const nameLines = doc.splitTextToSize(pdfText(student.nama), infoW);
+            doc.text(nameLines, PDF.M, y + 6);
+            let iy = y + 6 + nameLines.length * lineH(15) + 1;
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(75, 85, 99);
+            [['No. Kad Pengenalan', student.ic || '-'], ['Subjek / Kelas', ds.subject.nama], ['Sasaran', `${ds.subject.sasaranSkor}%`]].forEach(([k, v]) => {
+                const lines = doc.splitTextToSize(pdfText(`${k}: ${v}`), infoW);
+                doc.text(lines, PDF.M, iy);
+                iy += lines.length * lineH(9.5) + 0.8;
+            });
+            y = Math.max(y + boxH, iy) + 4;
+
+            // Mesej sasaran
+            const achieved = student.overallAvg >= ds.subject.sasaranSkor;
+            const tMsg = achieved && ds.subject.teksCapai ? ds.subject.teksCapai : ds.subject.teksBelumCapai;
+            if (tMsg) {
+                doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5);
+                const lines = doc.splitTextToSize(pdfText(tMsg), PDF.W - 2 * PDF.M - 8);
+                const h = lines.length * lineH(9.5) + 5;
+                const tone = achieved && ds.subject.teksCapai ? [[236, 253, 245], [4, 120, 87]] : [[239, 246, 255], [29, 78, 216]];
+                doc.setFillColor(...tone[0]); doc.setDrawColor(...tone[1]); doc.setLineWidth(0.2);
+                doc.roundedRect(PDF.M, y, PDF.W - 2 * PDF.M, h, 2, 2, 'FD');
+                doc.setTextColor(...tone[1]);
+                doc.text(lines, PDF.W / 2, y + 3.2 + lineH(9.5) * 0.75, { align: 'center' });
+                y += h + 6;
+            }
+
+            // Carta radar + jadual bahagian
+            y = ensureSpace(doc, y, 92);
+            const chartW = 88;
+            y = pdfSectionTitle(doc, y, 'Profil Kompetensi');
+            const chartTop = y;
+            if (ds.sections.length) {
+                const img = chartToImage(radarConfig(ds.sections, ds.sections.map(s => student.sectionScores[s] || 0), ds.subject.sasaranSkor, { label: 'Penguasaan', labelSize: 30, tickSize: 20 }), 900, 900);
+                doc.addImage(img, 'PNG', PDF.M, chartTop, chartW, chartW);
+                doc.setFontSize(7.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(...PDF_GRAY);
+                doc.setFillColor(234, 179, 8); doc.rect(PDF.M + 6, chartTop + chartW + 2, 3, 3, 'F');
+                doc.text('Prestasi semasa', PDF.M + 10.5, chartTop + chartW + 4.5);
+                doc.setDrawColor(239, 68, 68); doc.setLineWidth(0.5); doc.setLineDashPattern([1, 1], 0);
+                doc.line(PDF.M + 40, chartTop + chartW + 3.5, PDF.M + 46, chartTop + chartW + 3.5);
+                doc.setLineDashPattern([], 0);
+                doc.text(pdfText(targetLabel(ds.subject)), PDF.M + 47.5, chartTop + chartW + 4.5);
+            }
+            const rightX = PDF.M + chartW + 6;
+            const secColors = {};
+            doc.autoTable(Object.assign({}, AT_BASE, {
+                startY: chartTop,
+                margin: Object.assign({}, AT_BASE.margin, { left: rightX }),
+                head: [['Bahagian', 'Purata', 'Gred']],
+                body: ds.sections.map((s, i) => { const sg = gradeFor(student.sectionScores[s] || 0); secColors[i] = sg.color; return [pdfText(s), (student.sectionScores[s] || 0).toFixed(1) + '%', pdfText(sg.label)]; }),
+                columnStyles: { 1: { halign: 'center', cellWidth: 18 }, 2: { halign: 'center', cellWidth: 24 } },
+                didParseCell: gradeCellHook(secColors, [1, 2])
+            }));
+            const counts = APP.grades.map(() => 0);
+            ds.aspects.forEach(a => counts[APP.grades.indexOf(gradeFor(student.percentages[a.id]))]++);
+            const cntColors = {};
+            doc.autoTable(Object.assign({}, AT_BASE, {
+                startY: doc.lastAutoTable.finalY + 5,
+                margin: Object.assign({}, AT_BASE.margin, { left: rightX }),
+                head: [['Gred', 'Julat', 'Bil. Aspek']],
+                body: APP.grades.map((gr, i) => { cntColors[i] = gr.color; return [pdfText(gr.label), gradeRange(i, true), String(counts[i])]; }),
+                columnStyles: { 1: { halign: 'center' }, 2: { halign: 'center', cellWidth: 20 } },
+                didParseCell: gradeCellHook(cntColors, [0])
+            }));
+            y = Math.max(chartTop + chartW + 8, doc.lastAutoTable.finalY) + 8;
+
+            // Jadual terperinci
+            y = ensureSpace(doc, y, 30);
+            y = pdfSectionTitle(doc, y, 'Pecahan Markah Terperinci');
+            const body = [], rowColors = {};
+            ds.sections.forEach(sec => {
+                body.push([{ content: pdfText(`${sec}   (Purata: ${(student.sectionScores[sec] || 0).toFixed(1)}%)`), colSpan: 5, styles: { fillColor: [220, 252, 231], textColor: [22, 101, 52], fontStyle: 'bold', halign: 'left' } }]);
+                ds.aspects.filter(a => a.section === sec).forEach(a => {
+                    const pct = student.percentages[a.id];
+                    const ag = gradeFor(pct);
+                    rowColors[body.length] = ag.color;
+                    body.push([pdfText(a.name), String(student.marks[a.id]), String(a.maxMark), pct.toFixed(1) + '%', pdfText(ag.label)]);
+                });
+            });
+            doc.autoTable(Object.assign({}, AT_BASE, {
+                startY: y,
+                head: [['Aspek Penilaian', 'Markah', 'Markah Penuh', 'Peratus', 'Pencapaian']],
+                body: body.length ? body : [[{ content: 'Tiada aspek ditetapkan.', colSpan: 5 }]],
+                showHead: 'everyPage',
+                columnStyles: { 1: { halign: 'center', cellWidth: 20 }, 2: { halign: 'center', cellWidth: 24 }, 3: { halign: 'center', cellWidth: 22 }, 4: { halign: 'center', cellWidth: 28 } },
+                didParseCell: gradeCellHook(rowColors, [3, 4])
+            }));
+
+            pdfFinalize(doc);
+            return doc;
+        }
+
+        async function buildDashboardPdf(ds) {
+            const doc = newPdf();
+            const logo = await getLogoPng();
+            let y = pdfHeader(doc, logo, 'Laporan Prestasi Kelas', ds.subject.nama);
+
+            // Kad statistik
+            const gap = 4, cardW = (PDF.W - 2 * PDF.M - 3 * gap) / 4, cardH = 26;
+            const cards = [
+                ['JUMLAH PELAJAR', String(ds.stats.total), null],
+                ['PURATA KELAS', ds.stats.classAvg.toFixed(1) + '%', null],
+                ['PENGUASAAN TERBAIK', ds.stats.best ? ds.stats.best.name : '-', ds.stats.best ? (ds.classAverages[ds.stats.best.id] || 0).toFixed(1) + '%' : ''],
+                ['PERLU PENEKANAN', ds.stats.worst ? ds.stats.worst.name : '-', ds.stats.worst ? (ds.classAverages[ds.stats.worst.id] || 0).toFixed(1) + '%' : '']
+            ];
+            cards.forEach(([label, value, extra], i) => {
+                const x = PDF.M + i * (cardW + gap);
+                doc.setFillColor(249, 250, 251); doc.setDrawColor(229, 231, 235); doc.setLineWidth(0.2);
+                doc.roundedRect(x, y, cardW, cardH, 2, 2, 'FD');
+                doc.setFont('helvetica', 'normal'); doc.setFontSize(6.8); doc.setTextColor(...PDF_GRAY);
+                doc.text(label, x + 3, y + 5);
+                doc.setTextColor(...PDF_DARK); doc.setFont('helvetica', 'bold');
+                if (extra === null) {
+                    doc.setFontSize(16);
+                    doc.text(value, x + 3, y + 15);
+                } else {
+                    doc.setFontSize(8.5);
+                    const lines = doc.splitTextToSize(pdfText(value), cardW - 6).slice(0, 3);
+                    doc.text(lines, x + 3, y + 10);
+                    doc.setFontSize(9); doc.setTextColor(...hexToRgb(colorOf(gradeFor(parseFloat(extra))).hex));
+                    doc.text(extra, x + 3, y + cardH - 3);
+                }
+            });
+            y += cardH + 8;
+
+            // Radar bahagian + jadual
+            if (ds.sections.length) {
+                y = pdfSectionTitle(doc, y, 'Profil Prestasi Kelas (Mengikut Bahagian)');
+                const chartW = 84, top = y;
+                const radar = chartToImage(radarConfig(ds.sections, ds.sections.map(s => ds.classSectionAverages[s] || 0), ds.subject.sasaranSkor,
+                    { label: 'Purata Kelas', fill: 'rgba(21, 128, 61, 0.2)', stroke: 'rgba(21, 128, 61, 1)', point: 'rgb(234, 179, 8)', labelSize: 30, tickSize: 20 }), 900, 900);
+                doc.addImage(radar, 'PNG', PDF.M, top, chartW, chartW);
+                const secColors = {};
+                doc.autoTable(Object.assign({}, AT_BASE, {
+                    startY: top,
+                    margin: Object.assign({}, AT_BASE.margin, { left: PDF.M + chartW + 6 }),
+                    head: [['Bahagian', 'Purata Kelas', 'Gred']],
+                    body: ds.sections.map((s, i) => { const v = ds.classSectionAverages[s] || 0; const sg = gradeFor(v); secColors[i] = sg.color; return [pdfText(s), v.toFixed(1) + '%', pdfText(sg.label)]; }),
+                    columnStyles: { 1: { halign: 'center', cellWidth: 24 }, 2: { halign: 'center', cellWidth: 24 } },
+                    didParseCell: gradeCellHook(secColors, [1, 2])
+                }));
+                y = Math.max(top + chartW, doc.lastAutoTable.finalY) + 8;
+            }
+
+            // Carta bar
+            if (ds.aspects.length) {
+                y = ensureSpace(doc, y, 100);
+                y = pdfSectionTitle(doc, y, 'Carta Purata Setiap Aspek');
+                const bar = chartToImage(barConfig(ds, 'ALL', { tickSize: 22 }), 1800, 950);
+                const w = PDF.W - 2 * PDF.M, h = w * 950 / 1800;
+                doc.addImage(bar, 'PNG', PDF.M, y, w, h);
+                y += h + 8;
+            }
+
+            // Jadual aspek
+            y = ensureSpace(doc, y, 30);
+            y = pdfSectionTitle(doc, y, 'Prestasi Kelas Mengikut Aspek (Tertinggi ke Terendah)');
+            const ranked = ds.aspects.map(a => ({ a, avg: ds.classAverages[a.id] || 0 })).sort((p, q) => q.avg - p.avg);
+            const aColors = {};
+            doc.autoTable(Object.assign({}, AT_BASE, {
+                startY: y,
+                head: [['Bil', 'Aspek Penilaian', 'Bahagian', 'Purata Kelas', 'Gred']],
+                body: ranked.map((r, i) => { const rg = gradeFor(r.avg); aColors[i] = rg.color; return [String(i + 1), pdfText(r.a.name), pdfText(r.a.section), r.avg.toFixed(1) + '%', pdfText(rg.label)]; }),
+                showHead: 'everyPage',
+                columnStyles: { 0: { halign: 'center', cellWidth: 11 }, 2: { cellWidth: 40 }, 3: { halign: 'center', cellWidth: 26 }, 4: { halign: 'center', cellWidth: 28 } },
+                didParseCell: gradeCellHook(aColors, [3, 4])
+            }));
+            y = doc.lastAutoTable.finalY + 10;
+
+            // Senarai pelajar
+            y = ensureSpace(doc, y, 30);
+            y = pdfSectionTitle(doc, y, 'Kedudukan Pelajar');
+            const sColors = {};
+            const list = [...ds.students].sort((p, q) => q.overallAvg - p.overallAvg);
+            doc.autoTable(Object.assign({}, AT_BASE, {
+                startY: y,
+                head: [['Bil', 'Nama Pelajar', 'No. IC', 'Skor Purata', 'Gred']],
+                body: list.length ? list.map((s, i) => { const sg = gradeFor(s.overallAvg); sColors[i] = sg.color; return [String(i + 1), pdfText(s.nama), pdfText(s.ic || '-'), s.overallAvg.toFixed(1) + '%', pdfText(sg.label)]; }) : [[{ content: 'Tiada pelajar.', colSpan: 5 }]],
+                showHead: 'everyPage',
+                columnStyles: { 0: { halign: 'center', cellWidth: 11 }, 2: { cellWidth: 36 }, 3: { halign: 'center', cellWidth: 24 }, 4: { halign: 'center', cellWidth: 28 } },
+                didParseCell: gradeCellHook(sColors, [3, 4])
+            }));
+
+            pdfFinalize(doc);
+            return doc;
+        }
+
+        async function downloadDashboardPDF(btn) {
+            if (!globalData) return;
+            await withBusy(btn, 'Sedia PDF...', async () => {
+                try { (await buildDashboardPdf(globalData)).save(`Laporan_Kelas_${fileSafe(globalData.subject.nama)}.pdf`); }
+                catch (e) { console.error(e); alert('Gagal menjana PDF: ' + e.message); }
+            });
+        }
+
+        async function downloadAdminStudentPDF(btn) {
+            await withBusy(btn, '', async () => {
+                try { (await buildStudentPdf(currentEditingStudent, globalData)).save(`Laporan_${fileSafe(currentEditingStudent.nama)}_${fileSafe(globalData.subject.nama)}.pdf`); }
+                catch (e) { console.error(e); alert('Gagal menjana PDF: ' + e.message); }
+            });
+        }
+
+        async function downloadPortalPDF(btn) {
+            await withBusy(btn, '', async () => {
+                try { (await buildStudentPdf(currentLoggedInStudent, currentPortalData)).save(`Profil_Prestasi_${fileSafe(currentLoggedInStudent.nama)}_${fileSafe(currentPortalData.subject.nama)}.pdf`); }
+                catch (e) { console.error(e); alert('Gagal menjana PDF: ' + e.message); }
+            });
+        }
+
+        // ==========================================================
+        //  MUAT TURUN GAMBAR (html2canvas)
+        //  Elemen disalin ke dokumen klon pada lebar tetap, jadi
+        //  paparan sebenar tidak terganggu & tiada bahagian terpotong.
+        // ==========================================================
+        async function captureElement(elementId, width) {
+            const el = document.getElementById(elementId);
+            return html2canvas(el, {
+                scale: 2, useCORS: true, backgroundColor: '#f9fafb',
+                windowWidth: width, windowHeight: Math.max(window.innerHeight, el.scrollHeight + 400), scrollX: 0, scrollY: 0,
+                onclone: doc => {
+                    doc.documentElement.classList.add('capturing');
+                    const c = doc.getElementById(elementId);
+                    c.classList.remove('hidden', 'max-w-5xl', 'max-w-4xl', 'mx-auto', 'max-h-[90vh]', 'overflow-hidden', 'modal-enter');
+                    Object.assign(c.style, { width: width + 'px', maxWidth: 'none', maxHeight: 'none', transform: 'none', position: 'static', opacity: '1', margin: '0' });
+                    const badge = c.querySelector('#portal-student-class');
+                    if (badge) badge.classList.remove('hidden');
+                    const scroll = c.querySelector('#admin-modal-scroll-area');
+                    if (scroll) Object.assign(scroll.style, { overflow: 'visible', maxHeight: 'none', flex: 'none' });
+                    const host = doc.createElement('div');
+                    host.style.cssText = `width:${width}px;background:#f9fafb;`;
+                    host.appendChild(c);
+                    doc.body.className = '';
+                    doc.body.style.cssText = `margin:0;width:${width}px;height:auto;overflow:visible;background:#f9fafb;`;
+                    doc.body.replaceChildren(host);
+                }
+            });
+        }
+
+        async function downloadImage(btn, elementId, width, filename) {
+            await withBusy(btn, '', async () => {
+                try {
+                    const canvas = await captureElement(elementId, width);
+                    const link = document.createElement('a');
+                    link.download = filename;
+                    link.href = canvas.toDataURL('image/jpeg', 0.95);
+                    link.click();
+                } catch (e) { console.error(e); alert('Gagal memuat turun gambar.'); }
+            });
+        }
+
+        function downloadDashboardImage(btn) {
+            downloadImage(btn, 'tab-dashboard', 1440, `Laporan_Kelas_${fileSafe(globalData.subject.nama)}.jpg`);
+        }
+        function downloadAdminStudentImage(btn) {
+            if (document.getElementById('modal-read-view').classList.contains('hidden')) toggleEditMode();
+            downloadImage(btn, 'admin-modal-content', 1024, `Laporan_${fileSafe(currentEditingStudent.nama)}.jpg`);
+        }
+        function downloadPortalImage(btn) {
+            downloadImage(btn, 'tab-student-portal', 1024, `Profil_Prestasi_${fileSafe(currentLoggedInStudent.nama)}.jpg`);
+        }
+
+        // ==========================================================
+        //  EXCEL (CSV)
+        // ==========================================================
+        function csvCell(v) { return `"${String(v === null || v === undefined ? '' : v).replace(/"/g, '""')}"`; }
+
+        function downloadCSV(rows, filename) {
+            const csv = rows.map(r => r.map(csvCell).join(',')).join('\r\n');
+            const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url; link.download = filename; link.style.display = 'none';
+            document.body.appendChild(link); link.click(); link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        function singleStudentRows(student, ds) {
+            const rows = [
+                ['Nama Pelajar', student.nama], ['No. IC', student.ic || '-'], ['Subjek / Kelas', ds.subject.nama],
+                ['Skor Keseluruhan', student.overallAvg.toFixed(2) + '%'], ['Gred', gradeFor(student.overallAvg).label], [],
+                ['Bahagian', 'Aspek Penilaian', 'Markah Diperolehi', 'Markah Penuh', 'Peratusan (%)', 'Pencapaian']
+            ];
+            ds.aspects.forEach(a => rows.push([a.section, a.name, student.marks[a.id], a.maxMark, student.percentages[a.id].toFixed(2), gradeFor(student.percentages[a.id]).label]));
+            return rows;
+        }
+
+        function downloadPortalExcel() {
+            downloadCSV(singleStudentRows(currentLoggedInStudent, currentPortalData), `Profil_${fileSafe(currentLoggedInStudent.nama)}.csv`);
+        }
+        function downloadAdminStudentExcel() {
+            downloadCSV(singleStudentRows(currentEditingStudent, globalData), `Laporan_${fileSafe(currentEditingStudent.nama)}.csv`);
+        }
+        function downloadAllStudentsExcel() {
+            if (!globalData) return;
+            const ds = globalData;
+            const rows = [[`Senarai Laporan Prestasi - ${ds.subject.nama}`], [],
+                ['Bil', 'Nama Pelajar', 'No. IC', 'Skor Purata (%)', 'Gred'].concat(ds.aspects.map(a => `${a.name} (/${a.maxMark})`))];
+            sortedStudents().forEach((s, i) => rows.push([i + 1, s.nama, s.ic || '-', s.overallAvg.toFixed(2), gradeFor(s.overallAvg).label].concat(ds.aspects.map(a => s.marks[a.id]))));
+            downloadCSV(rows, `Rekod_Kelas_${fileSafe(ds.subject.nama)}.csv`);
+        }
+    </script>
+</body>
+</html>
