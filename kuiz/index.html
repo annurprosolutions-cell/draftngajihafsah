@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="ms">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Kuiz Hafsah</title>
+  <meta name="description" content="Kuiz langsung gaya Kahoot untuk Kelas Mengaji Hafsah: karakter 3D anime, multipemain serentak dan papan markah langsung.">
+  <meta name="theme-color" content="#46178f">
+  <link rel="icon" type="image/png" href="https://i.postimg.cc/TwZN5fP1/image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&family=Amiri:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/kuiz.css">
+  <script src="vendor/peerjs.min.js"></script>
+  <script src="vendor/qrcode.js"></script>
+</head>
+<body>
+  <!-- ============================================================ UTAMA -->
+  <section class="screen" id="scr-home">
+    <div class="topbar">
+      <span class="title">Kelas Mengaji Hafsah</span>
+      <button class="icon-btn" data-action="mute" aria-label="Bunyi on/off">🔊</button>
+    </div>
+    <div class="center-col">
+      <div class="logo">Kuiz Hafsah<small>Kuiz langsung, karakter 3D, papan markah masa nyata</small></div>
+      <form class="card home-card" id="join-form" autocomplete="off">
+        <input class="pin-input" id="pin-input" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="PIN permainan" aria-label="PIN permainan">
+        <button class="btn primary big block" type="submit">Masuk</button>
+        <div class="form-error" id="home-error" role="alert"></div>
+      </form>
+      <div class="home-links">
+        <button class="btn ghost" id="btn-host">Saya cikgu: hos permainan</button>
+        <button class="btn ghost" id="btn-watch">Tonton papan markah</button>
+      </div>
+      <p class="foot-note">Tiada akaun diperlukan. Telefon murid bersambung terus ke skrin cikgu (peer-to-peer). Karakter dan kuiz disimpan dalam pelayar peranti anda sahaja.</p>
+    </div>
+  </section>
+
+  <!-- ============================================================ UMUM -->
+  <section class="screen" id="scr-loading" hidden>
+    <div class="center-col">
+      <div class="spinner"></div>
+      <div class="status-big" id="loading-text">Menyambung...</div>
+      <div class="muted" id="loading-sub"></div>
+      <button class="btn ghost" id="loading-cancel">Batal</button>
+    </div>
+  </section>
+
+  <section class="screen" id="scr-error" hidden>
+    <div class="center-col">
+      <div class="status-big" id="error-title">Alamak</div>
+      <p class="muted" id="error-text"></p>
+      <button class="btn big" id="error-home">Kembali ke laman utama</button>
+    </div>
+  </section>
+
+  <!-- ============================================================ PEMAIN -->
+  <section class="screen" id="scr-p-create" hidden>
+    <div class="topbar">
+      <span class="title">Cipta karakter anda</span>
+      <span class="pill" id="create-pin"></span>
+    </div>
+    <div class="creator">
+      <div class="creator-stage">
+        <div class="stage-box" id="create-stage"></div>
+        <div class="stage-hint">Seret untuk pusing • Ketik untuk lompat</div>
+      </div>
+      <div class="creator-panel">
+        <div class="creator-head">
+          <label for="name-input">Nama panggilan</label>
+          <input class="text-input" id="name-input" maxlength="16" placeholder="Contoh: Aisyah" autocomplete="off">
+          <div class="form-error" id="create-error" role="alert"></div>
+        </div>
+        <div class="tabs" id="creator-tabs" role="tablist"></div>
+        <div class="tab-body" id="creator-body"></div>
+        <div class="creator-foot">
+          <button class="btn" id="btn-random">🎲 Rawak</button>
+          <button class="btn go" id="btn-join">Masuk permainan</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="scr-p-lobby" hidden>
+    <div class="p-top"><span class="pill" id="pl-pin"></span><span class="pill" id="pl-name"></span></div>
+    <div class="center-col">
+      <div class="status-big" id="pl-title">Anda dah masuk!</div>
+      <div class="muted" id="pl-sub">Nampak nama anda di skrin depan? Tunggu cikgu mulakan.</div>
+      <div class="p-stage" id="pl-stage"></div>
+      <div class="emotes">
+        <button class="btn small ghost" data-emote="jump">Lompat</button>
+        <button class="btn small ghost" data-emote="wave">Lambai</button>
+        <button class="btn small ghost" data-emote="dance">Menari</button>
+        <button class="btn small ghost" data-emote="spin">Pusing</button>
+      </div>
+      <button class="btn small" id="btn-edit-avatar">Tukar karakter</button>
+    </div>
+  </section>
+
+  <section class="screen" id="scr-p-intro" hidden>
+    <div class="p-top"><span class="pill" id="pi-num"></span><span class="pill" id="pi-score"></span></div>
+    <div class="center-col">
+      <div class="status-big" id="pi-title">Bersedia!</div>
+      <div class="p-qtext" id="pi-text"></div>
+      <div class="timer-bar"><i id="pi-bar"></i></div>
+    </div>
+  </section>
+
+  <section class="screen" id="scr-p-answer" hidden>
+    <div class="p-top"><span class="pill" id="pa-num"></span><span class="pill" id="pa-time">⏱</span></div>
+    <div class="p-qtext" id="pa-text"></div>
+    <div class="answer-grid" id="pa-grid"></div>
+  </section>
+
+  <section class="screen" id="scr-p-wait" hidden>
+    <div class="p-top"><span class="pill" id="pw-num"></span><span class="pill" id="pw-score"></span></div>
+    <div class="center-col">
+      <div class="status-big">Jawapan dihantar!</div>
+      <div id="pw-choice"></div>
+      <div class="muted" id="pw-tip">Tengok skrin depan...</div>
+      <div class="p-stage" id="pw-stage"></div>
+    </div>
+  </section>
+
+  <section class="screen result-screen" id="scr-p-result" hidden>
+    <div class="p-top"><span class="pill" id="pr-num"></span><span class="pill" id="pr-name"></span></div>
+    <div class="center-col">
+      <div class="status-big" id="pr-title"></div>
+      <div class="points-pill" id="pr-points"></div>
+      <div class="streak" id="pr-streak"></div>
+      <div class="p-stage" id="pr-stage"></div>
+      <div class="rank-line" id="pr-rank"></div>
+      <div class="muted" id="pr-correct"></div>
+    </div>
+  </section>
+
+  <section class="screen" id="scr-p-final" hidden>
+    <div class="p-top"><span class="pill" id="pf-pin"></span><span class="pill" id="pf-name"></span></div>
+    <div class="center-col">
+      <div class="status-big" id="pf-title"></div>
+      <div class="points-pill" id="pf-score"></div>
+      <div class="p-stage" id="pf-stage"></div>
+      <div class="mini-board" id="pf-board"></div>
+      <button class="btn big" id="pf-home">Main lagi</button>
+    </div>
+  </section>
+
+  <!-- ============================================================ HOS -->
+  <section class="screen" id="scr-h-setup" hidden>
+    <div class="topbar">
+      <span class="title">Hos permainan</span>
+      <div style="display:flex;gap:8px">
+        <button class="icon-btn" data-action="mute" aria-label="Bunyi on/off">🔊</button>
+        <button class="btn small ghost" id="setup-back">Keluar</button>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="resume-banner" id="resume-banner" hidden>
+        <span id="resume-text"></span>
+        <span style="display:flex;gap:8px"><button class="btn small go" id="resume-yes">Sambung</button><button class="btn small" id="resume-no">Buang</button></span>
+      </div>
+      <div class="setup">
+        <div>
+          <h2 style="margin-bottom:12px">Pilih kuiz</h2>
+          <div class="quiz-list" id="quiz-list"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+            <button class="btn" id="btn-new-quiz">+ Cipta kuiz baru</button>
+            <button class="btn ghost" id="btn-import">Import CSV / JSON</button>
+            <button class="btn ghost" id="btn-template">Muat turun templat CSV</button>
+            <button class="btn ghost" id="btn-history">Sejarah permainan</button>
+            <input type="file" id="import-file" accept=".csv,.json,text/csv,application/json" hidden>
+          </div>
+        </div>
+        <div class="card settings">
+          <h3>Tetapan</h3>
+          <div id="setup-selected" class="muted"></div>
+          <label class="toggle">Papar soalan di telefon murid <input type="checkbox" id="set-device" checked></label>
+          <label class="toggle">Benarkan masuk lewat <input type="checkbox" id="set-late" checked></label>
+          <label class="toggle">Kocok susunan soalan <input type="checkbox" id="set-shuffle"></label>
+          <label class="toggle">Auto ke soalan seterusnya <input type="checkbox" id="set-auto"></label>
+          <button class="btn go big block" id="btn-start-host">Hos sekarang</button>
+          <p class="muted" style="font-size:13px;margin:0">Skrin ini menjadi "pelayan" permainan. Jangan tutup tab ini sehingga permainan tamat.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="scr-h-editor" hidden>
+    <div class="topbar">
+      <span class="title" id="editor-heading">Penyunting kuiz</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn small ghost" id="editor-export">Eksport JSON</button>
+        <button class="btn small danger" id="editor-delete">Padam</button>
+        <button class="btn small" id="editor-cancel">Batal</button>
+        <button class="btn small go" id="editor-save">Simpan</button>
+      </div>
+    </div>
+    <div class="wrap editor" id="editor"></div>
+  </section>
+
+  <section class="screen" id="scr-h-lobby" hidden>
+    <div class="lobby-top">
+      <div class="join-box">
+        <span class="lbl">Sertai di</span>
+        <span class="url" id="lobby-url"></span>
+      </div>
+      <div class="join-box">
+        <span class="lbl">PIN permainan</span>
+        <span class="pin" id="lobby-pin"></span>
+      </div>
+      <div id="lobby-qr"></div>
+    </div>
+    <div class="lobby-main">
+      <div class="crowd-stage">
+        <div class="stage-box" id="lobby-stage"></div>
+        <div class="empty-lobby" id="lobby-empty">Menunggu pemain...<br>Imbas QR atau masukkan PIN</div>
+      </div>
+      <div class="lobby-side">
+        <div class="head"><span class="count-badge">👥 <span id="lobby-count">0</span></span><span class="muted" style="font-size:13px">Ketik nama untuk keluarkan</span></div>
+        <div class="player-list" id="lobby-list"></div>
+      </div>
+    </div>
+    <div class="lobby-foot">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="pill" id="lobby-quiz"></span>
+        <span class="pill" id="net-status">● Dalam talian</span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="icon-btn" data-action="mute" aria-label="Bunyi on/off">🔊</button>
+        <button class="icon-btn" data-action="fullscreen" aria-label="Skrin penuh">⛶</button>
+        <button class="btn ghost" id="lobby-watch">Pautan penonton</button>
+        <button class="btn ghost" id="lobby-lock">Kunci bilik</button>
+        <button class="btn danger" id="lobby-cancel">Batal</button>
+        <button class="btn go big" id="lobby-start">Mula</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="scr-h-intro" hidden>
+    <div class="topbar"><span class="pill" id="hi-num"></span><span class="pill" id="hi-pin"></span></div>
+    <div class="h-intro">
+      <div class="qnum" id="hi-label"></div>
+      <div class="qtext" id="hi-text"></div>
+      <div id="hi-extra"></div>
+      <div class="timer-bar"><i id="hi-bar"></i></div>
+    </div>
+  </section>
+
+  <section class="screen" id="scr-h-question" hidden>
+    <div class="h-qbar" id="hq-text"></div>
+    <div class="h-mid">
+      <div class="h-timer" id="hq-timer"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="47" id="hq-ring"></circle></svg><span id="hq-secs">20</span></div>
+      <div class="h-media" id="hq-media"></div>
+      <div class="h-count" id="hq-count"><b id="hq-answers">0</b>Jawapan</div>
+    </div>
+    <div class="h-answers" id="hq-answers-grid"></div>
+    <div class="bottom-bar">
+      <span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="pill" id="hq-num"></span><span class="pill" id="hq-pin"></span></span>
+      <span style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="icon-btn" data-action="mute" aria-label="Bunyi on/off">🔊</button>
+        <button class="btn ghost" data-action="live">Papan markah langsung</button>
+        <button class="btn" id="hq-skip">Tamatkan masa</button>
+        <button class="btn go" id="hq-next" hidden>Seterusnya</button>
+      </span>
+    </div>
+  </section>
+
+  <section class="screen" id="scr-h-board" hidden>
+    <div class="board-title">Papan Markah</div>
+    <div class="board" id="hb-board"></div>
+    <div style="flex:1"></div>
+    <div class="bottom-bar">
+      <span class="pill" id="hb-num"></span>
+      <span style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn ghost" data-action="live">Senarai penuh</button>
+        <button class="btn go big" id="hb-next">Seterusnya</button>
+      </span>
+    </div>
+  </section>
+
+  <section class="screen" id="scr-h-podium" hidden>
+    <div class="topbar"><span class="title" id="hp-title">Juara!</span><span class="pill" id="hp-quiz"></span></div>
+    <div class="podium-wrap">
+      <div class="stage-box" id="podium-stage"></div>
+      <div class="podium-tags" id="podium-tags"></div>
+    </div>
+    <div class="bottom-bar">
+      <span style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="hp-results">Keputusan penuh</button>
+        <button class="btn ghost" id="hp-csv">Muat turun CSV</button>
+      </span>
+      <span style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn ghost" id="hp-again">Main lagi (kuiz sama)</button>
+        <button class="btn go" id="hp-done">Selesai</button>
+      </span>
+    </div>
+  </section>
+
+  <!-- ============================================================ PENONTON -->
+  <section class="screen" id="scr-watch" hidden>
+    <div class="topbar">
+      <span class="title" id="w-title">Papan markah langsung</span>
+      <span style="display:flex;gap:8px"><span class="pill" id="w-pin"></span><span class="pill" id="w-phase"></span></span>
+    </div>
+    <div class="board-title" style="font-size:clamp(24px,3vw,40px)">Kedudukan Semasa</div>
+    <div class="watch-board" id="w-board"></div>
+  </section>
+
+  <!-- ============================================================ LAPISAN -->
+  <div class="overlay" id="reconnect" hidden>
+    <div class="spinner"></div>
+    <div class="status-big" id="reconnect-text">Menyambung semula...</div>
+    <div class="muted" id="reconnect-sub">Jangan tutup halaman ini. Markah anda selamat.</div>
+  </div>
+
+  <aside class="live-drawer" id="live-drawer" aria-label="Papan markah langsung">
+    <div class="head"><span>Papan markah langsung</span><button class="icon-btn" data-action="live" aria-label="Tutup">✕</button></div>
+    <div class="live-list" id="live-list"></div>
+  </aside>
+
+  <noscript><div class="overlay">Sila aktifkan JavaScript untuk bermain.</div></noscript>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
